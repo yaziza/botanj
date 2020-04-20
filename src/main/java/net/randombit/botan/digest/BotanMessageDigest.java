@@ -2,6 +2,9 @@
  * (C) 2020 Yasser Aziza
  *
  * Botanj is released under the MIT License (see license.txt)
+ *
+ * Contributors:
+ *    Yasser Aziza - initial implementation
  */
 
 package net.randombit.botan.digest;
@@ -84,24 +87,28 @@ public class BotanMessageDigest extends MessageDigestSpi {
     }
 
     // SHA-3 algorithm
+    @SuppressWarnings("typename")
     public static final class SHA3_224 extends BotanMessageDigest {
         public SHA3_224() {
             super("SHA3-224", 28);
         }
     }
 
+    @SuppressWarnings("typename")
     public static final class SHA3_256 extends BotanMessageDigest {
         public SHA3_256() {
             super("SHA3-256", 32);
         }
     }
 
+    @SuppressWarnings("typename")
     public static final class SHA3_384 extends BotanMessageDigest {
         public SHA3_384() {
             super("SHA3-384", 48);
         }
     }
 
+    @SuppressWarnings("typename")
     public static final class SHA3_512 extends BotanMessageDigest {
         public SHA3_512() {
             super("SHA3-512", 64);
