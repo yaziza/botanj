@@ -1,0 +1,19 @@
+# Travis CI Java documentation can be found in:
+# https://docs.travis-ci.com/user/languages/java/
+language: java
+
+sudo: false
+
+cache:
+  directories:
+    - ~/.m2
+
+jdk:
+  - openjdk8
+  - openjdk11
+
+branches:
+  only:
+    - master
+
+script: mvn clean verify
