@@ -7,7 +7,6 @@
  *    Yasser Aziza - initial implementation
  */
 
-
 package net.randombit.botan;
 
 import java.security.Provider;
@@ -15,14 +14,15 @@ import java.security.Provider;
 public final class BotanProvider extends Provider {
 
     public static final String PROVIDER_NAME = "Botan";
-
-    private static final String PROVIDER_INFO = "Botan Security Provider v0.1.0";
+    private static final String PROVIDER_INFO = "Botan Java Security Provider";
 
     private static final String PACKAGE_NAME = BotanProvider.class.getPackage().getName();
     private static final String DIGEST_PREFIX = ".digest.";
 
+    private static final BotanNative BOTAN_NATIVE = Botan.getInstance();
+
     public BotanProvider() {
-        super(PROVIDER_NAME, 0.1, PROVIDER_INFO);
+        super(PROVIDER_NAME, 0, PROVIDER_INFO);
 
         // Message Digests
         addMdAlgorithms();
@@ -31,6 +31,21 @@ public final class BotanProvider extends Provider {
         addSha3Algorithms();
         addKeccakAlgorithms();
         addBlake2Algorithms();
+    }
+
+    @Override
+    public String getInfo() {
+        return PROVIDER_INFO;
+    }
+
+    @Override
+    public double getVersion() {
+        return BOTAN_NATIVE.botan_ffi_api_version();
+    }
+
+    @Override
+    public String toString() {
+        return BOTAN_NATIVE.botan_version_string();
     }
 
     private void addMdAlgorithms() {

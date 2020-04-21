@@ -27,6 +27,9 @@
     <!-- http://checkstyle.sourceforge.net/config.html#TreeWalker -->
     <module name="TreeWalker">
 
+        <!-- https://checkstyle.org/config_imports.html#AvoidStarImport -->
+        <module name="AvoidStarImport"/>
+
         <!-- https://checkstyle.sourceforge.io/config_annotation.html#SuppressWarningsHolder -->
         <module name="SuppressWarningsHolder"/>
 

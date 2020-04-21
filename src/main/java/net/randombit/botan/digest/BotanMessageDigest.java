@@ -10,7 +10,6 @@
 package net.randombit.botan.digest;
 
 import java.security.MessageDigestSpi;
-import java.security.NoSuchAlgorithmException;
 
 public class BotanMessageDigest extends MessageDigestSpi {
 
