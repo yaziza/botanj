@@ -9,6 +9,17 @@
 
 package net.randombit.botan;
 
+import jnr.ffi.Pointer;
+import jnr.ffi.Runtime;
+import jnr.ffi.Struct;
+import jnr.ffi.annotations.In;
+import jnr.ffi.annotations.Out;
+import jnr.ffi.byref.NativeLongByReference;
+import jnr.ffi.byref.PointerByReference;
+import jnr.ffi.types.size_t;
+
+import java.nio.ByteBuffer;
+
 public interface BotanNative {
 
     /**
@@ -27,7 +38,7 @@ public interface BotanNative {
      *
      * @return api version
      */
-    int botan_ffi_api_version();
+    long botan_ffi_api_version();
 
     /**
      * Returns the version of the currently supported FFI API. This is
@@ -37,7 +48,7 @@ public interface BotanNative {
      * @param apiVersion supported API version
      * @return 0 if the given API version is supported
      */
-    int botan_ffi_supports_api(int apiVersion);
+    int botan_ffi_supports_api(long apiVersion);
 
     /**
      * Returns a free-form version string, e.g., 2.0.0
@@ -49,22 +60,106 @@ public interface BotanNative {
     /**
      * @return the major version of the library
      */
-    int botan_version_major();
+    long botan_version_major();
 
     /**
      * @return the minor version of the library
      */
-    int botan_version_minor();
+    long botan_version_minor();
 
     /**
      * @return the patch version of the library
      */
-    int botan_version_patch();
+    long botan_version_patch();
 
     /**
      * @return the date this version was released as an integer,
      * or 0 if an unreleased version
      */
-    int botan_version_datestamp();
+    long botan_version_datestamp();
+
+    /**
+     * Initializes a hash function object.
+     *
+     * @param hash     hash object
+     * @param hashName name of the hash function, e.g., "SHA-384"
+     * @param flags    should be 0 in current API revision, all other uses are reserved
+     *                 and return BOTAN_FFI_ERROR_BAD_FLAG
+     */
+    int botan_hash_init(PointerByReference hash, @In String hashName, long flags);
+
+    /**
+     * Copy the state of a hash function object
+     *
+     * @param dest   destination hash object
+     * @param source source hash object
+     * @return 0 on success, a negative value on failure
+     */
+    int botan_hash_copy_state(PointerByReference dest, Pointer source);
+
+    /**
+     * Writes the output length of the hash function to *output_length
+     *
+     * @param hash   hash object
+     * @param length output buffer to hold the hash function output length
+     * @return 0 on success, a negative value on failure
+     */
+    int botan_hash_output_length(Pointer hash, @Out NativeLongByReference length);
+
+    /**
+     * Writes the block size of the hash function to *block_size
+     *
+     * @param hash hash object
+     * @param size output buffer to hold the hash function output length
+     * @return 0 on success, a negative value on failure
+     */
+    int botan_hash_block_size(Pointer hash, @Out NativeLongByReference size);
+
+    /**
+     * Send more input to the hash function
+     *
+     * @param hash   hash object
+     * @param input  input buffer
+     * @param length number of bytes to read from the input buffer
+     * @return 0 on success, a negative value on failure
+     */
+    int botan_hash_update(Pointer hash, @In byte[] input, @In long length);
+
+    /**
+     * Finalizes the hash computation and writes the output to
+     * out[0:botan_hash_output_length()] then reinitializes for computing
+     * another digest as if botan_hash_clear had been called.
+     *
+     * @param hash hash object
+     * @param out  output buffer
+     * @return 0 on success, a negative value on failure
+     */
+    int botan_hash_final(Pointer hash, @Out byte[] out);
+
+    /**
+     * Reinitializes the state of the hash computation. A hash can
+     * be computed (with update/final) immediately.
+     *
+     * @param hash hash object
+     * @return 0 on success, a negative value on failure
+     */
+    int botan_hash_clear(Pointer hash);
+
+    /**
+     * Frees all resources of the hash object.
+     *
+     * @param hash hash object
+     * @return 0 if success, error if invalid object handle
+     */
+    int botan_hash_destroy(Pointer hash);
+
+    /**
+     * Get the name of this hash function
+     *
+     * @param hash   the object to read
+     * @param name   output buffer
+     * @param length on input, the length of buffer, on success the number of bytes written
+     */
+    int botan_hash_name(Pointer hash, @In @Out byte[] name, @In @Out NativeLongByReference length);
 
 }

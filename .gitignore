@@ -13,5 +13,8 @@ target/
 # No temp files
 *~
 
+# No log files
+*.log
+
 # No magic files used by the OS
 .DS_Store

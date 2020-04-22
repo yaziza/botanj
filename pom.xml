@@ -10,6 +10,10 @@
     <description>Botan Java Security Provider implementation</description>
 
     <properties>
+        <jnr-ffi-version>2.1.12</jnr-ffi-version>
+        <junit-version>4.13</junit-version>
+        <maven-checkstyle-version>2.12</maven-checkstyle-version>
+
         <java.version>1.8</java.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
@@ -20,20 +24,21 @@
         <dependency>
             <groupId>com.github.jnr</groupId>
             <artifactId>jnr-ffi</artifactId>
-            <version>2.1.12</version>
+            <version>${jnr-ffi-version}</version>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/junit/junit -->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.13</version>
+            <version>${junit-version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
 
     <build>
         <plugins>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -46,7 +51,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
-                <version>2.12</version>
+                <version>${maven-checkstyle-version}</version>
                 <executions>
                     <execution>
                         <id>check-coding-conventions</id>
