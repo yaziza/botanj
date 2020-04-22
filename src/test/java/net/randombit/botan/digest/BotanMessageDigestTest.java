@@ -10,7 +10,6 @@
 package net.randombit.botan.digest;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.bouncycastle.util.encoders.Hex;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -159,7 +158,7 @@ public class BotanMessageDigestTest {
 
             Assert.assertArrayEquals("Digest mismatch with Bouncy Castle provider for algorithm "
                     + algorithm, expected, actual);
-
         }
     }
+
 }

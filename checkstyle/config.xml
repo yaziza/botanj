@@ -5,6 +5,11 @@
 
 <module name="Checker">
 
+    <module name="Header">
+        <property name="header"
+                  value="/*"/>
+    </module>
+
     <!-- http://checkstyle.sourceforge.net/config_misc.html#NewlineAtEndOfFile -->
     <module name="NewlineAtEndOfFile">
         <!-- Require a Unix line delimiter at end of file. -->

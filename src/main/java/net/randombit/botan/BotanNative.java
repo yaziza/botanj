@@ -74,6 +74,53 @@ public interface BotanNative {
     long botan_version_datestamp();
 
     /**
+     * Performs hex encoding.
+     *
+     * @param input       is some binary data
+     * @param inputLength length of x in bytes
+     * @param output      an array of at least x*2 bytes
+     * @param flags       flags out be upper or lower case?
+     * @return 0 on success
+     */
+    int botan_hex_encode(@In byte[] input, @In long inputLength, @Out byte[] output, @In long flags);
+
+    /**
+     * Performs hex decoding.
+     *
+     * @param input        a string of hex chars (whitespace is ignored)
+     * @param inputLength  the length of the input
+     * @param output       the output buffer should be at least strlen(input)/2 bytes
+     * @param outputLength the size of the output
+     * @return 0 on success
+     */
+    int botan_hex_decode(@In byte[] input, @In long inputLength, @Out byte[] output,
+                         @Out NativeLongByReference outputLength);
+
+    /**
+     * Performs base64 encoding.
+     *
+     * @param input        the input buffer
+     * @param inputLength  the length of the input
+     * @param output       the output buffer
+     * @param outputLength the size of the output
+     * @return 0 on success
+     */
+    int botan_base64_encode(@In byte[] input, @In long inputLength, @Out byte[] output,
+                            @Out NativeLongByReference outputLength);
+
+    /**
+     * Performs base64 decoding.
+     *
+     * @param input        the input buffer
+     * @param inputLength  the length of the input
+     * @param output       the output buffer
+     * @param outputLength the size of the output
+     * @return 0 on success
+     */
+    int botan_base64_decode(@In String input, @In long inputLength, @Out byte[] output,
+                            @Out NativeLongByReference outputLength);
+
+    /**
      * Initializes a hash function object.
      *
      * @param hash     hash object
