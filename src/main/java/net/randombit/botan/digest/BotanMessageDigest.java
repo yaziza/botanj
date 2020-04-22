@@ -9,9 +9,17 @@
 
 package net.randombit.botan.digest;
 
-import java.security.MessageDigestSpi;
+import jnr.ffi.byref.PointerByReference;
+import net.randombit.botan.Botan;
+import net.randombit.botan.BotanNative;
 
-public class BotanMessageDigest extends MessageDigestSpi {
+import java.security.MessageDigestSpi;
+import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
+
+public class BotanMessageDigest extends MessageDigestSpi implements Cloneable {
+
+    private static final BotanNative NATIVE = Botan.getInstance();
 
     /**
      * Holds the name of the hashing algorithm.
@@ -23,64 +31,101 @@ public class BotanMessageDigest extends MessageDigestSpi {
      */
     private final int size;
 
+    /**
+     * Holds the reference to the hash object referenced by botan.
+     */
+    private final PointerByReference hashRef;
+
+    /**
+     * Holds a dummy buffer for writing single bytes to the digest.
+     */
+    private final byte[] singleByte = new byte[1];
+
+    private BotanMessageDigest(String name, int size) throws NoSuchAlgorithmException {
+        this.name = name;
+        this.size = size;
+        this.hashRef = new PointerByReference();
+        int err = NATIVE.botan_hash_init(hashRef, name, 0);
+        if (err != 0) {
+            String msg = NATIVE.botan_error_description(err);
+            throw new NoSuchAlgorithmException(msg);
+        }
+    }
+
+    private BotanMessageDigest(String name, int size, PointerByReference hashRef) {
+        this.name = name;
+        this.size = size;
+        this.hashRef = hashRef;
+    }
+
     @Override
     protected int engineGetDigestLength() {
         return size;
     }
 
-    private BotanMessageDigest(String name, int size) {
-        this.name = name;
-        this.size = size;
-    }
-
     @Override
     protected void engineUpdate(byte input) {
+        byte[] singleByte = new byte[]{input};
 
+        engineUpdate(singleByte, 0, 1);
     }
 
     @Override
     protected void engineUpdate(byte[] input, int offset, int len) {
+        byte[] bytes = Arrays.copyOfRange(input, offset, input.length);
 
+        NATIVE.botan_hash_update(hashRef.getValue(), bytes, len);
     }
 
     @Override
     protected byte[] engineDigest() {
-        return new byte[size];
+        final byte[] result = new byte[size];
+        NATIVE.botan_hash_final(hashRef.getValue(), result);
+
+        return result;
     }
 
     @Override
     protected void engineReset() {
+        NATIVE.botan_hash_clear(hashRef.getValue());
+    }
 
+    @Override
+    public Object clone() {
+        PointerByReference clone = new PointerByReference();
+        NATIVE.botan_hash_copy_state(clone, hashRef.getValue());
+
+        return new BotanMessageDigest(name, size, clone);
     }
 
     // SHA-1 algorithm
     public static final class SHA1 extends BotanMessageDigest {
-        public SHA1() {
+        public SHA1() throws NoSuchAlgorithmException {
             super("SHA-1", 20);
         }
     }
 
     // SHA-2 algorithm
     public static final class SHA224 extends BotanMessageDigest {
-        public SHA224() {
+        public SHA224() throws NoSuchAlgorithmException {
             super("SHA-224", 28);
         }
     }
 
     public static final class SHA256 extends BotanMessageDigest {
-        public SHA256() {
+        public SHA256() throws NoSuchAlgorithmException {
             super("SHA-256", 32);
         }
     }
 
     public static final class SHA384 extends BotanMessageDigest {
-        public SHA384() {
+        public SHA384() throws NoSuchAlgorithmException {
             super("SHA-384", 48);
         }
     }
 
     public static final class SHA512 extends BotanMessageDigest {
-        public SHA512() {
+        public SHA512() throws NoSuchAlgorithmException {
             super("SHA-512", 64);
         }
     }
@@ -88,85 +133,97 @@ public class BotanMessageDigest extends MessageDigestSpi {
     // SHA-3 algorithm
     @SuppressWarnings("typename")
     public static final class SHA3_224 extends BotanMessageDigest {
-        public SHA3_224() {
-            super("SHA3-224", 28);
+        public SHA3_224() throws NoSuchAlgorithmException {
+            super("SHA-3(224)", 28);
         }
     }
 
     @SuppressWarnings("typename")
     public static final class SHA3_256 extends BotanMessageDigest {
-        public SHA3_256() {
-            super("SHA3-256", 32);
+        public SHA3_256() throws NoSuchAlgorithmException {
+            super("SHA-3(256)", 32);
         }
     }
 
     @SuppressWarnings("typename")
     public static final class SHA3_384 extends BotanMessageDigest {
-        public SHA3_384() {
-            super("SHA3-384", 48);
+        public SHA3_384() throws NoSuchAlgorithmException {
+            super("SHA-3(384)", 48);
         }
     }
 
     @SuppressWarnings("typename")
     public static final class SHA3_512 extends BotanMessageDigest {
-        public SHA3_512() {
-            super("SHA3-512", 64);
+        public SHA3_512() throws NoSuchAlgorithmException {
+            super("SHA-3(512)", 64);
         }
     }
 
     //Keccak algorithm
     public static final class Keccak224 extends BotanMessageDigest {
-        public Keccak224() {
-            super("KECCAK-224", 28);
+        public Keccak224() throws NoSuchAlgorithmException {
+            super("Keccak-1600(224)", 28);
         }
     }
 
     public static final class Keccak256 extends BotanMessageDigest {
-        public Keccak256() {
-            super("KECCAK-256", 32);
+        public Keccak256() throws NoSuchAlgorithmException {
+            super("Keccak-1600(256)", 32);
         }
     }
 
     public static final class Keccak384 extends BotanMessageDigest {
-        public Keccak384() {
-            super("KECCAK-384", 48);
+        public Keccak384() throws NoSuchAlgorithmException {
+            super("Keccak-1600(384)", 48);
         }
     }
 
     public static final class Keccak512 extends BotanMessageDigest {
-        public Keccak512() {
-            super("KECCAK-512", 64);
+        public Keccak512() throws NoSuchAlgorithmException {
+            super("Keccak-1600(512)", 64);
         }
     }
 
     // Blake2b algorithm
     public static final class Blake2b160 extends BotanMessageDigest {
-        public Blake2b160() {
-            super("BLAKE2B-160", 20);
+        public Blake2b160() throws NoSuchAlgorithmException {
+            super("Blake2b(160)", 20);
         }
     }
 
     public static final class Blake2b256 extends BotanMessageDigest {
-        public Blake2b256() {
-            super("BLAKE2B-256", 32);
+        public Blake2b256() throws NoSuchAlgorithmException {
+            super("Blake2b(256)", 32);
         }
     }
 
     public static final class Blake2b384 extends BotanMessageDigest {
-        public Blake2b384() {
-            super("BLAKE2B-384", 48);
+        public Blake2b384() throws NoSuchAlgorithmException {
+            super("Blake2b(384)", 48);
         }
     }
 
     public static final class Blake2b512 extends BotanMessageDigest {
-        public Blake2b512() {
-            super("BLAKE2B-512", 64);
+        public Blake2b512() throws NoSuchAlgorithmException {
+            super("Blake2b(512)", 64);
         }
     }
 
-    // RIPEMD-160 algorithm
+    // MD algorithms
+    public static final class MD4 extends BotanMessageDigest {
+        public MD4() throws NoSuchAlgorithmException {
+            super("MD4", 16);
+        }
+    }
+
+    public static final class MD5 extends BotanMessageDigest {
+        public MD5() throws NoSuchAlgorithmException {
+            super("MD5", 16);
+        }
+    }
+
     public static final class RipeMd160 extends BotanMessageDigest {
-        public RipeMd160() {
+        public RipeMd160() throws NoSuchAlgorithmException {
             super("RIPEMD-160", 20);
         }
     }

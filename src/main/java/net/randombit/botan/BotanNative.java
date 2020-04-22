@@ -10,15 +10,10 @@
 package net.randombit.botan;
 
 import jnr.ffi.Pointer;
-import jnr.ffi.Runtime;
-import jnr.ffi.Struct;
 import jnr.ffi.annotations.In;
 import jnr.ffi.annotations.Out;
 import jnr.ffi.byref.NativeLongByReference;
 import jnr.ffi.byref.PointerByReference;
-import jnr.ffi.types.size_t;
-
-import java.nio.ByteBuffer;
 
 public interface BotanNative {
 
@@ -151,6 +146,7 @@ public interface BotanNative {
      * @param hash hash object
      * @return 0 if success, error if invalid object handle
      */
+    //TODO: do we really need this ?
     int botan_hash_destroy(Pointer hash);
 
     /**

@@ -49,6 +49,14 @@ public final class BotanProvider extends Provider {
     }
 
     private void addMdAlgorithms() {
+        put("MessageDigest.MD4", PACKAGE_NAME + DIGEST_PREFIX + "BotanMessageDigest$MD4");
+        put("Alg.Alias.MessageDigest.MD4", "MD4");
+        put("Alg.Alias.MessageDigest.1.3.6.1.4.1.37476.3.2.1.99.1", "MD4");
+
+        put("MessageDigest.MD5", PACKAGE_NAME + DIGEST_PREFIX + "BotanMessageDigest$MD5");
+        put("Alg.Alias.MessageDigest.MD5", "MD5");
+        put("Alg.Alias.MessageDigest.1.2.840.113549.2.5", "MD5");
+
         put("MessageDigest.RIPEMD-160", PACKAGE_NAME + DIGEST_PREFIX + "BotanMessageDigest$RipeMd160");
         put("Alg.Alias.MessageDigest.RIPEMD160", "RIPEMD-160");
         put("Alg.Alias.MessageDigest.1.3.36.3.2.1", "RIPEMD-160");

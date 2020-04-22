@@ -12,6 +12,7 @@
     <properties>
         <jnr-ffi-version>2.1.12</jnr-ffi-version>
         <junit-version>4.13</junit-version>
+        <bouncy-castle-version>1.65</bouncy-castle-version>
         <maven-checkstyle-version>2.12</maven-checkstyle-version>
 
         <java.version>1.8</java.version>
@@ -34,6 +35,15 @@
             <version>${junit-version}</version>
             <scope>test</scope>
         </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk15on -->
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk15on</artifactId>
+            <version>${bouncy-castle-version}</version>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
     <build>
