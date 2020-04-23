@@ -164,4 +164,37 @@ public class BotanMessageDigestTest {
         }
     }
 
+    @Test
+    public void testBotanPerformance() throws GeneralSecurityException, InterruptedException {
+        if (isSupportedByBouncyCastle) {
+            final MessageDigest bc = MessageDigest.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
+            final MessageDigest botan = MessageDigest.getInstance(algorithm, BotanProvider.PROVIDER_NAME);
+
+            final long startBc = System.nanoTime();
+            for (int i = 0; i < 1_000; i++) {
+                bc.update("some input".getBytes());
+            }
+            final byte[] expected = bc.digest();
+            final long endBc = System.nanoTime();
+
+            final long startBotan = System.nanoTime();
+            for (int i = 0; i < 1_000; i++) {
+                botan.update("some input".getBytes());
+            }
+            final byte[] actual = botan.digest();
+            final long endBotan = System.nanoTime();
+
+            double difference = (endBc - startBc) - (endBotan - startBotan);
+            difference /= (endBc - startBc);
+            difference *= 100;
+
+            System.out.println("BC    : " + (endBc - startBc) + " ns");
+            System.out.println("Botan : " + (endBotan - startBotan) + " ns");
+            System.out.println(String.format(algorithm + " Botan faster/slower than Bouncy castle by: %.2f ", difference) + "%");
+
+            Assert.assertArrayEquals("Digest mismatch with Bouncy Castle provider for algorithm "
+                    + algorithm, expected, actual);
+        }
+    }
+
 }

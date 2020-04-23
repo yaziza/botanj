@@ -9,8 +9,9 @@
 
 package net.randombit.botan.mac;
 
+import java.security.GeneralSecurityException;
+import java.security.Security;
 import net.randombit.botan.BotanProvider;
-import net.randombit.botan.codec.HexUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.Assert;
 import org.junit.Before;
@@ -20,9 +21,6 @@ import org.junit.runners.Parameterized;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
-import java.security.GeneralSecurityException;
-import java.security.MessageDigest;
-import java.security.Security;
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -135,6 +133,44 @@ public class BotanMacTest {
 
             final byte[] expected = bc.doFinal("Hello".getBytes());
             final byte[] actual = botan.doFinal();
+
+            Assert.assertArrayEquals("MAC mismatch with Bouncy Castle provider for algorithm "
+                    + algorithm, expected, actual);
+        }
+    }
+
+    @Test
+    public void testBotanPerformance() throws GeneralSecurityException, InterruptedException {
+        if (isSupportedByBouncyCastle) {
+            final SecretKeySpec key = new SecretKeySpec(new byte[size], algorithm);
+
+            final Mac bc = Mac.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
+            final Mac botan = Mac.getInstance(algorithm, BotanProvider.PROVIDER_NAME);
+
+            bc.init(key);
+            botan.init(key);
+
+            final long startBc = System.nanoTime();
+            for (int i = 0; i < 1_000; i++) {
+                bc.update("some input".getBytes());
+            }
+            final byte[] expected = bc.doFinal();
+            final long endBc = System.nanoTime();
+
+            final long startBotan = System.nanoTime();
+            for (int i = 0; i < 1_000; i++) {
+                botan.update("some input".getBytes());
+            }
+            final byte[] actual = botan.doFinal();
+            final long endBotan = System.nanoTime();
+
+            double difference = (endBc - startBc) - (endBotan - startBotan);
+            difference /= (endBc - startBc);
+            difference *= 100;
+
+            System.out.println("BC    : " + (endBc - startBc) + " ns");
+            System.out.println("Botan : " + (endBotan - startBotan + " ns"));
+            System.out.println(String.format(algorithm + " Botan faster/slower than Bouncy castle by: %.2f ", difference) + "%");
 
             Assert.assertArrayEquals("MAC mismatch with Bouncy Castle provider for algorithm "
                     + algorithm, expected, actual);
