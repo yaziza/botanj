@@ -94,6 +94,7 @@ public final class BotanProvider extends Provider {
         put("Alg.Alias.MessageDigest.2.16.840.1.101.3.4.2.2", "SHA-384");
 
         put("MessageDigest.SHA-512", PACKAGE_NAME + DIGEST_PREFIX + "BotanMessageDigest$SHA512");
+        put("Alg.Alias.MessageDigest.SHA2", "SHA-512");
         put("Alg.Alias.MessageDigest.SHA512", "SHA-512");
         put("Alg.Alias.MessageDigest.2.16.840.1.101.3.4.2.3", "SHA-512");
     }
@@ -109,6 +110,7 @@ public final class BotanProvider extends Provider {
         put("Alg.Alias.MessageDigest.2.16.840.1.101.3.4.2.9", "SHA3-384");
 
         put("MessageDigest.SHA3-512", PACKAGE_NAME + DIGEST_PREFIX + "BotanMessageDigest$SHA3_512");
+        put("Alg.Alias.MessageDigest.SHA3", "SHA3-512");
         put("Alg.Alias.MessageDigest.2.16.840.1.101.3.4.2.10", "SHA3-512");
     }
 
@@ -123,6 +125,7 @@ public final class BotanProvider extends Provider {
         put("Alg.Alias.MessageDigest.Keccak384", "KECCAK-384");
 
         put("MessageDigest.KECCAK-512", PACKAGE_NAME + DIGEST_PREFIX + "BotanMessageDigest$Keccak512");
+        put("Alg.Alias.MessageDigest.KECCAK", "KECCAK-512");
         put("Alg.Alias.MessageDigest.Keccak512", "KECCAK-512");
     }
 
@@ -140,6 +143,7 @@ public final class BotanProvider extends Provider {
         put("Alg.Alias.MessageDigest.1.3.6.1.4.1.1722.12.2.1.12", "BLAKE2B-384");
 
         put("MessageDigest.BLAKE2B-512", PACKAGE_NAME + DIGEST_PREFIX + "BotanMessageDigest$Blake2b512");
+        put("Alg.Alias.MessageDigest.BLAKE2B", "BLAKE2B-512");
         put("Alg.Alias.MessageDigest.Blake2b512", "BLAKE2B-512");
         put("Alg.Alias.MessageDigest.1.3.6.1.4.1.1722.12.2.1.16", "BLAKE2B-512");
     }
@@ -155,16 +159,17 @@ public final class BotanProvider extends Provider {
         put("Alg.Alias.Mac.HmacSHA1", PACKAGE_NAME + MAC_PREFIX + "BotanMac$HMacSha1");
 
         put("Mac.HMAC-SHA224", PACKAGE_NAME + MAC_PREFIX + "BotanMac$HMacSha224");
-        put("Alg.Alias.HmacSHA224", PACKAGE_NAME + MAC_PREFIX + "BotanMac$HMacSha224");
+        put("Alg.Alias.Mac.HmacSHA224", PACKAGE_NAME + MAC_PREFIX + "BotanMac$HMacSha224");
 
         put("Mac.HMAC-SHA256", PACKAGE_NAME + MAC_PREFIX + "BotanMac$HMacSha256");
-        put("Alg.Alias.HmacSHA256", PACKAGE_NAME + MAC_PREFIX + "BotanMac$HMacSha256");
+        put("Alg.Alias.Mac.HmacSHA256", PACKAGE_NAME + MAC_PREFIX + "BotanMac$HMacSha256");
 
         put("Mac.HMAC-SHA384", PACKAGE_NAME + MAC_PREFIX + "BotanMac$HMacSha384");
-        put("Alg.Alias.HmacSHA384", PACKAGE_NAME + MAC_PREFIX + "BotanMac$HMacSha384");
+        put("Alg.Alias.Mac.HmacSHA384", PACKAGE_NAME + MAC_PREFIX + "BotanMac$HMacSha384");
 
         put("Mac.HMAC-SHA512", PACKAGE_NAME + MAC_PREFIX + "BotanMac$HMacSha512");
-        put("Alg.Alias.HmacSHA512", PACKAGE_NAME + MAC_PREFIX + "BotanMac$HMacSha512");
+        put("Mac.HMAC-SHA2", PACKAGE_NAME + MAC_PREFIX + "BotanMac$HMacSha512");
+        put("Alg.Alias.Mac.HmacSHA512", PACKAGE_NAME + MAC_PREFIX + "BotanMac$HMacSha512");
     }
 
     private void addAesAlgorithm() {

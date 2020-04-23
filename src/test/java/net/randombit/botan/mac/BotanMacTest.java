@@ -38,6 +38,7 @@ public class BotanMacTest {
                 {"HMAC-SHA256", 32, true},
                 {"HMAC-SHA384", 48, true},
                 {"HMAC-SHA512", 64, true},
+                {"HMAC-SHA2", 64, false},
                 {"HMAC-MD5", 16, true},
                 {"HMAC-RIPEMD160", 20, true},
         });

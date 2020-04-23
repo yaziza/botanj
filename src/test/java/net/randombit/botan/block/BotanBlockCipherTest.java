@@ -85,9 +85,6 @@ public class BotanBlockCipherTest {
             final byte[] expected = bc.doFinal(new byte[blockSize]);
             final byte[] actual = botan.doFinal(new byte[blockSize]);
 
-            System.out.println(HexUtils.encodeToHexString(actual));
-            System.out.println(HexUtils.encodeToHexString(expected));
-
             Assert.assertArrayEquals("Encryption mismatch with Bouncy Castle provider for algorithm "
                     + algorithm, expected, actual);
         }

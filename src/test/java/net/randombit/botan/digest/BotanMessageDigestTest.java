@@ -38,24 +38,28 @@ public class BotanMessageDigestTest {
                 {"sha-256", 32, true},
                 {"sha-384", 48, true},
                 {"sha-512", 64, true},
+                {"sha2", 64, false},
 
                 // SHA-3
                 {"sha3-224", 28, true},
                 {"sha3-256", 32, true},
                 {"sha3-384", 48, true},
                 {"sha3-512", 64, true},
+                {"sha3", 64, false},
 
                 // KECCAK
                 {"keccak-224", 28, true},
                 {"keccak-256", 32, true},
                 {"keccak-384", 48, true},
                 {"keccak-512", 64, true},
+                {"keccak", 64, false},
 
                 // Blake2b
                 {"blake2b-160", 20, true},
                 {"blake2b-256", 32, true},
                 {"blake2b-384", 48, true},
                 {"blake2b-512", 64, true},
+                {"blake2b", 64, false},
 
                 // MD
                 {"md4", 16, true},
