@@ -10,16 +10,14 @@
 package net.randombit.botan.digest;
 
 import jnr.ffi.byref.PointerByReference;
-import net.randombit.botan.Botan;
-import net.randombit.botan.BotanNative;
 
 import java.security.MessageDigestSpi;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
-public class BotanMessageDigest extends MessageDigestSpi implements Cloneable {
+import static net.randombit.botan.BotanProvider.NATIVE;
 
-    private static final BotanNative NATIVE = Botan.getInstance();
+public class BotanMessageDigest extends MessageDigestSpi implements Cloneable {
 
     /**
      * Holds the name of the hashing algorithm.
@@ -36,15 +34,11 @@ public class BotanMessageDigest extends MessageDigestSpi implements Cloneable {
      */
     private final PointerByReference hashRef;
 
-    /**
-     * Holds a dummy buffer for writing single bytes to the digest.
-     */
-    private final byte[] singleByte = new byte[1];
-
     private BotanMessageDigest(String name, int size) throws NoSuchAlgorithmException {
         this.name = name;
         this.size = size;
         this.hashRef = new PointerByReference();
+
         int err = NATIVE.botan_hash_init(hashRef, name, 0);
         if (err != 0) {
             String msg = NATIVE.botan_error_description(err);
@@ -65,14 +59,14 @@ public class BotanMessageDigest extends MessageDigestSpi implements Cloneable {
 
     @Override
     protected void engineUpdate(byte input) {
-        byte[] singleByte = new byte[]{input};
+        final byte[] singleByte = new byte[]{input};
 
         engineUpdate(singleByte, 0, 1);
     }
 
     @Override
     protected void engineUpdate(byte[] input, int offset, int len) {
-        byte[] bytes = Arrays.copyOfRange(input, offset, input.length);
+        final byte[] bytes = Arrays.copyOfRange(input, offset, input.length);
 
         NATIVE.botan_hash_update(hashRef.getValue(), bytes, len);
     }
@@ -92,7 +86,7 @@ public class BotanMessageDigest extends MessageDigestSpi implements Cloneable {
 
     @Override
     public Object clone() {
-        PointerByReference clone = new PointerByReference();
+        final PointerByReference clone = new PointerByReference();
         NATIVE.botan_hash_copy_state(clone, hashRef.getValue());
 
         return new BotanMessageDigest(name, size, clone);

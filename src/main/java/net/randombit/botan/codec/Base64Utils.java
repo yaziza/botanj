@@ -10,47 +10,55 @@
 package net.randombit.botan.codec;
 
 import jnr.ffi.byref.NativeLongByReference;
-import net.randombit.botan.Botan;
-import net.randombit.botan.BotanNative;
 
 import java.util.Arrays;
 
-public final class Base64Utils {
+import static net.randombit.botan.BotanProvider.NATIVE;
 
-    private static final BotanNative NATIVE = Botan.getInstance();
+public final class Base64Utils {
 
     private Base64Utils() {
         // Not meant to be instantiated
     }
 
+    /**
+     * Performs bas64 encoding.
+     *
+     * @param input input
+     * @return encoded output
+     */
     public static byte[] encode(byte[] input) {
         int outputSize = base64OutputLength(input);
 
         final byte[] result = new byte[outputSize];
         final NativeLongByReference length = new NativeLongByReference();
 
-        int err = NATIVE.botan_base64_encode(input, input.length, result, length);
-        if (err != 0) {
-            //TODO: throw err
-            System.out.println(NATIVE.botan_error_description(err));
-        }
+        NATIVE.botan_base64_encode(input, input.length, result, length);
 
         return result;
     }
 
+    /**
+     * Performs bas64 decoding.
+     *
+     * @param input encoded input
+     * @return decoded output
+     */
     public static byte[] decode(byte[] input) {
         final byte[] result = new byte[base64InputLength(input)];
         final NativeLongByReference length = new NativeLongByReference();
 
-        int err = NATIVE.botan_base64_decode(new String(input), input.length, result, length);
-        if (err != 0) {
-            //TODO: throw err
-            System.out.println(NATIVE.botan_error_description(err));
-        }
+        NATIVE.botan_base64_decode(new String(input), input.length, result, length);
 
         return Arrays.copyOfRange(result, 0, length.intValue());
     }
 
+    /**
+     * Performs bas64 decoding.
+     *
+     * @param input {@link String} input
+     * @return decoded output
+     */
     public static byte[] decode(String input) {
         return decode(input.getBytes());
     }

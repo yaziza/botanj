@@ -9,17 +9,22 @@
 
 package net.randombit.botan;
 
+import jnr.ffi.LibraryLoader;
+
 import java.security.Provider;
 
 public final class BotanProvider extends Provider {
+
+    private static final String RELATIVE_LIB_PATH = "/native/lib/libbotan-2.dylib";
+    private static final String ABSOLUTE_LIB_PATH = BotanProvider.class.getResource(RELATIVE_LIB_PATH).getPath();
+    public static final BotanNative NATIVE = LibraryLoader.create(BotanNative.class).load(ABSOLUTE_LIB_PATH);
 
     public static final String PROVIDER_NAME = "Botan";
     private static final String PROVIDER_INFO = "Botan Java Security Provider";
 
     private static final String PACKAGE_NAME = BotanProvider.class.getPackage().getName();
     private static final String DIGEST_PREFIX = ".digest.";
-
-    private static final BotanNative BOTAN_NATIVE = Botan.getInstance();
+    private static final String MAC_PREFIX = ".mac.";
 
     public BotanProvider() {
         super(PROVIDER_NAME, 0, PROVIDER_INFO);
@@ -31,6 +36,9 @@ public final class BotanProvider extends Provider {
         addSha3Algorithms();
         addKeccakAlgorithms();
         addBlake2Algorithms();
+
+        // Message Authentication Codes
+        addHmacAlgorithms();
     }
 
     @Override
@@ -40,12 +48,12 @@ public final class BotanProvider extends Provider {
 
     @Override
     public double getVersion() {
-        return BOTAN_NATIVE.botan_ffi_api_version();
+        return NATIVE.botan_ffi_api_version();
     }
 
     @Override
     public String toString() {
-        return BOTAN_NATIVE.botan_version_string();
+        return NATIVE.botan_version_string();
     }
 
     private void addMdAlgorithms() {
@@ -130,6 +138,29 @@ public final class BotanProvider extends Provider {
         put("MessageDigest.BLAKE2B-512", PACKAGE_NAME + DIGEST_PREFIX + "BotanMessageDigest$Blake2b512");
         put("Alg.Alias.MessageDigest.Blake2b512", "BLAKE2B-512");
         put("Alg.Alias.MessageDigest.1.3.6.1.4.1.1722.12.2.1.16", "BLAKE2B-512");
+    }
+
+    private void addHmacAlgorithms() {
+        put("Mac.HMAC-MD5", PACKAGE_NAME + MAC_PREFIX + "BotanMac$HMacMd5");
+        put("Alg.Alias.Mac.HmacMD5", PACKAGE_NAME + MAC_PREFIX + "BotanMac$HMacMd5");
+
+        put("Mac.HMAC-RIPEMD160", PACKAGE_NAME + MAC_PREFIX + "BotanMac$HMacRipeMd160");
+        put("Alg.Alias.Mac.HmacRipeMd160", PACKAGE_NAME + MAC_PREFIX + "BotanMac$HMacRipeMd160");
+
+        put("Mac.HMAC-SHA1", PACKAGE_NAME + MAC_PREFIX + "BotanMac$HMacSha1");
+        put("Alg.Alias.Mac.HmacSHA1", PACKAGE_NAME + MAC_PREFIX + "BotanMac$HMacSha1");
+
+        put("Mac.HMAC-SHA224", PACKAGE_NAME + MAC_PREFIX + "BotanMac$HMacSha224");
+        put("Alg.Alias.HmacSHA224", PACKAGE_NAME + MAC_PREFIX + "BotanMac$HMacSha224");
+
+        put("Mac.HMAC-SHA256", PACKAGE_NAME + MAC_PREFIX + "BotanMac$HMacSha256");
+        put("Alg.Alias.HmacSHA256", PACKAGE_NAME + MAC_PREFIX + "BotanMac$HMacSha256");
+
+        put("Mac.HMAC-SHA384", PACKAGE_NAME + MAC_PREFIX + "BotanMac$HMacSha384");
+        put("Alg.Alias.HmacSHA384", PACKAGE_NAME + MAC_PREFIX + "BotanMac$HMacSha384");
+
+        put("Mac.HMAC-SHA512", PACKAGE_NAME + MAC_PREFIX + "BotanMac$HMacSha512");
+        put("Alg.Alias.HmacSHA512", PACKAGE_NAME + MAC_PREFIX + "BotanMac$HMacSha512");
     }
 
 }

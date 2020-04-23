@@ -80,7 +80,7 @@ public interface BotanNative {
      * @param inputLength length of x in bytes
      * @param output      an array of at least x*2 bytes
      * @param flags       flags out be upper or lower case?
-     * @return 0 on success
+     * @return 0 on success, a negative value on failure
      */
     int botan_hex_encode(@In byte[] input, @In long inputLength, @Out byte[] output, @In long flags);
 
@@ -91,7 +91,7 @@ public interface BotanNative {
      * @param inputLength  the length of the input
      * @param output       the output buffer should be at least strlen(input)/2 bytes
      * @param outputLength the size of the output
-     * @return 0 on success
+     * @return 0 on success, a negative value on failure
      */
     int botan_hex_decode(@In byte[] input, @In long inputLength, @Out byte[] output,
                          @Out NativeLongByReference outputLength);
@@ -103,7 +103,7 @@ public interface BotanNative {
      * @param inputLength  the length of the input
      * @param output       the output buffer
      * @param outputLength the size of the output
-     * @return 0 on success
+     * @return 0 on success, a negative value on failure
      */
     int botan_base64_encode(@In byte[] input, @In long inputLength, @Out byte[] output,
                             @Out NativeLongByReference outputLength);
@@ -115,7 +115,7 @@ public interface BotanNative {
      * @param inputLength  the length of the input
      * @param output       the output buffer
      * @param outputLength the size of the output
-     * @return 0 on success
+     * @return 0 on success, a negative value on failure
      */
     int botan_base64_decode(@In String input, @In long inputLength, @Out byte[] output,
                             @Out NativeLongByReference outputLength);
@@ -127,8 +127,9 @@ public interface BotanNative {
      * @param hashName name of the hash function, e.g., "SHA-384"
      * @param flags    should be 0 in current API revision, all other uses are reserved
      *                 and return BOTAN_FFI_ERROR_BAD_FLAG
+     * @return 0 on success, a negative value on failure
      */
-    int botan_hash_init(PointerByReference hash, @In String hashName, long flags);
+    int botan_hash_init(PointerByReference hash, @In String hashName, @In long flags);
 
     /**
      * Copy the state of a hash function object
@@ -202,7 +203,86 @@ public interface BotanNative {
      * @param hash   the object to read
      * @param name   output buffer
      * @param length on input, the length of buffer, on success the number of bytes written
+     * @return 0 on success, a negative value on failure
      */
     int botan_hash_name(Pointer hash, @In @Out byte[] name, @In @Out NativeLongByReference length);
+
+    /**
+     * Initializes a message authentication code object.
+     *
+     * @param mac   mac object
+     * @param name  name of the hash function, e.g., "HMAC(SHA-384)"
+     * @param flags should be 0 in current API revision, all other uses are reserved
+     *              and return a negative value (error code)
+     * @return 0 on success, a negative value on failure
+     */
+    int botan_mac_init(PointerByReference mac, @In String name, @In long flags);
+
+    /**
+     * Writes the output length of the message authentication code to *output_length.
+     *
+     * @param mac    mac object
+     * @param length output buffer to hold the MAC output length
+     * @return 0 on success, a negative value on failure
+     */
+    int botan_mac_output_length(Pointer mac, @Out NativeLongByReference length);
+
+    /**
+     * Sets the key on the MAC.
+     *
+     * @param mac    mac object
+     * @param key    buffer holding the key
+     * @param length size of the key buffer in bytes
+     * @return 0 on success, a negative value on failure
+     */
+    int botan_mac_set_key(Pointer mac, @In byte[] key, @In long length);
+
+    /**
+     * Sends more input to the message authentication code.
+     *
+     * @param mac    mac object
+     * @param buffer input buffer
+     * @param length number of bytes to read from the input buffer
+     * @return 0 on success, a negative value on failure
+     */
+    int botan_mac_update(Pointer mac, @In byte[] buffer, @In long length);
+
+    /**
+     * Finalizes the MAC computation and writes the output to
+     * out[0:botan_mac_output_length()] then reinitializes for computing
+     * another MAC as if botan_mac_clear had been called.
+     *
+     * @param mac mac object
+     * @param out output buffer
+     * @return 0 on success, a negative value on failure
+     */
+    int botan_mac_final(Pointer mac, @Out byte[] out);
+
+    /**
+     * Reinitializes the state of the MAC computation. A MAC can
+     * be computed (with update/final) immediately.
+     *
+     * @param mac mac object
+     * @return 0 on success, a negative value on failure
+     */
+    int botan_mac_clear(Pointer mac);
+
+    /**
+     * Frees all resources of the MAC object
+     *
+     * @param mac mac object
+     * @return 0 if success, error if invalid object handle
+     */
+    int botan_mac_destroy(Pointer mac);
+
+    /**
+     * Gets the name of this MAC
+     *
+     * @param mac    the object to read
+     * @param name   output buffer
+     * @param length on input, the length of buffer, on success the number of bytes written
+     * @return 0 on success, a negative value on failure
+     */
+    int botan_mac_name(Pointer mac, @In @Out byte[] name, @In @Out NativeLongByReference length);
 
 }

@@ -66,12 +66,12 @@ public class BotanMessageDigestTest {
 
     private final String algorithm;
     private final int size;
-    private final boolean isSupportedBySun;
+    private final boolean isSupportedByBouncyCastle;
 
-    public BotanMessageDigestTest(String algorithm, int size, boolean isSupportedBySun) {
+    public BotanMessageDigestTest(String algorithm, int size, boolean isSupportedByBouncyCastle) {
         this.algorithm = algorithm;
         this.size = size;
-        this.isSupportedBySun = isSupportedBySun;
+        this.isSupportedByBouncyCastle = isSupportedByBouncyCastle;
     }
 
     @BeforeClass
@@ -91,7 +91,7 @@ public class BotanMessageDigestTest {
 
     @Test
     public void testAgainstBouncyCastle() throws GeneralSecurityException {
-        if (isSupportedBySun) {
+        if (isSupportedByBouncyCastle) {
             final MessageDigest bc = MessageDigest.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
             final MessageDigest botan = MessageDigest.getInstance(algorithm, BotanProvider.PROVIDER_NAME);
 
@@ -105,7 +105,7 @@ public class BotanMessageDigestTest {
 
     @Test
     public void testCloneDigest() throws GeneralSecurityException, CloneNotSupportedException {
-        if (isSupportedBySun) {
+        if (isSupportedByBouncyCastle) {
             final MessageDigest bc = MessageDigest.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
             final MessageDigest botan = MessageDigest.getInstance(algorithm, BotanProvider.PROVIDER_NAME);
             final MessageDigest clone = (MessageDigest) botan.clone();
@@ -120,7 +120,7 @@ public class BotanMessageDigestTest {
 
     @Test
     public void testRestDigest() throws GeneralSecurityException {
-        if (isSupportedBySun) {
+        if (isSupportedByBouncyCastle) {
             final MessageDigest bc = MessageDigest.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
             final MessageDigest botan = MessageDigest.getInstance(algorithm, BotanProvider.PROVIDER_NAME);
 
@@ -135,21 +135,20 @@ public class BotanMessageDigestTest {
 
             Assert.assertArrayEquals("Digest mismatch with Bouncy Castle provider for algorithm "
                     + algorithm, expected, actual);
-
         }
     }
 
     @Test
     public void testSingleByteUpdate() throws GeneralSecurityException {
-        if (isSupportedBySun) {
+        if (isSupportedByBouncyCastle) {
             final MessageDigest bc = MessageDigest.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
             final MessageDigest botan = MessageDigest.getInstance(algorithm, BotanProvider.PROVIDER_NAME);
 
-            botan.update(new byte[] {'H'});
-            botan.update(new byte[] {'e'});
-            botan.update(new byte[] {'l'});
-            botan.update(new byte[] {'l'});
-            botan.update(new byte[] {'o'});
+            botan.update((byte) 'H');
+            botan.update((byte) 'e');
+            botan.update((byte) 'l');
+            botan.update((byte) 'l');
+            botan.update((byte) 'o');
 
             bc.update("Hello".getBytes());
 

@@ -10,43 +10,52 @@
 package net.randombit.botan.codec;
 
 import jnr.ffi.byref.NativeLongByReference;
-import net.randombit.botan.Botan;
-import net.randombit.botan.BotanNative;
 
 import java.util.Arrays;
 
-public final class HexUtils {
+import static net.randombit.botan.BotanProvider.NATIVE;
 
-    private static final BotanNative NATIVE = Botan.getInstance();
+public final class HexUtils {
 
     private HexUtils() {
         // Not meant to be instantiated
     }
 
+    /**
+     * Performs hex encoding.
+     *
+     * @param input input
+     * @return encoded output
+     */
     public static byte[] encode(byte[] input) {
         byte[] result = new byte[input.length * 2];
-        int err = NATIVE.botan_hex_encode(input, input.length, result, 1);
-        if (err != 0) {
-            //TODO: throw err
-            System.out.println(NATIVE.botan_error_description(err));
-        }
+
+        NATIVE.botan_hex_encode(input, input.length, result, 1);
 
         return result;
     }
 
+    /**
+     * Performs hex decoding.
+     *
+     * @param input encoded input
+     * @return decoded output
+     */
     public static byte[] decode(byte[] input) {
         byte[] result = new byte[input.length];
         NativeLongByReference length = new NativeLongByReference();
 
-        int err = NATIVE.botan_hex_decode(input, input.length, result, length);
-        if (err != 0) {
-            //TODO: throw err
-            System.out.println(NATIVE.botan_error_description(err));
-        }
+        NATIVE.botan_hex_decode(input, input.length, result, length);
 
         return Arrays.copyOfRange(result, 0, length.intValue());
     }
 
+    /**
+     * Performs hex decoding.
+     *
+     * @param input encoded {@link String} input
+     * @return decoded output
+     */
     public static byte[] decode(String input) {
         return decode(input.getBytes());
     }
