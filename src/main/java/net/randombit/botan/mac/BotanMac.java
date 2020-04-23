@@ -18,7 +18,7 @@ import java.security.Key;
 import java.security.spec.AlgorithmParameterSpec;
 import java.util.Arrays;
 
-import static net.randombit.botan.BotanProvider.NATIVE;
+import static net.randombit.botan.Botan.singleton;
 
 public class BotanMac extends MacSpi {
 
@@ -53,15 +53,15 @@ public class BotanMac extends MacSpi {
             throws InvalidKeyException, InvalidAlgorithmParameterException {
 
         String algorithm = String.format(name, key.getEncoded().length);
-        int err = NATIVE.botan_mac_init(macRef, algorithm, 0);
+        int err = singleton().botan_mac_init(macRef, algorithm, 0);
         if (err != 0) {
-            String msg = NATIVE.botan_error_description(err);
+            String msg = singleton().botan_error_description(err);
             throw new InvalidAlgorithmParameterException(msg);
         }
 
-        err = NATIVE.botan_mac_set_key(macRef.getValue(), key.getEncoded(), key.getEncoded().length);
+        err = singleton().botan_mac_set_key(macRef.getValue(), key.getEncoded(), key.getEncoded().length);
         if (err != 0) {
-            String msg = NATIVE.botan_error_description(err);
+            String msg = singleton().botan_error_description(err);
             throw new InvalidKeyException(msg);
         }
     }
@@ -77,20 +77,20 @@ public class BotanMac extends MacSpi {
     protected void engineUpdate(byte[] input, int offset, int len) {
         final byte[] bytes = Arrays.copyOfRange(input, offset, input.length);
 
-        NATIVE.botan_mac_update(macRef.getValue(), bytes, len);
+        singleton().botan_mac_update(macRef.getValue(), bytes, len);
     }
 
     @Override
     protected byte[] engineDoFinal() {
         final byte[] result = new byte[size];
-        NATIVE.botan_mac_final(macRef.getValue(), result);
+        singleton().botan_mac_final(macRef.getValue(), result);
 
         return result;
     }
 
     @Override
     protected void engineReset() {
-        NATIVE.botan_mac_clear(macRef.getValue());
+        singleton().botan_mac_clear(macRef.getValue());
     }
 
     // HMAC

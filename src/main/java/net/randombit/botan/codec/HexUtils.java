@@ -13,7 +13,7 @@ import jnr.ffi.byref.NativeLongByReference;
 
 import java.util.Arrays;
 
-import static net.randombit.botan.BotanProvider.NATIVE;
+import static net.randombit.botan.Botan.singleton;
 
 public final class HexUtils {
 
@@ -32,7 +32,7 @@ public final class HexUtils {
         int resultSize = Math.multiplyExact(input.length, 2);
         byte[] result = new byte[resultSize];
 
-        NATIVE.botan_hex_encode(input, input.length, result, 1);
+        singleton().botan_hex_encode(input, input.length, result, 1);
 
         return result;
     }
@@ -57,7 +57,7 @@ public final class HexUtils {
         byte[] result = new byte[input.length];
         NativeLongByReference length = new NativeLongByReference();
 
-        NATIVE.botan_hex_decode(input, input.length, result, length);
+        singleton().botan_hex_decode(input, input.length, result, length);
 
         return Arrays.copyOfRange(result, 0, length.intValue());
     }

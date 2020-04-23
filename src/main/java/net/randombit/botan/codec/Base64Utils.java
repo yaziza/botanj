@@ -13,7 +13,7 @@ import jnr.ffi.byref.NativeLongByReference;
 
 import java.util.Arrays;
 
-import static net.randombit.botan.BotanProvider.NATIVE;
+import static net.randombit.botan.Botan.singleton;
 
 public final class Base64Utils {
 
@@ -33,7 +33,7 @@ public final class Base64Utils {
         final byte[] result = new byte[outputSize];
         final NativeLongByReference length = new NativeLongByReference();
 
-        NATIVE.botan_base64_encode(input, input.length, result, length);
+        singleton().botan_base64_encode(input, input.length, result, length);
 
         return result;
     }
@@ -48,7 +48,7 @@ public final class Base64Utils {
         final byte[] result = new byte[base64InputLength(input)];
         final NativeLongByReference length = new NativeLongByReference();
 
-        NATIVE.botan_base64_decode(new String(input), input.length, result, length);
+        singleton().botan_base64_decode(new String(input), input.length, result, length);
 
         return Arrays.copyOfRange(result, 0, length.intValue());
     }

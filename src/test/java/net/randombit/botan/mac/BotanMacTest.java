@@ -170,7 +170,8 @@ public class BotanMacTest {
 
             System.out.println("BC    : " + (endBc - startBc) + " ns");
             System.out.println("Botan : " + (endBotan - startBotan + " ns"));
-            System.out.println(String.format(algorithm + " Botan faster/slower than Bouncy castle by: %.2f ", difference) + "%");
+            System.out.println(String.format(algorithm + " Botan faster/slower than Bouncy castle by: %.2f ",
+                    difference) + "%\n");
 
             Assert.assertArrayEquals("MAC mismatch with Bouncy Castle provider for algorithm "
                     + algorithm, expected, actual);

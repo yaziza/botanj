@@ -16,7 +16,6 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.ShortBufferException;
 import jnr.ffi.byref.PointerByReference;
-import net.randombit.botan.BotanProvider;
 
 import java.security.AlgorithmParameters;
 import java.security.InvalidAlgorithmParameterException;
@@ -27,7 +26,7 @@ import java.security.SecureRandom;
 import java.security.spec.AlgorithmParameterSpec;
 import java.util.Arrays;
 
-import static net.randombit.botan.BotanProvider.NATIVE;
+import static net.randombit.botan.Botan.singleton;
 
 public class BotanBlockCipher extends CipherSpi {
 
@@ -98,15 +97,15 @@ public class BotanBlockCipher extends CipherSpi {
         this.opmode = opmode;
         this.keySize = encodedKey.length;
 
-        int err = BotanProvider.NATIVE.botan_block_cipher_init(cipherRef, name + keySize * 8);
+        int err = singleton().botan_block_cipher_init(cipherRef, name + keySize * 8);
         if (err != 0) {
-            String msg = NATIVE.botan_error_description(err);
+            String msg = singleton().botan_error_description(err);
             throw new InvalidKeyException(msg);
         }
 
-        err = BotanProvider.NATIVE.botan_block_cipher_set_key(cipherRef.getValue(), encodedKey, encodedKey.length);
+        err = singleton().botan_block_cipher_set_key(cipherRef.getValue(), encodedKey, encodedKey.length);
         if (err != 0) {
-            String msg = NATIVE.botan_error_description(err);
+            String msg = singleton().botan_error_description(err);
             throw new InvalidKeyException(msg);
         }
     }
@@ -164,11 +163,11 @@ public class BotanBlockCipher extends CipherSpi {
         final byte[] output = new byte[nrOfBlocks * blockSize];
 
         if (Cipher.ENCRYPT_MODE == opmode) {
-            BotanProvider.NATIVE.botan_block_cipher_encrypt_blocks(
+            singleton().botan_block_cipher_encrypt_blocks(
                     cipherRef.getValue(), fromOffset, output, nrOfBlocks);
 
         } else if (Cipher.DECRYPT_MODE == opmode) {
-            BotanProvider.NATIVE.botan_block_cipher_decrypt_blocks(
+            singleton().botan_block_cipher_decrypt_blocks(
                     cipherRef.getValue(), fromOffset, output, nrOfBlocks);
 
         } else {

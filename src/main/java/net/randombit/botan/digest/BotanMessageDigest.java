@@ -15,7 +15,7 @@ import java.security.MessageDigestSpi;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
-import static net.randombit.botan.BotanProvider.NATIVE;
+import static net.randombit.botan.Botan.singleton;
 
 public class BotanMessageDigest extends MessageDigestSpi implements Cloneable {
 
@@ -39,9 +39,9 @@ public class BotanMessageDigest extends MessageDigestSpi implements Cloneable {
         this.size = size;
         this.hashRef = new PointerByReference();
 
-        int err = NATIVE.botan_hash_init(hashRef, name, 0);
+        int err = singleton().botan_hash_init(hashRef, name, 0);
         if (err != 0) {
-            String msg = NATIVE.botan_error_description(err);
+            String msg = singleton().botan_error_description(err);
             throw new NoSuchAlgorithmException(msg);
         }
     }
@@ -68,26 +68,26 @@ public class BotanMessageDigest extends MessageDigestSpi implements Cloneable {
     protected void engineUpdate(byte[] input, int offset, int len) {
         final byte[] bytes = Arrays.copyOfRange(input, offset, input.length);
 
-        NATIVE.botan_hash_update(hashRef.getValue(), bytes, len);
+        singleton().botan_hash_update(hashRef.getValue(), bytes, len);
     }
 
     @Override
     protected byte[] engineDigest() {
         final byte[] result = new byte[size];
-        NATIVE.botan_hash_final(hashRef.getValue(), result);
+        singleton().botan_hash_final(hashRef.getValue(), result);
 
         return result;
     }
 
     @Override
     protected void engineReset() {
-        NATIVE.botan_hash_clear(hashRef.getValue());
+        singleton().botan_hash_clear(hashRef.getValue());
     }
 
     @Override
     public Object clone() {
         final PointerByReference clone = new PointerByReference();
-        NATIVE.botan_hash_copy_state(clone, hashRef.getValue());
+        singleton().botan_hash_copy_state(clone, hashRef.getValue());
 
         return new BotanMessageDigest(name, size, clone);
     }

@@ -9,15 +9,9 @@
 
 package net.randombit.botan;
 
-import jnr.ffi.LibraryLoader;
-
 import java.security.Provider;
 
 public final class BotanProvider extends Provider {
-
-    private static final String RELATIVE_LIB_PATH = "/native/lib/libbotan-2.dylib";
-    private static final String ABSOLUTE_LIB_PATH = BotanProvider.class.getResource(RELATIVE_LIB_PATH).getPath();
-    public static final BotanNative NATIVE = LibraryLoader.create(BotanNative.class).load(ABSOLUTE_LIB_PATH);
 
     public static final String PROVIDER_NAME = "Botan";
     private static final String PROVIDER_INFO = "Botan Java Security Provider";
@@ -27,8 +21,12 @@ public final class BotanProvider extends Provider {
     private static final String MAC_PREFIX = ".mac.";
     private static final String BLOCK_CIPHER_PREFIX = ".block.";
 
+    private static final BotanNative NATIVE = Botan.singleton();
+
     public BotanProvider() {
         super(PROVIDER_NAME, 0, PROVIDER_INFO);
+
+        Botan.checkAvailability();
 
         // Message Digests
         addMdAlgorithm();
@@ -175,7 +173,6 @@ public final class BotanProvider extends Provider {
     private void addAesAlgorithm() {
         // FIXME: later on AES should never default to this
         put("Cipher.AES", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$Aes");
-
     }
 
 }
