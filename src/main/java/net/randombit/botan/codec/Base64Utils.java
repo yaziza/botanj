@@ -66,7 +66,11 @@ public final class Base64Utils {
     private static int base64OutputLength(byte[] output) {
         int n = output.length;
 
-        return (n * 4 + 2) / 3;
+        // Throwing an exception if the result overflows
+        n = Math.multiplyExact(n, 4);
+        n = Math.addExact(n, 2);
+
+        return n / 3;
     }
 
     private static int base64InputLength(byte[] input) {

@@ -28,11 +28,23 @@ public final class HexUtils {
      * @return encoded output
      */
     public static byte[] encode(byte[] input) {
-        byte[] result = new byte[input.length * 2];
+        // Throwing an exception if the result overflows
+        int resultSize = Math.multiplyExact(input.length, 2);
+        byte[] result = new byte[resultSize];
 
         NATIVE.botan_hex_encode(input, input.length, result, 1);
 
         return result;
+    }
+
+    /**
+     * Performs hex encoding.
+     *
+     * @param input input
+     * @return encoded output {@link String}
+     */
+    public static String encodeToHexString(byte[] input) {
+        return new String(encode(input));
     }
 
     /**

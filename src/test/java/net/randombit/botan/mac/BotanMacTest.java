@@ -10,6 +10,7 @@
 package net.randombit.botan.mac;
 
 import net.randombit.botan.BotanProvider;
+import net.randombit.botan.codec.HexUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.Assert;
 import org.junit.Before;
@@ -75,8 +76,8 @@ public class BotanMacTest {
         if (isSupportedByBouncyCastle) {
             final SecretKeySpec key = new SecretKeySpec(new byte[size], algorithm);
 
-            final Mac bc = Mac.getInstance(algorithm, BotanProvider.PROVIDER_NAME);
-            final Mac botan = Mac.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
+            final Mac bc = Mac.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
+            final Mac botan = Mac.getInstance(algorithm, BotanProvider.PROVIDER_NAME);
 
             bc.init(key);
             botan.init(key);
@@ -94,14 +95,17 @@ public class BotanMacTest {
         if (isSupportedByBouncyCastle) {
             final SecretKeySpec key = new SecretKeySpec(new byte[size], algorithm);
 
-            final Mac bc = Mac.getInstance(algorithm, BotanProvider.PROVIDER_NAME);
-            final Mac botan = Mac.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
+            final Mac bc = Mac.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
+            final Mac botan = Mac.getInstance(algorithm, BotanProvider.PROVIDER_NAME);
 
             bc.init(key);
             botan.init(key);
 
             botan.update("hello world".getBytes());
             botan.reset();
+
+            //TODO: check bc rest and remove this
+            botan.init(key);
 
             final byte[] expected = bc.doFinal("some input".getBytes());
             final byte[] actual = botan.doFinal("some input".getBytes());
@@ -116,8 +120,8 @@ public class BotanMacTest {
         if (isSupportedByBouncyCastle) {
             final SecretKeySpec key = new SecretKeySpec(new byte[size], algorithm);
 
-            final Mac bc = Mac.getInstance(algorithm, BotanProvider.PROVIDER_NAME);
-            final Mac botan = Mac.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
+            final Mac bc = Mac.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
+            final Mac botan = Mac.getInstance(algorithm, BotanProvider.PROVIDER_NAME);
 
             bc.init(key);
             botan.init(key);

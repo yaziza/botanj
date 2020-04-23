@@ -25,20 +25,24 @@ public final class BotanProvider extends Provider {
     private static final String PACKAGE_NAME = BotanProvider.class.getPackage().getName();
     private static final String DIGEST_PREFIX = ".digest.";
     private static final String MAC_PREFIX = ".mac.";
+    private static final String BLOCK_CIPHER_PREFIX = ".block.";
 
     public BotanProvider() {
         super(PROVIDER_NAME, 0, PROVIDER_INFO);
 
         // Message Digests
-        addMdAlgorithms();
-        addSha1Algorithms();
-        addSha2Algorithms();
-        addSha3Algorithms();
-        addKeccakAlgorithms();
-        addBlake2Algorithms();
+        addMdAlgorithm();
+        addSha1Algorithm();
+        addSha2Algorithm();
+        addSha3Algorithm();
+        addKeccakAlgorithm();
+        addBlake2Algorithm();
 
         // Message Authentication Codes
-        addHmacAlgorithms();
+        addHmacAlgorithm();
+
+        // Block Ciphers
+        addAesAlgorithm();
     }
 
     @Override
@@ -56,7 +60,7 @@ public final class BotanProvider extends Provider {
         return NATIVE.botan_version_string();
     }
 
-    private void addMdAlgorithms() {
+    private void addMdAlgorithm() {
         put("MessageDigest.MD4", PACKAGE_NAME + DIGEST_PREFIX + "BotanMessageDigest$MD4");
         put("Alg.Alias.MessageDigest.MD4", "MD4");
         put("Alg.Alias.MessageDigest.1.3.6.1.4.1.37476.3.2.1.99.1", "MD4");
@@ -70,13 +74,13 @@ public final class BotanProvider extends Provider {
         put("Alg.Alias.MessageDigest.1.3.36.3.2.1", "RIPEMD-160");
     }
 
-    private void addSha1Algorithms() {
+    private void addSha1Algorithm() {
         put("MessageDigest.SHA-1", PACKAGE_NAME + DIGEST_PREFIX + "BotanMessageDigest$SHA1");
         put("Alg.Alias.MessageDigest.SHA1", "SHA-1");
         put("Alg.Alias.MessageDigest.1.3.14.3.2.26", "SHA-1");
     }
 
-    private void addSha2Algorithms() {
+    private void addSha2Algorithm() {
         put("MessageDigest.SHA-224", PACKAGE_NAME + DIGEST_PREFIX + "BotanMessageDigest$SHA224");
         put("Alg.Alias.MessageDigest.SHA224", "SHA-224");
         put("Alg.Alias.MessageDigest.2.16.840.1.101.3.4.2.4", "SHA-224");
@@ -94,7 +98,7 @@ public final class BotanProvider extends Provider {
         put("Alg.Alias.MessageDigest.2.16.840.1.101.3.4.2.3", "SHA-512");
     }
 
-    private void addSha3Algorithms() {
+    private void addSha3Algorithm() {
         put("MessageDigest.SHA3-224", PACKAGE_NAME + DIGEST_PREFIX + "BotanMessageDigest$SHA3_224");
         put("Alg.Alias.MessageDigest.2.16.840.1.101.3.4.2.7", "SHA3-224");
 
@@ -108,7 +112,7 @@ public final class BotanProvider extends Provider {
         put("Alg.Alias.MessageDigest.2.16.840.1.101.3.4.2.10", "SHA3-512");
     }
 
-    private void addKeccakAlgorithms() {
+    private void addKeccakAlgorithm() {
         put("MessageDigest.KECCAK-224", PACKAGE_NAME + DIGEST_PREFIX + "BotanMessageDigest$Keccak224");
         put("Alg.Alias.MessageDigest.Keccak224", "KECCAK-224");
 
@@ -122,7 +126,7 @@ public final class BotanProvider extends Provider {
         put("Alg.Alias.MessageDigest.Keccak512", "KECCAK-512");
     }
 
-    private void addBlake2Algorithms() {
+    private void addBlake2Algorithm() {
         put("MessageDigest.BLAKE2B-160", PACKAGE_NAME + DIGEST_PREFIX + "BotanMessageDigest$Blake2b160");
         put("Alg.Alias.MessageDigest.Blake2b160", "BLAKE2B-160");
         put("Alg.Alias.MessageDigest.1.3.6.1.4.1.1722.12.2.1.5", "BLAKE2B-160");
@@ -140,7 +144,7 @@ public final class BotanProvider extends Provider {
         put("Alg.Alias.MessageDigest.1.3.6.1.4.1.1722.12.2.1.16", "BLAKE2B-512");
     }
 
-    private void addHmacAlgorithms() {
+    private void addHmacAlgorithm() {
         put("Mac.HMAC-MD5", PACKAGE_NAME + MAC_PREFIX + "BotanMac$HMacMd5");
         put("Alg.Alias.Mac.HmacMD5", PACKAGE_NAME + MAC_PREFIX + "BotanMac$HMacMd5");
 
@@ -161,6 +165,12 @@ public final class BotanProvider extends Provider {
 
         put("Mac.HMAC-SHA512", PACKAGE_NAME + MAC_PREFIX + "BotanMac$HMacSha512");
         put("Alg.Alias.HmacSHA512", PACKAGE_NAME + MAC_PREFIX + "BotanMac$HMacSha512");
+    }
+
+    private void addAesAlgorithm() {
+        // FIXME: later on AES should never default to this
+        put("Cipher.AES", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$Aes");
+
     }
 
 }

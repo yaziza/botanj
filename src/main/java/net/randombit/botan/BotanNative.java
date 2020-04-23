@@ -79,7 +79,7 @@ public interface BotanNative {
      * @param input       is some binary data
      * @param inputLength length of x in bytes
      * @param output      an array of at least x*2 bytes
-     * @param flags       flags out be upper or lower case?
+     * @param flags       output be upper or lower case?
      * @return 0 on success, a negative value on failure
      */
     int botan_hex_encode(@In byte[] input, @In long inputLength, @Out byte[] output, @In long flags);
@@ -284,5 +284,82 @@ public interface BotanNative {
      * @return 0 on success, a negative value on failure
      */
     int botan_mac_name(Pointer mac, @In @Out byte[] name, @In @Out NativeLongByReference length);
+
+    /**
+     * Initializes a block cipher object.
+     *
+     * @param cipher object
+     * @param name   name of the cipher
+     * @return 0 on success, a negative value on failure
+     */
+    int botan_block_cipher_init(PointerByReference cipher, @In String name);
+
+    /**
+     * Destroys a block cipher object.
+     *
+     * @param cipher object
+     * @return 0 if success, error if invalid object handle
+     */
+    int botan_block_cipher_destroy(Pointer cipher);
+
+    /**
+     * Reinitializes the block cipher.
+     *
+     * @param cipher object
+     * @return 0 on success, a negative value on failure
+     */
+    int botan_block_cipher_clear(Pointer cipher);
+
+    /**
+     * Sets the key for a block cipher instance.
+     *
+     * @param cipher object
+     * @param key    buffer holding the key
+     * @param length size of the key buffer in bytes
+     * @return 0 on success, a negative value on failure
+     */
+    int botan_block_cipher_set_key(Pointer cipher, @In byte[] key, @In long length);
+
+    /**
+     * Returns the positive block size of this block cipher, or negative to
+     * indicate an error.
+     *
+     * @param cipher object
+     * @return block size on success, a negative value on failure
+     */
+    int botan_block_cipher_block_size(Pointer cipher);
+
+    /**
+     * Encrypts one or more blocks with the cipher.
+     *
+     * @param cipher     object
+     * @param plainText  the plain text
+     * @param cipherText the cipher text
+     * @param nrOfBlocks number of blocks to be encrypted
+     * @return 0 on success, a negative value on failure
+     */
+    int botan_block_cipher_encrypt_blocks(Pointer cipher, @In byte[] plainText,
+                                          @Out byte[] cipherText, @In long nrOfBlocks);
+
+    /**
+     * Decrypts one or more blocks with the cipher.
+     *
+     * @param cipher     object
+     * @param cipherText the cipher text
+     * @param plainText  the plain text
+     * @param nrOfBlocks number of blocks to be decrypted
+     * @return 0 on success, a negative value on failure
+     */
+    int botan_block_cipher_decrypt_blocks(Pointer cipher, @In byte[] cipherText,
+                                          @Out byte[] plainText, @In long nrOfBlocks);
+
+    /**
+     * Gets the name of this block cipher.
+     *
+     * @param cipher     object
+     * @param name       output buffer
+     * @param nameLength on input, the length of buffer, on success the number of bytes written
+     */
+    int botan_block_cipher_name(Pointer cipher, @Out byte[] name, @In @Out NativeLongByReference nameLength);
 
 }
