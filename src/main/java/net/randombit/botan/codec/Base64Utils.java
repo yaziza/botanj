@@ -28,7 +28,7 @@ public final class Base64Utils {
      * @return encoded output
      */
     public static byte[] encode(byte[] input) {
-        int outputSize = base64OutputLength(input);
+        final int outputSize = base64OutputLength(input);
 
         final byte[] result = new byte[outputSize];
         final NativeLongByReference length = new NativeLongByReference();

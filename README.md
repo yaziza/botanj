@@ -18,9 +18,9 @@ implementation is compatible with other JSPs (e.g. Bouncy Castle), thus enabling
 Botanj uses [JNR-FFI](https://github.com/jnr/jnr-ffi) for loading Botan native code.
 
 ## Building The Library
-* [Install](https://botan.randombit.net/handbook/building.html) native Botan Library under `src/main/resources/native`
-* [Install](https://maven.apache.org/) Maven
-* [Install](https://openjdk.java.net/) Java 1.8+ (tested with openjdk8 / 11)
+* Install native [Botan](https://botan.randombit.net/handbook/building.html) Library under `src/main/resources/native`
+* Install Apache [Maven](https://maven.apache.org/)
+* Install Java 1.8+ (tested with [openjdk 8 / 11](https://openjdk.java.net/))
 * Run tests against Bouncy castle Provider:
 `mvn test`
 
@@ -36,7 +36,7 @@ An example describing the procedure to compute a MAC object:
 
 ```java
 final SecretKeySpec key = new SecretKeySpec(key, "HMAC-SHA512");
-final Mac mac = Mac.getInstance("HMAC-384", BotanProvider.PROVIDER_NAME);
+final Mac mac = Mac.getInstance("HMAC-SHA512", BotanProvider.PROVIDER_NAME);
 mac.init(key);
 final byte[] output = mac.doFinal("hello world".getBytes());
 ```

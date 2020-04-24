@@ -37,6 +37,12 @@ public class BotanMac extends MacSpi {
      */
     private final PointerByReference macRef;
 
+
+    /**
+     * Holds a dummy buffer for writing single bytes to the MAC.
+     */
+    private final byte[] singleByte = new byte[1];
+
     private BotanMac(String name, int size) {
         this.name = name;
         this.size = size;
@@ -52,14 +58,14 @@ public class BotanMac extends MacSpi {
     protected void engineInit(Key key, AlgorithmParameterSpec params)
             throws InvalidKeyException, InvalidAlgorithmParameterException {
 
-        String algorithm = String.format(name, key.getEncoded().length);
-        int err = singleton().botan_mac_init(macRef, algorithm, 0);
+        int err = singleton().botan_mac_init(macRef, name, 0);
         if (err != 0) {
             String msg = singleton().botan_error_description(err);
             throw new InvalidAlgorithmParameterException(msg);
         }
 
-        err = singleton().botan_mac_set_key(macRef.getValue(), key.getEncoded(), key.getEncoded().length);
+        err = singleton().botan_mac_set_key(macRef.getValue(), key.getEncoded(),
+                key.getEncoded().length);
         if (err != 0) {
             String msg = singleton().botan_error_description(err);
             throw new InvalidKeyException(msg);
@@ -68,7 +74,7 @@ public class BotanMac extends MacSpi {
 
     @Override
     protected void engineUpdate(byte input) {
-        final byte[] singleByte = new byte[]{input};
+        singleByte[0] = input;
 
         engineUpdate(singleByte, 0, 1);
     }

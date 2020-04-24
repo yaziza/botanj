@@ -132,7 +132,7 @@ public interface BotanNative {
     int botan_hash_init(@Out PointerByReference hash, @In String hashName, @In long flags);
 
     /**
-     * Copy the state of a hash function object
+     * Copy the state of a hash function object.
      *
      * @param dest   destination hash object
      * @param source source hash object
@@ -141,7 +141,7 @@ public interface BotanNative {
     int botan_hash_copy_state(@Out PointerByReference dest, @In Pointer source);
 
     /**
-     * Writes the output length of the hash function to *output_length
+     * Writes the output length of the hash function to the given reference.
      *
      * @param hash   hash object
      * @param length output buffer to hold the hash function output length
@@ -150,7 +150,7 @@ public interface BotanNative {
     int botan_hash_output_length(@In Pointer hash, @Out NativeLongByReference length);
 
     /**
-     * Writes the block size of the hash function to *block_size
+     * Writes the block size of the hash function to the given reference.
      *
      * @param hash hash object
      * @param size output buffer to hold the hash function output length
@@ -159,7 +159,7 @@ public interface BotanNative {
     int botan_hash_block_size(@In Pointer hash, @Out NativeLongByReference size);
 
     /**
-     * Send more input to the hash function
+     * Sends more input to the hash function.
      *
      * @param hash   hash object
      * @param input  input buffer
@@ -198,9 +198,9 @@ public interface BotanNative {
     int botan_hash_destroy(@In Pointer hash);
 
     /**
-     * Get the name of this hash function
+     * Gets the name of this hash function.
      *
-     * @param hash   the object to read
+     * @param hash   hash object
      * @param name   output buffer
      * @param length on input, the length of buffer, on success the number of bytes written
      * @return 0 on success, a negative value on failure
@@ -210,7 +210,7 @@ public interface BotanNative {
     /**
      * Initializes a message authentication code object.
      *
-     * @param mac   mac object
+     * @param mac   MAC object
      * @param name  name of the hash function, e.g., "HMAC(SHA-384)"
      * @param flags should be 0 in current API revision, all other uses are reserved
      *              and return a negative value (error code)
@@ -219,9 +219,9 @@ public interface BotanNative {
     int botan_mac_init(@Out PointerByReference mac, @In String name, @In long flags);
 
     /**
-     * Writes the output length of the message authentication code to *output_length.
+     * Writes the output length of the message authentication code to the given reference.
      *
-     * @param mac    mac object
+     * @param mac    MAC object
      * @param length output buffer to hold the MAC output length
      * @return 0 on success, a negative value on failure
      */
@@ -230,7 +230,7 @@ public interface BotanNative {
     /**
      * Sets the key on the MAC.
      *
-     * @param mac    mac object
+     * @param mac    MAC object
      * @param key    buffer holding the key
      * @param length size of the key buffer in bytes
      * @return 0 on success, a negative value on failure
@@ -240,7 +240,7 @@ public interface BotanNative {
     /**
      * Sends more input to the message authentication code.
      *
-     * @param mac    mac object
+     * @param mac    MAC object
      * @param buffer input buffer
      * @param length number of bytes to read from the input buffer
      * @return 0 on success, a negative value on failure
@@ -252,7 +252,7 @@ public interface BotanNative {
      * out[0:botan_mac_output_length()] then reinitializes for computing
      * another MAC as if botan_mac_clear had been called.
      *
-     * @param mac mac object
+     * @param mac MAC object
      * @param out output buffer
      * @return 0 on success, a negative value on failure
      */
@@ -262,23 +262,24 @@ public interface BotanNative {
      * Reinitializes the state of the MAC computation. A MAC can
      * be computed (with update/final) immediately.
      *
-     * @param mac mac object
+     * @param mac MAC object
      * @return 0 on success, a negative value on failure
      */
     int botan_mac_clear(@In Pointer mac);
 
     /**
-     * Frees all resources of the MAC object
+     * Frees all resources of the MAC object.
      *
-     * @param mac mac object
+     * @param mac MAC object
      * @return 0 if success, error if invalid object handle
      */
+    //TODO: do we really need this ?
     int botan_mac_destroy(@In Pointer mac);
 
     /**
-     * Gets the name of this MAC
+     * Gets the name of this MAC.
      *
-     * @param mac    the object to read
+     * @param mac    MAC object
      * @param name   output buffer
      * @param length on input, the length of buffer, on success the number of bytes written
      * @return 0 on success, a negative value on failure
@@ -288,7 +289,7 @@ public interface BotanNative {
     /**
      * Initializes a block cipher object.
      *
-     * @param cipher object
+     * @param cipher cipher object
      * @param name   name of the cipher
      * @return 0 on success, a negative value on failure
      */
@@ -297,15 +298,16 @@ public interface BotanNative {
     /**
      * Destroys a block cipher object.
      *
-     * @param cipher object
+     * @param cipher cipher object
      * @return 0 if success, error if invalid object handle
      */
+    //TODO: do we really need this ?
     int botan_block_cipher_destroy(@In Pointer cipher);
 
     /**
      * Reinitializes the block cipher.
      *
-     * @param cipher object
+     * @param cipher cipher object
      * @return 0 on success, a negative value on failure
      */
     int botan_block_cipher_clear(@In Pointer cipher);
@@ -313,7 +315,7 @@ public interface BotanNative {
     /**
      * Sets the key for a block cipher instance.
      *
-     * @param cipher object
+     * @param cipher cipher object
      * @param key    buffer holding the key
      * @param length size of the key buffer in bytes
      * @return 0 on success, a negative value on failure
@@ -324,7 +326,7 @@ public interface BotanNative {
      * Returns the positive block size of this block cipher, or negative to
      * indicate an error.
      *
-     * @param cipher object
+     * @param cipher cipher object
      * @return block size on success, a negative value on failure
      */
     int botan_block_cipher_block_size(@In Pointer cipher);
@@ -332,7 +334,7 @@ public interface BotanNative {
     /**
      * Encrypts one or more blocks with the cipher.
      *
-     * @param cipher     object
+     * @param cipher     cipher object
      * @param plainText  the plain text
      * @param cipherText the cipher text
      * @param nrOfBlocks number of blocks to be encrypted
@@ -344,7 +346,7 @@ public interface BotanNative {
     /**
      * Decrypts one or more blocks with the cipher.
      *
-     * @param cipher     object
+     * @param cipher     cipher object
      * @param cipherText the cipher text
      * @param plainText  the plain text
      * @param nrOfBlocks number of blocks to be decrypted
@@ -356,10 +358,11 @@ public interface BotanNative {
     /**
      * Gets the name of this block cipher.
      *
-     * @param cipher     object
+     * @param cipher     cipher object
      * @param name       output buffer
      * @param nameLength on input, the length of buffer, on success the number of bytes written
      */
-    int botan_block_cipher_name(@In Pointer cipher, @Out byte[] name, @In @Out NativeLongByReference nameLength);
+    int botan_block_cipher_name(@In Pointer cipher, @Out byte[] name,
+                                @In @Out NativeLongByReference nameLength);
 
 }

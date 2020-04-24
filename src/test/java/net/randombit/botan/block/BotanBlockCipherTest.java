@@ -76,7 +76,9 @@ public class BotanBlockCipherTest {
         if (isSupportedByBouncyCastle) {
             final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
 
-            final Cipher bc = Cipher.getInstance(algorithm + "/ECB/Nopadding", BouncyCastleProvider.PROVIDER_NAME);
+            // Testing plain Botan AES against BC AES/ECB/Nopadding (testing only one block)
+            final Cipher bc = Cipher.getInstance(algorithm + "/ECB/Nopadding",
+                    BouncyCastleProvider.PROVIDER_NAME);
             final Cipher botan = Cipher.getInstance(algorithm, BotanProvider.PROVIDER_NAME);
 
             botan.init(ENCRYPT_MODE, key);
@@ -96,7 +98,8 @@ public class BotanBlockCipherTest {
             final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
 
             // Testing plain Botan AES against BC AES/ECB/Nopadding (testing only one block)
-            final Cipher bc = Cipher.getInstance(algorithm + "/ECB/Nopadding", BouncyCastleProvider.PROVIDER_NAME);
+            final Cipher bc = Cipher.getInstance(algorithm + "/ECB/Nopadding",
+                    BouncyCastleProvider.PROVIDER_NAME);
             final Cipher botan = Cipher.getInstance(algorithm, BotanProvider.PROVIDER_NAME);
 
             botan.init(DECRYPT_MODE, key);

@@ -29,8 +29,8 @@ public final class HexUtils {
      */
     public static byte[] encode(byte[] input) {
         // Throwing an exception if the result overflows
-        int resultSize = Math.multiplyExact(input.length, 2);
-        byte[] result = new byte[resultSize];
+        final int resultSize = Math.multiplyExact(input.length, 2);
+        final byte[] result = new byte[resultSize];
 
         singleton().botan_hex_encode(input, input.length, result, 1);
 
@@ -54,8 +54,8 @@ public final class HexUtils {
      * @return decoded output
      */
     public static byte[] decode(byte[] input) {
-        byte[] result = new byte[input.length];
-        NativeLongByReference length = new NativeLongByReference();
+        final byte[] result = new byte[input.length];
+        final NativeLongByReference length = new NativeLongByReference();
 
         singleton().botan_hex_decode(input, input.length, result, length);
 

@@ -34,6 +34,11 @@ public class BotanMessageDigest extends MessageDigestSpi implements Cloneable {
      */
     private final PointerByReference hashRef;
 
+    /**
+     * Holds a dummy buffer for writing single bytes to the hash.
+     */
+    private final byte[] singleByte = new byte[1];
+
     private BotanMessageDigest(String name, int size) throws NoSuchAlgorithmException {
         this.name = name;
         this.size = size;
@@ -59,7 +64,7 @@ public class BotanMessageDigest extends MessageDigestSpi implements Cloneable {
 
     @Override
     protected void engineUpdate(byte input) {
-        final byte[] singleByte = new byte[]{input};
+        singleByte[0] = input;
 
         engineUpdate(singleByte, 0, 1);
     }

@@ -37,9 +37,10 @@ public class Base64UtilsTest {
     @Test
     public void testDecodeString() {
         final String base64 = "c29tZSBzZWNyZXQ=";
+        byte[] expected = Base64.getDecoder().decode(base64);
+        byte[] actual = Base64Utils.decode(base64);
 
-        Assert.assertArrayEquals("Hex mismatch with bouncy castle ",
-                Base64.getDecoder().decode(base64), Base64Utils.decode(base64));
+        Assert.assertArrayEquals("Hex mismatch with bouncy castle ", expected, actual);
     }
 
     @Test

@@ -93,7 +93,7 @@ public class BotanBlockCipher extends CipherSpi {
 
     @Override
     protected void engineInit(int opmode, Key key, SecureRandom random) throws InvalidKeyException {
-        byte[] encodedKey = key.getEncoded();
+        final byte[] encodedKey = key.getEncoded();
         this.opmode = opmode;
         this.keySize = encodedKey.length;
 
