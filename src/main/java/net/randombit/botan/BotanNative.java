@@ -365,4 +365,161 @@ public interface BotanNative {
     int botan_block_cipher_name(@In Pointer cipher, @Out byte[] name,
                                 @In @Out NativeLongByReference nameLength);
 
+    /**
+     * Initializes a cipher object.
+     *
+     * @param cipher cipher object
+     * @param name   name of the cipher including operating mode and padding
+     * @param flags
+     * @return 0 on success, a negative value on failure
+     */
+    int botan_cipher_init(@Out PointerByReference cipher, @In String name, @In long flags);
+
+    /**
+     * Returns the name of the cipher object.
+     *
+     * @param cipher cipher object
+     * @param name   output buffer
+     * @param length on input, the length of buffer, on success the number of bytes written
+     * @return 0 on success, a negative value on failure
+     */
+    int botan_cipher_name(@In Pointer cipher, @Out byte[] name, @In @Out NativeLongByReference length);
+
+    /**
+     * Returns the output length of this cipher, for a particular input length.
+     *
+     * @param cipher       cipher object
+     * @param inputLength  input length
+     * @param outputLength output length
+     * @return 0 on success, a negative value on failure
+     */
+    int botan_cipher_output_length(@In Pointer cipher, @In long inputLength,
+                                   @In @Out NativeLongByReference outputLength);
+
+    /**
+     * Returns if the specified nonce length is valid for this cipher.
+     *
+     * @param cipher      cipher object
+     * @param nonceLength nonce length
+     * @return 0 on success, a negative value on failure
+     */
+    int botan_cipher_valid_nonce_length(@In Pointer cipher, @In long nonceLength);
+
+    /**
+     * Gets the tag length of the cipher (0 for non-AEAD modes).
+     *
+     * @param cipher    cipher object
+     * @param tagLength tag length
+     * @return 0 on success, a negative value on failure
+     */
+    int botan_cipher_get_tag_length(@In Pointer cipher, @In @Out NativeLongByReference tagLength);
+
+    /**
+     * Gets the default nonce length of this cipher.
+     *
+     * @param cipher      cipher object
+     * @param nonceLength nonce length
+     * @return 0 on success, a negative value on failure
+     */
+    int botan_cipher_get_default_nonce_length(@In Pointer cipher, @In @Out NativeLongByReference nonceLength);
+
+    /**
+     * Returns the update granularity of the cipher; botan_cipher_update must be
+     * called with blocks of this size, except for the final.
+     *
+     * @param cipher            cipher object
+     * @param updateGranularity update granularity
+     * @return 0 on success, a negative value on failure
+     */
+    int botan_cipher_get_update_granularity(@In Pointer cipher, @In @Out NativeLongByReference updateGranularity);
+
+    /**
+     * Gets information about the supported key lengths.
+     *
+     * @param cipher    cipher object
+     * @param minKeylen minimal key length
+     * @param maxKeylen maximal key length
+     * @param modKeylen mod key length
+     * @return 0 on success, a negative value on failure
+     */
+    int botan_cipher_get_keyspec(@In Pointer cipher, @In @Out NativeLongByReference minKeylen,
+                                 @In @Out NativeLongByReference maxKeylen, @In @Out NativeLongByReference modKeylen);
+
+    /**
+     * Sets the key for this cipher object.
+     *
+     * @param cipher    cipher object
+     * @param key       key
+     * @param keyLength key length
+     * @return 0 on success, a negative value on failure
+     */
+    int botan_cipher_set_key(@In Pointer cipher, @In byte[] key, @In long keyLength);
+
+    /**
+     * Resets the message specific state for this cipher. Without resetting the keys,
+     * this resets the nonce, and any state associated with any message bits that have
+     * been processed so far.
+     * It is conceptually equivalent to calling botan_cipher_clear followed
+     * by botan_cipher_set_key with the original key.
+     *
+     * @param cipher cipher object
+     * @return 0 on success, a negative value on failure
+     */
+    int botan_cipher_reset(@In Pointer cipher);
+
+    /**
+     * Sets the associated data. Will fail if cipher is not an AEAD.
+     *
+     * @param cipher cipher object
+     * @param ad     associated data
+     * @param adLen  associated data length
+     * @return 0 on success, a negative value on failure
+     */
+    int botan_cipher_set_associated_data(@In Pointer cipher, @In byte[] ad, @In long adLen);
+
+    /**
+     * Begin processing a new message using the provided nonce.
+     *
+     * @param cipher      cipher object
+     * @param nonce       nonce data
+     * @param nonceLength nonce data length
+     * @return 0 on success, a negative value on failure
+     */
+    int botan_cipher_start(@In Pointer cipher, @In byte[] nonce, @In long nonceLength);
+
+    /**
+     * Encrypts some data.
+     *
+     * @param cipher        cipher object
+     * @param flags
+     * @param output        cipher output bytes
+     * @param outputSize    cipher output size
+     * @param outputWritten written output size
+     * @param input         cipher input bytes
+     * @param inputSize     cipher input size
+     * @param inputConsumed cipher input consumed
+     * @return 0 on success, a negative value on failure
+     */
+    int botan_cipher_update(@In Pointer cipher, @In long flags, @Out byte[] output,
+                            @In @Out NativeLongByReference outputSize,
+                            @In @Out NativeLongByReference outputWritten,
+                            @In byte[] input, @In long inputSize,
+                            @In @Out NativeLongByReference inputConsumed);
+
+    /**
+     * Resets the key, nonce, AD and all other state on this cipher object.
+     *
+     * @param cipher cipher object
+     * @return 0 if success, error if invalid object handle
+     */
+    int botan_cipher_clear(@In Pointer cipher);
+
+    /**
+     * Destroys the cipher object.
+     *
+     * @param cipher cipher object
+     * @return 0 if success, error if invalid object handle
+     */
+    int botan_cipher_destroy(@In Pointer cipher);
+
 }
