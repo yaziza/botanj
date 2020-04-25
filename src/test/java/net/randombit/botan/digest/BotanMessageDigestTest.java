@@ -165,7 +165,7 @@ public class BotanMessageDigestTest {
     }
 
     @Test
-    public void testBotanPerformance() throws GeneralSecurityException, InterruptedException {
+    public void testBotanPerformance() throws GeneralSecurityException {
         if (isSupportedByBouncyCastle) {
             final MessageDigest bc = MessageDigest.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
             final MessageDigest botan = MessageDigest.getInstance(algorithm, BotanProvider.PROVIDER_NAME);
@@ -190,7 +190,7 @@ public class BotanMessageDigestTest {
 
             System.out.println("BC    : " + (endBc - startBc) + " ns");
             System.out.println("Botan : " + (endBotan - startBotan) + " ns");
-            System.out.println(String.format(algorithm + " Botan faster/slower than Bouncy castle by: %.2f ",
+            System.out.println(String.format(algorithm + " - Botan faster/slower than Bouncy castle by: %.2f ",
                     difference) + "%\n");
 
             Assert.assertArrayEquals("Digest mismatch with Bouncy Castle provider for algorithm "

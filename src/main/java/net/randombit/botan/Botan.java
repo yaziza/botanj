@@ -9,6 +9,7 @@
 
 package net.randombit.botan;
 
+import java.security.GeneralSecurityException;
 import jnr.ffi.LibraryLoader;
 
 public final class Botan {
@@ -55,6 +56,19 @@ public final class Botan {
     public static void checkAvailability() {
         if (loadError != null) {
             throw loadError;
+        }
+    }
+
+    /**
+     * Checks whether the native lib call was successful.
+     *
+     * @param result int result from calling botan native
+     * @throws {@link GeneralSecurityException} in case of error
+     */
+    public static void checkNativeCall(int result) throws GeneralSecurityException {
+        if (result != 0) {
+            String description = NATIVE.botan_error_description(result);
+            throw new GeneralSecurityException(description);
         }
     }
 

@@ -140,7 +140,7 @@ public class BotanMacTest {
     }
 
     @Test
-    public void testBotanPerformance() throws GeneralSecurityException, InterruptedException {
+    public void testBotanPerformance() throws GeneralSecurityException {
         if (isSupportedByBouncyCastle) {
             final SecretKeySpec key = new SecretKeySpec(new byte[size], algorithm);
 
@@ -170,7 +170,7 @@ public class BotanMacTest {
 
             System.out.println("BC    : " + (endBc - startBc) + " ns");
             System.out.println("Botan : " + (endBotan - startBotan + " ns"));
-            System.out.println(String.format(algorithm + " Botan faster/slower than Bouncy castle by: %.2f ",
+            System.out.println(String.format(algorithm + " - Botan faster/slower than Bouncy castle by: %.2f ",
                     difference) + "%\n");
 
             Assert.assertArrayEquals("MAC mismatch with Bouncy Castle provider for algorithm "

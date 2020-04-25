@@ -41,12 +41,21 @@ mac.init(key);
 final byte[] output = mac.doFinal("hello world".getBytes());
 ```
 
+An example describing the procedure to encrypt using AES-256/CBC/PKCS7:
+```java
+final Cipher cipher = Cipher.getInstance("AES-256/CBC/PKCS7", BotanProvider.PROVIDER_NAME);
+// WARNING: botanj uses java cipher modes (1: encrypt, 2: decrypt)
+cipher.init(Cipher.ENCRYPT_MODE, key, iv);
+final byte[] cipherTest = cipher.doFinal("hello world".getBytes());
+```
+
 ## Supported Primitives
 
 ### Ciphers, hashes, MACs, and checksums
 * Hash functions: SHA-1, SHA-2, SHA-3, MD4, MD5, RIPEMD-160, BLAKE2b
 * Message Authentication codes: HMAC
-* Block ciphers: AES(WIP)
+* Cipher modes: CBC
+* Block ciphers: AES, DES/3DES
 
 ### Public Key Cryptography
 * Not yet supported

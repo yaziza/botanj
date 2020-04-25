@@ -501,7 +501,7 @@ public interface BotanNative {
      * @return 0 on success, a negative value on failure
      */
     int botan_cipher_update(@In Pointer cipher, @In long flags, @Out byte[] output,
-                            @In @Out NativeLongByReference outputSize,
+                            @Out long outputSize,
                             @In @Out NativeLongByReference outputWritten,
                             @In byte[] input, @In long inputSize,
                             @In @Out NativeLongByReference inputConsumed);
