@@ -32,7 +32,7 @@ import static net.randombit.botan.Botan.singleton;
 public abstract class BotanBlockCipher extends CipherSpi {
 
     /**
-     * Holds the name of the block cipher algorithm.
+     * Holds the name of the block cipher algorithm (e.g. AES-256/CBC/PKCS7).
      */
     private final String name;
 
@@ -40,6 +40,11 @@ public abstract class BotanBlockCipher extends CipherSpi {
      * Holds the block size of the cipher in bytes.
      */
     private final int blockSize;
+
+    /**
+     * Whether this modes is with padding or not
+     */
+    private boolean withPadding;
 
     /**
      * Holds the reference to the block cipher object referenced by botan.
@@ -51,14 +56,17 @@ public abstract class BotanBlockCipher extends CipherSpi {
      */
     private byte[] iv;
 
-    private BotanBlockCipher(String name, int blockSize) {
+    private BotanBlockCipher(String name, int blockSize, boolean withPadding) {
         this.name = Objects.requireNonNull(name);
         this.blockSize = blockSize;
+        this.withPadding = withPadding;
         this.cipherRef = new PointerByReference();
     }
 
     /**
      * Gets the standard name for the particular algorithm (e.g. AES).
+     *
+     * @return {@link String} containing the base cipher name
      */
     abstract String getCipherName();
 
@@ -79,11 +87,16 @@ public abstract class BotanBlockCipher extends CipherSpi {
 
     @Override
     protected int engineGetOutputSize(int inputLen) {
+        if (!withPadding) {
+            return inputLen;
+        }
+
         final NativeLongByReference outputSize = new NativeLongByReference();
 
         singleton().botan_cipher_output_length(cipherRef.getValue(), inputLen, outputSize);
 
-        return outputSize.intValue();
+        return inputLen % blockSize != 0
+                ? outputSize.intValue() : outputSize.intValue() + blockSize;
     }
 
     @Override
@@ -115,7 +128,6 @@ public abstract class BotanBlockCipher extends CipherSpi {
 
         final String algName = String.format(name, keySize * Byte.SIZE);
 
-        singleton().botan_cipher_clear(cipherRef.getValue());
         singleton().botan_cipher_init(cipherRef, algName, opmode - 1);
         singleton().botan_cipher_set_key(cipherRef.getValue(), encodedKey, keySize);
     }
@@ -145,7 +157,6 @@ public abstract class BotanBlockCipher extends CipherSpi {
     @Override
     protected int engineUpdate(byte[] input, int inputOffset, int inputLen, byte[] output, int outputOffset) {
         output = engineUpdate(input, inputOffset, inputLen);
-        outputOffset = 0;
 
         return output.length;
     }
@@ -157,38 +168,32 @@ public abstract class BotanBlockCipher extends CipherSpi {
 
     @Override
     protected byte[] engineDoFinal(byte[] input, int inputOffset, int inputLen) {
-        if (inputLen <= 0) {
-            return new byte[0];
-        }
-
         return doCipher(input, inputOffset, inputLen);
     }
 
     @Override
     protected int engineDoFinal(byte[] input, int inputOffset, int inputLen, byte[] output, int outputOffset) {
         output = engineDoFinal(input, inputOffset, inputLen);
-        outputOffset = 0;
 
         return output.length;
     }
 
     private byte[] doCipher(byte[] input, int inputOffset, int inputLen) {
-        Objects.requireNonNull(input);
+        if (inputLen == 0) {
+            return new byte[0];
+        }
 
-        final NativeLongByReference outputSize = new NativeLongByReference();
-        singleton().botan_cipher_output_length(cipherRef.getValue(), inputLen, outputSize);
+        final NativeLongByReference outputWritten = new NativeLongByReference();
+        final NativeLongByReference inputConsumed = new NativeLongByReference();
+        final byte[] output = new byte[engineGetOutputSize(inputLen)];
 
         final byte[] inputFromOffset = Arrays.copyOfRange(input, inputOffset, input.length);
-        final byte[] output = new byte[outputSize.intValue()];
 
-        NativeLongByReference outputWritten = new NativeLongByReference();
-        NativeLongByReference inputConsumed = new NativeLongByReference();
-
-        int err = singleton().botan_cipher_update(cipherRef.getValue(), 0,
-                output, outputSize.intValue(), outputWritten,
+        singleton().botan_cipher_update(cipherRef.getValue(), 1,
+                output, output.length, outputWritten,
                 inputFromOffset, inputLen, inputConsumed);
 
-        return output;
+        return Arrays.copyOfRange(output, 0, outputWritten.intValue());
     }
 
     private byte[] checkKey(Key key) throws InvalidKeyException {
@@ -207,7 +212,7 @@ public abstract class BotanBlockCipher extends CipherSpi {
     // AES
     public static final class AesCbcNoPadding extends BotanBlockCipher {
         public AesCbcNoPadding() {
-            super("AES-%d/CBC/NoPadding", 16);
+            super("AES-%d/CBC/NoPadding", 16, false);
         }
 
         public String getCipherName() {
@@ -218,7 +223,7 @@ public abstract class BotanBlockCipher extends CipherSpi {
 
     public static final class AesCbcPkcs7 extends BotanBlockCipher {
         public AesCbcPkcs7() {
-            super("AES-%d/CBC/PKCS7", 16);
+            super("AES-%d/CBC/PKCS7", 16, true);
         }
 
         public String getCipherName() {
@@ -228,7 +233,7 @@ public abstract class BotanBlockCipher extends CipherSpi {
 
     public static final class AesCbcIso extends BotanBlockCipher {
         public AesCbcIso() {
-            super("AES-%d/CBC/OneAndZeros", 16);
+            super("AES-%d/CBC/OneAndZeros", 16, true);
         }
 
         public String getCipherName() {
@@ -238,7 +243,7 @@ public abstract class BotanBlockCipher extends CipherSpi {
 
     public static final class AesCbcX923 extends BotanBlockCipher {
         public AesCbcX923() {
-            super("AES-%d/CBC/X9.23", 16);
+            super("AES-%d/CBC/X9.23", 16, true);
         }
 
         public String getCipherName() {
@@ -248,7 +253,7 @@ public abstract class BotanBlockCipher extends CipherSpi {
 
     public static final class AesCbcEsp extends BotanBlockCipher {
         public AesCbcEsp() {
-            super("AES-%d/CBC/ESP", 16);
+            super("AES-%d/CBC/ESP", 16, true);
         }
 
         String getCipherName() {
@@ -259,7 +264,7 @@ public abstract class BotanBlockCipher extends CipherSpi {
     // DES
     public static final class DesCbcNoPadding extends BotanBlockCipher {
         public DesCbcNoPadding() {
-            super("DES/CBC/NoPadding", 8);
+            super("DES/CBC/NoPadding", 8, false);
         }
 
         public String getCipherName() {
@@ -269,7 +274,7 @@ public abstract class BotanBlockCipher extends CipherSpi {
 
     public static final class DesCbcPkcs7 extends BotanBlockCipher {
         public DesCbcPkcs7() {
-            super("DES/CBC/PKCS7", 8);
+            super("DES/CBC/PKCS7", 8, true);
         }
 
         public String getCipherName() {
@@ -279,7 +284,7 @@ public abstract class BotanBlockCipher extends CipherSpi {
 
     public static final class DesCbcX923 extends BotanBlockCipher {
         public DesCbcX923() {
-            super("DES/CBC/X9.23", 8);
+            super("DES/CBC/X9.23", 8, true);
         }
 
         public String getCipherName() {
@@ -289,7 +294,7 @@ public abstract class BotanBlockCipher extends CipherSpi {
 
     public static final class DesCbcEsp extends BotanBlockCipher {
         public DesCbcEsp() {
-            super("DES/CBC/ESP", 8);
+            super("DES/CBC/ESP", 8, true);
         }
 
         public String getCipherName() {
@@ -300,7 +305,7 @@ public abstract class BotanBlockCipher extends CipherSpi {
     // 3DES
     public static final class DesEdeCbcNoPadding extends BotanBlockCipher {
         public DesEdeCbcNoPadding() {
-            super("3DES/CBC/NoPadding", 8);
+            super("3DES/CBC/NoPadding", 8, false);
         }
 
         public String getCipherName() {
@@ -310,7 +315,7 @@ public abstract class BotanBlockCipher extends CipherSpi {
 
     public static final class DesEdeCbcPkcs7 extends BotanBlockCipher {
         public DesEdeCbcPkcs7() {
-            super("3DES/CBC/PKCS7", 8);
+            super("3DES/CBC/PKCS7", 8, true);
         }
 
         public String getCipherName() {
@@ -320,7 +325,7 @@ public abstract class BotanBlockCipher extends CipherSpi {
 
     public static final class DesEdeCbcX923 extends BotanBlockCipher {
         public DesEdeCbcX923() {
-            super("3DES/CBC/X9.23", 8);
+            super("3DES/CBC/X9.23", 8, true);
         }
 
         public String getCipherName() {
@@ -330,7 +335,7 @@ public abstract class BotanBlockCipher extends CipherSpi {
 
     public static final class DesEdeCbcEsp extends BotanBlockCipher {
         public DesEdeCbcEsp() {
-            super("3DES/CBC/ESP", 8);
+            super("3DES/CBC/ESP", 8, true);
         }
 
         public String getCipherName() {
