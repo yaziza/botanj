@@ -41,10 +41,13 @@ public class BotanBlockCipherTest {
                 {"AES/CBC/NoPadding", 16, 24, true, false},
                 {"AES/CBC/NoPadding", 16, 32, true, false},
 
-                // FIXME: PKCS7 padding different than bouncy castle
                 {"AES/CBC/PKCS7", 16, 16, false, true},
                 {"AES/CBC/PKCS7", 16, 24, false, true},
                 {"AES/CBC/PKCS7", 16, 32, false, true},
+
+                {"AES/CBC/PKCS5Padding", 16, 16, true, true},
+                {"AES/CBC/PKCS5Padding", 16, 24, true, true},
+                {"AES/CBC/PKCS5Padding", 16, 32, true, true},
 
                 // TODO: check if Bouncy castle supports ISO padding
                 {"AES/CBC/OneAndZeros", 16, 16, false, true},
@@ -62,12 +65,16 @@ public class BotanBlockCipherTest {
                 // DES
                 {"DES/CBC/NoPadding", 8, 8, true, false},
                 {"DES/CBC/PKCS7", 8, 8, false, true},
+                {"DES/CBC/PKCS5Padding", 8, 8, true, true},
                 {"DES/CBC/X9.23", 8, 8, false, true},
                 {"DES/CBC/ESP", 8, 8, false, true},
 
                 // 3DES
                 {"DESede/CBC/NoPadding", 8, 16, true, false},
                 {"DESede/CBC/NoPadding", 8, 24, true, false},
+
+                {"DESede/CBC/PKCS5Padding", 8, 16, true, true},
+                {"DESede/CBC/PKCS5Padding", 8, 24, true, true},
 
                 {"DESede/CBC/PKCS7", 8, 16, false, true},
                 {"DESede/CBC/PKCS7", 8, 24, false, true},
@@ -138,7 +145,7 @@ public class BotanBlockCipherTest {
     }
 
     @Test
-    public void testEncryptAgainstBouncyCastle() throws GeneralSecurityException {
+    public void testEncryptThenDecryptAgainstBouncyCastle() throws GeneralSecurityException {
         if (isSupportedByBouncyCastle) {
             final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
             final IvParameterSpec iv = new IvParameterSpec(new byte[blockSize]);
@@ -149,34 +156,20 @@ public class BotanBlockCipherTest {
             bc.init(ENCRYPT_MODE, key, iv);
             botan.init(ENCRYPT_MODE, key, iv);
 
-            final byte[] input = withPadding ? "some plain text".getBytes()
+            final byte[] input = withPadding ? "some plain text to encrypt".getBytes()
                     : new byte[blockSize * Byte.SIZE * 10];
 
-            final byte[] expected = bc.doFinal(input);
-            final byte[] actual = botan.doFinal(input);
+            byte[] expected = bc.doFinal(input);
+            byte[] actual = botan.doFinal(input);
 
             Assert.assertArrayEquals("Encryption mismatch with Bouncy Castle provider for algorithm "
                     + algorithm, expected, actual);
-        }
-    }
-
-    @Test
-    public void testDecryptAgainstBouncyCastle() throws GeneralSecurityException {
-        if (isSupportedByBouncyCastle) {
-            final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
-            final IvParameterSpec iv = new IvParameterSpec(new byte[blockSize]);
-
-            final Cipher bc = Cipher.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
-            final Cipher botan = Cipher.getInstance(algorithm, BotanProvider.PROVIDER_NAME);
 
             bc.init(DECRYPT_MODE, key, iv);
             botan.init(DECRYPT_MODE, key, iv);
 
-            final byte[] input = withPadding ? "some cipher text".getBytes()
-                    : new byte[blockSize * Byte.SIZE * 10];
-
-            final byte[] expected = bc.doFinal(input);
-            final byte[] actual = botan.doFinal(input);
+            expected = bc.doFinal(expected);
+            actual = botan.doFinal(actual);
 
             Assert.assertArrayEquals("Decryption mismatch with Bouncy Castle provider for algorithm "
                     + algorithm, expected, actual);
