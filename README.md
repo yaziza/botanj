@@ -7,7 +7,7 @@ Botanj - Java Security Provider (JSP)
 
 1. [Introduction](#introduction)
 2. [Building The Library](#building-the-library)
-3. [Using Botan JSP](#using-botan-jsp)
+3. [Using Botan JSP](#using-botanj)
 4. [Supported Primitives](#supported-primitives)
 
 ## Introduction
@@ -24,11 +24,11 @@ Botanj uses [JNR-FFI](https://github.com/jnr/jnr-ffi) for loading Botan native c
 * Run tests against Bouncy castle Provider:
 `mvn test`
 
-## Using Botanj JSP
+## Using Botanj
 An example describing the procedure to compute a MessageDigest object:
 
 ```java
-final MessageDigest digest = MessageDigest.getInstance("blake2b-384", BotanProvider.PROVIDER_NAME);
+final MessageDigest digest = MessageDigest.getInstance("blake2b-512", BotanProvider.PROVIDER_NAME);
 final byte[] output = digest.digest("hello world".getBytes());
 ```
 
@@ -44,9 +44,8 @@ final byte[] output = mac.doFinal("hello world".getBytes());
 An example describing the procedure to encrypt using AES-256/CBC/PKCS7:
 ```java
 final Cipher cipher = Cipher.getInstance("AES-256/CBC/PKCS7", BotanProvider.PROVIDER_NAME);
-// WARNING: botanj uses java cipher modes (1: encrypt, 2: decrypt)
 cipher.init(Cipher.ENCRYPT_MODE, key, iv);
-final byte[] cipherTest = cipher.doFinal("hello world".getBytes());
+final byte[] output = cipher.doFinal("hello world".getBytes());
 ```
 
 ## Supported Primitives

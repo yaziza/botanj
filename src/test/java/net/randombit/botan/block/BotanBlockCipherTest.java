@@ -77,7 +77,6 @@ public class BotanBlockCipherTest {
 
                 {"DESede/CBC/ESP", 8, 16, false, true},
                 {"DESede/CBC/ESP", 8, 24, false, true},
-
         });
     }
 
@@ -85,15 +84,15 @@ public class BotanBlockCipherTest {
     private final int blockSize;
     private final int keySize;
     private final boolean isSupportedByBouncyCastle;
-    private final boolean isPaddingSupported;
+    private final boolean withPadding;
 
     public BotanBlockCipherTest(String algorithm, int blockSize, int keySize,
-                                boolean isSupportedByBouncyCastle, boolean isPaddingSupported) {
+                                boolean isSupportedByBouncyCastle, boolean withPadding) {
         this.algorithm = algorithm;
         this.blockSize = blockSize;
         this.keySize = keySize;
         this.isSupportedByBouncyCastle = isSupportedByBouncyCastle;
-        this.isPaddingSupported = isPaddingSupported;
+        this.withPadding = withPadding;
     }
 
     @Before
@@ -108,7 +107,7 @@ public class BotanBlockCipherTest {
         final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.PROVIDER_NAME);
 
         cipher.init(ENCRYPT_MODE, key);
-        final byte[] output = cipher.doFinal("top secret input".getBytes());
+        cipher.doFinal("top secret input".getBytes());
 
         Assert.assertEquals(algorithm + " block size in bytes", blockSize, cipher.getBlockSize());
     }
@@ -150,7 +149,7 @@ public class BotanBlockCipherTest {
             bc.init(ENCRYPT_MODE, key, iv);
             botan.init(ENCRYPT_MODE, key, iv);
 
-            final byte[] input = isPaddingSupported ? "some plain text".getBytes()
+            final byte[] input = withPadding ? "some plain text".getBytes()
                     : new byte[blockSize * Byte.SIZE * 10];
 
             final byte[] expected = bc.doFinal(input);
@@ -173,7 +172,7 @@ public class BotanBlockCipherTest {
             bc.init(DECRYPT_MODE, key, iv);
             botan.init(DECRYPT_MODE, key, iv);
 
-            final byte[] input = isPaddingSupported ? "some cipher text".getBytes()
+            final byte[] input = withPadding ? "some cipher text".getBytes()
                     : new byte[blockSize * Byte.SIZE * 10];
 
             final byte[] expected = bc.doFinal(input);
@@ -191,8 +190,9 @@ public class BotanBlockCipherTest {
 
         final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.PROVIDER_NAME);
 
-        // Encrypt 10 blocks
-        final byte[] expected = new byte[blockSize * Byte.SIZE * 10];
+        final byte[] expected = withPadding ?
+                HexUtils.decode("0397f4f6820b1f9386f14403be5ac16e50213bd473b4874b9bcbf5f318ee686b1d") :
+                new byte[blockSize];
 
         cipher.init(ENCRYPT_MODE, key, iv);
         final byte[] cipherText = cipher.doFinal(expected);
