@@ -11,7 +11,6 @@ package net.randombit.botan.block;
 
 import java.security.AlgorithmParameters;
 import javax.crypto.spec.IvParameterSpec;
-import net.randombit.botan.Botan;
 import net.randombit.botan.BotanProvider;
 import net.randombit.botan.codec.HexUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
