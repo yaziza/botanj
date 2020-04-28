@@ -11,6 +11,7 @@ package net.randombit.botan.block;
 
 import java.security.AlgorithmParameters;
 import javax.crypto.spec.IvParameterSpec;
+import net.randombit.botan.Botan;
 import net.randombit.botan.BotanProvider;
 import net.randombit.botan.codec.HexUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -208,18 +209,14 @@ public class BotanBlockCipherTest {
             bc.init(ENCRYPT_MODE, key, iv);
             botan.init(ENCRYPT_MODE, key, iv);
 
+            byte[] input = new byte[10_240];
+
             final long startBc = System.nanoTime();
-            for (int i = 0; i < 1_000; i++) {
-                bc.update(new byte[1024]);
-            }
-            final byte[] expected = bc.doFinal();
+            final byte[] expected = bc.doFinal(input);
             final long endBc = System.nanoTime();
 
             final long startBotan = System.nanoTime();
-            for (int i = 0; i < 1_000; i++) {
-                botan.update(new byte[1024]);
-            }
-            final byte[] actual = botan.doFinal();
+            final byte[] actual = botan.doFinal(input);
             final long endBotan = System.nanoTime();
 
             double difference = (endBc - startBc) - (endBotan - startBotan);

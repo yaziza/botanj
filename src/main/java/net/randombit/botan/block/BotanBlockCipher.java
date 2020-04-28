@@ -18,6 +18,7 @@ import java.security.SecureRandom;
 import java.security.spec.InvalidParameterSpecException;
 import java.util.Arrays;
 import java.util.Objects;
+import javax.crypto.Cipher;
 import javax.crypto.CipherSpi;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
@@ -50,6 +51,11 @@ public abstract class BotanBlockCipher extends CipherSpi {
      * Holds the reference to the block cipher object referenced by botan.
      */
     private final PointerByReference cipherRef;
+
+    /**
+     * Holds the cipher operation mode in native botan terms (0: Encryption, 1: Decryption)
+     */
+    private int opmode;
 
     /**
      * Holds the Initial Vector (IV).
@@ -87,16 +93,14 @@ public abstract class BotanBlockCipher extends CipherSpi {
 
     @Override
     protected int engineGetOutputSize(int inputLen) {
-        if (!withPadding) {
+        if (!withPadding || opmode == 1) {
             return inputLen;
         }
 
         final NativeLongByReference outputSize = new NativeLongByReference();
-
         singleton().botan_cipher_output_length(cipherRef.getValue(), inputLen, outputSize);
 
-        return inputLen % blockSize != 0
-                ? outputSize.intValue() : outputSize.intValue() + blockSize;
+        return inputLen + (blockSize - inputLen % blockSize);
     }
 
     @Override
@@ -128,7 +132,9 @@ public abstract class BotanBlockCipher extends CipherSpi {
 
         final String algName = String.format(name, keySize * Byte.SIZE);
 
-        singleton().botan_cipher_init(cipherRef, algName, opmode - 1);
+        this.opmode = opmode - 1;
+
+        singleton().botan_cipher_init(cipherRef, algName, this.opmode);
         singleton().botan_cipher_set_key(cipherRef.getValue(), encodedKey, keySize);
     }
 
@@ -156,19 +162,12 @@ public abstract class BotanBlockCipher extends CipherSpi {
 
     @Override
     protected int engineUpdate(byte[] input, int inputOffset, int inputLen, byte[] output, int outputOffset) {
-        output = engineUpdate(input, inputOffset, inputLen);
-
-        return output.length;
+        throw new UnsupportedOperationException("Only doFinal(input) is currently supported");
     }
 
     @Override
     protected byte[] engineUpdate(byte[] input, int inputOffset, int inputLen) {
-        return doCipher(input, inputOffset, inputLen);
-    }
-
-    @Override
-    protected byte[] engineDoFinal(byte[] input, int inputOffset, int inputLen) {
-        return doCipher(input, inputOffset, inputLen);
+        throw new UnsupportedOperationException("Only doFinal(input) is currently supported");
     }
 
     @Override
@@ -178,7 +177,12 @@ public abstract class BotanBlockCipher extends CipherSpi {
         return output.length;
     }
 
-    private byte[] doCipher(byte[] input, int inputOffset, int inputLen) {
+    @Override
+    protected byte[] engineDoFinal(byte[] input, int inputOffset, int inputLen) {
+        return doCipher(input, inputOffset, inputLen, 1);
+    }
+
+    private byte[] doCipher(byte[] input, int inputOffset, int inputLen, int finalFlag) {
         if (inputLen == 0) {
             return new byte[0];
         }
@@ -187,9 +191,10 @@ public abstract class BotanBlockCipher extends CipherSpi {
         final NativeLongByReference inputConsumed = new NativeLongByReference();
         final byte[] output = new byte[engineGetOutputSize(inputLen)];
 
-        final byte[] inputFromOffset = Arrays.copyOfRange(input, inputOffset, input.length);
+        final byte[] inputFromOffset = input == null ?
+                new byte[0] : Arrays.copyOfRange(input, inputOffset, input.length);
 
-        singleton().botan_cipher_update(cipherRef.getValue(), 1,
+        singleton().botan_cipher_update(cipherRef.getValue(), finalFlag,
                 output, output.length, outputWritten,
                 inputFromOffset, inputLen, inputConsumed);
 
