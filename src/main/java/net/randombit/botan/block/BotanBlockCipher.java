@@ -19,6 +19,7 @@ import java.security.spec.InvalidParameterSpecException;
 import java.util.Arrays;
 import java.util.Objects;
 import javax.crypto.CipherSpi;
+import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
@@ -181,14 +182,19 @@ public abstract class BotanBlockCipher extends CipherSpi {
     }
 
     @Override
-    protected int engineDoFinal(byte[] input, int inputOffset, int inputLen, byte[] output, int outputOffset) {
+    protected int engineDoFinal(byte[] input, int inputOffset, int inputLen, byte[] output, int outputOffset)
+            throws IllegalBlockSizeException {
         output = engineDoFinal(input, inputOffset, inputLen);
 
         return output.length;
     }
 
     @Override
-    protected byte[] engineDoFinal(byte[] input, int inputOffset, int inputLen) {
+    protected byte[] engineDoFinal(byte[] input, int inputOffset, int inputLen) throws IllegalBlockSizeException {
+        if (!withPadding && (inputLen % blockSize) != 0) {
+            throw new IllegalBlockSizeException("Data not block size aligned");
+        }
+
         return doCipher(input, inputOffset, inputLen, BOTAN_DO_FINAL_FLAG);
     }
 
