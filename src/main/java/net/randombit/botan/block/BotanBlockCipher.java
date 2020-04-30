@@ -18,6 +18,7 @@ import java.security.SecureRandom;
 import java.security.spec.InvalidParameterSpecException;
 import java.util.Arrays;
 import java.util.Objects;
+import javax.crypto.Cipher;
 import javax.crypto.CipherSpi;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
@@ -41,6 +42,11 @@ public abstract class BotanBlockCipher extends CipherSpi {
      * Calling botan_cipher_update() for finishing cipher operation.
      */
     private static final int BOTAN_DO_FINAL_FLAG = 1;
+
+    /**
+     * Holds an empty array of bytes
+     */
+    private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
 
     /**
      * Holds the name of the block cipher algorithm (e.g. AES-256/CBC/PKCS7).
@@ -71,6 +77,19 @@ public abstract class BotanBlockCipher extends CipherSpi {
      * Holds the Initial Vector (IV).
      */
     private byte[] iv;
+
+    /**
+     * Botan update granularity for this cipher. botan_cipher_update() must be
+     * called with blocks of this size, except for doFinal().
+     */
+    private int updateGranularity;
+
+    /**
+     * Native botan_cipher_update() will be called only with blocks of
+     * size {@link BotanBlockCipher#updateGranularity}. The rest will be held
+     * until the next update or doFinal call.
+     */
+    private byte[] buffer = EMPTY_BYTE_ARRAY;
 
     private BotanBlockCipher(String name, int blockSize, boolean withPadding) {
         this.name = Objects.requireNonNull(name);
@@ -147,6 +166,10 @@ public abstract class BotanBlockCipher extends CipherSpi {
 
         singleton().botan_cipher_init(cipherRef, algName, mode);
         singleton().botan_cipher_set_key(cipherRef.getValue(), encodedKey, keySize);
+
+        final NativeLongByReference updateGranularity = new NativeLongByReference();
+        singleton().botan_cipher_get_update_granularity(cipherRef.getValue(), updateGranularity);
+        this.updateGranularity = updateGranularity.intValue();
     }
 
     @Override
@@ -173,12 +196,29 @@ public abstract class BotanBlockCipher extends CipherSpi {
 
     @Override
     protected int engineUpdate(byte[] input, int inputOffset, int inputLen, byte[] output, int outputOffset) {
-        throw new UnsupportedOperationException("Only doFinal(input) is currently supported");
+        output = engineUpdate(input, inputOffset, inputLen);
+
+        return output.length;
     }
 
     @Override
     protected byte[] engineUpdate(byte[] input, int inputOffset, int inputLen) {
-        throw new UnsupportedOperationException("Only doFinal(input) is currently supported");
+        if (inputLen == 0) {
+            return EMPTY_BYTE_ARRAY;
+        }
+
+        // resize buffer and append the new input
+        byte[] currentInput = Arrays.copyOf(buffer, inputLen + buffer.length);
+        System.arraycopy(input, inputOffset, currentInput, buffer.length, inputLen);
+
+        // compute the new buffer offset
+        int bufferOffset = currentInput.length % updateGranularity;
+
+        input = Arrays.copyOfRange(currentInput, 0, currentInput.length - bufferOffset);
+        buffer = Arrays.copyOfRange(currentInput, currentInput.length - bufferOffset, currentInput.length);
+
+        return (input.length == 0) ? EMPTY_BYTE_ARRAY
+                : doCipher(input, 0, input.length, BOTAN_UPDATE_FLAG);
     }
 
     @Override
@@ -199,20 +239,28 @@ public abstract class BotanBlockCipher extends CipherSpi {
     }
 
     private byte[] doCipher(byte[] input, int inputOffset, int inputLen, int botanFlag) {
-        if (inputLen == 0) {
-            return new byte[0];
+        boolean isEmptyInput = (inputLen == 0) && (buffer.length == 0);
+
+        if (isEmptyInput && Cipher.DECRYPT_MODE == mode) {
+            return EMPTY_BYTE_ARRAY;
         }
+
+        if (isEmptyInput && Cipher.ENCRYPT_MODE == mode) {
+            // Encrypt last padding block
+            input = new byte[blockSize];
+            inputLen = blockSize;
+        }
+
 
         final NativeLongByReference outputWritten = new NativeLongByReference();
         final NativeLongByReference inputConsumed = new NativeLongByReference();
-        final byte[] output = new byte[engineGetOutputSize(inputLen)];
 
-        final byte[] inputFromOffset = input == null ?
-                new byte[0] : Arrays.copyOfRange(input, inputOffset, input.length);
+        final byte[] finalInput = getDoFinalInput(input, inputOffset, inputLen);
+        final byte[] output = new byte[engineGetOutputSize(inputLen + buffer.length)];
 
         singleton().botan_cipher_update(cipherRef.getValue(), botanFlag,
                 output, output.length, outputWritten,
-                inputFromOffset, inputLen, inputConsumed);
+                finalInput, finalInput.length, inputConsumed);
 
         if (BOTAN_DO_FINAL_FLAG == botanFlag) {
             engineReset();
@@ -236,9 +284,25 @@ public abstract class BotanBlockCipher extends CipherSpi {
 
     private void engineReset() {
         singleton().botan_cipher_reset(cipherRef.getValue());
+
+        buffer = EMPTY_BYTE_ARRAY;
+
         if (iv != null) {
             singleton().botan_cipher_start(cipherRef.getValue(), iv, iv.length);
         }
+    }
+
+    private byte[] getDoFinalInput(byte[] input, int inputOffset, int inputLen) {
+        // resize buffer
+        byte[] result = Arrays.copyOf(buffer, inputLen + buffer.length);
+
+        if (inputLen > 0) {
+            // append the new input
+            byte[] inputFromOffset = Arrays.copyOfRange(input, inputOffset, input.length);
+            System.arraycopy(inputFromOffset, 0, result, buffer.length, inputLen + buffer.length);
+        }
+
+        return result;
     }
 
     // AES

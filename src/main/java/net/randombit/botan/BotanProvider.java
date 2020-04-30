@@ -13,8 +13,8 @@ import java.security.Provider;
 
 public final class BotanProvider extends Provider {
 
-    public static final String PROVIDER_NAME = "Botan";
-    private static final String PROVIDER_INFO = "Botan Java Security Provider";
+    public static final String NAME = "Botan";
+    private static final String INFO = "Botan Java Security Provider";
 
     private static final String PACKAGE_NAME = BotanProvider.class.getPackage().getName();
     private static final String DIGEST_PREFIX = ".digest.";
@@ -24,7 +24,7 @@ public final class BotanProvider extends Provider {
     private static final BotanNative NATIVE = Botan.singleton();
 
     public BotanProvider() {
-        super(PROVIDER_NAME, 0, PROVIDER_INFO);
+        super(NAME, 0, INFO);
 
         Botan.checkAvailability();
 
@@ -47,7 +47,7 @@ public final class BotanProvider extends Provider {
 
     @Override
     public String getInfo() {
-        return PROVIDER_INFO;
+        return INFO;
     }
 
     @Override

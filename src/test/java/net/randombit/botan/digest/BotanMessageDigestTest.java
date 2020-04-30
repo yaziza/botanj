@@ -9,6 +9,10 @@
 
 package net.randombit.botan.digest;
 
+import net.randombit.botan.mac.BotanMacTest;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.message.StringFormattedMessage;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -26,6 +30,10 @@ import java.util.Collection;
 
 @RunWith(Parameterized.class)
 public class BotanMessageDigestTest {
+
+    private static final Logger LOG = LogManager.getLogger(BotanMessageDigestTest.class.getSimpleName());
+
+    private static final String NOT_SUPPORTED_BY_BC = "Algorithm not supported by Bouncy Castle {}";
 
     @Parameterized.Parameters
     public static Collection<Object[]> parameters() {
@@ -86,7 +94,7 @@ public class BotanMessageDigestTest {
 
     @Test
     public void testDigestOutputSize() throws GeneralSecurityException {
-        final MessageDigest digest = MessageDigest.getInstance(algorithm, BotanProvider.PROVIDER_NAME);
+        final MessageDigest digest = MessageDigest.getInstance(algorithm, BotanProvider.NAME);
         final byte[] output = digest.digest("Some input".getBytes());
 
         Assert.assertEquals(algorithm + " output size in bytes", size, digest.getDigestLength());
@@ -95,107 +103,121 @@ public class BotanMessageDigestTest {
 
     @Test
     public void testAgainstBouncyCastle() throws GeneralSecurityException {
-        if (isSupportedByBouncyCastle) {
-            final MessageDigest bc = MessageDigest.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
-            final MessageDigest botan = MessageDigest.getInstance(algorithm, BotanProvider.PROVIDER_NAME);
-
-            final byte[] expected = bc.digest("hello world".getBytes());
-            final byte[] actual = botan.digest("hello world".getBytes());
-
-            Assert.assertArrayEquals("Digest mismatch with Bouncy Castle provider for algorithm "
-                    + algorithm, expected, actual);
+        if (!isSupportedByBouncyCastle) {
+            LOG.info(NOT_SUPPORTED_BY_BC, algorithm);
+            return;
         }
+
+        final MessageDigest bc = MessageDigest.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
+        final MessageDigest botan = MessageDigest.getInstance(algorithm, BotanProvider.NAME);
+
+        final byte[] expected = bc.digest("hello world".getBytes());
+        final byte[] actual = botan.digest("hello world".getBytes());
+
+        Assert.assertArrayEquals("Digest mismatch with Bouncy Castle provider for algorithm "
+                + algorithm, expected, actual);
     }
 
     @Test
     public void testCloneDigest() throws GeneralSecurityException, CloneNotSupportedException {
-        if (isSupportedByBouncyCastle) {
-            final MessageDigest bc = MessageDigest.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
-            final MessageDigest botan = MessageDigest.getInstance(algorithm, BotanProvider.PROVIDER_NAME);
-            final MessageDigest clone = (MessageDigest) botan.clone();
-
-            final byte[] expected = bc.digest("Clone support".getBytes());
-            final byte[] actual = clone.digest("Clone support".getBytes());
-
-            Assert.assertArrayEquals("Digest mismatch with Bouncy Castle provider for algorithm "
-                    + algorithm, expected, actual);
+        if (!isSupportedByBouncyCastle) {
+            LOG.info(NOT_SUPPORTED_BY_BC, algorithm);
+            return;
         }
+
+        final MessageDigest bc = MessageDigest.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
+        final MessageDigest botan = MessageDigest.getInstance(algorithm, BotanProvider.NAME);
+        final MessageDigest clone = (MessageDigest) botan.clone();
+
+        final byte[] expected = bc.digest("Clone support".getBytes());
+        final byte[] actual = clone.digest("Clone support".getBytes());
+
+        Assert.assertArrayEquals("Digest mismatch with Bouncy Castle provider for algorithm "
+                + algorithm, expected, actual);
     }
 
     @Test
     public void testRestDigest() throws GeneralSecurityException {
-        if (isSupportedByBouncyCastle) {
-            final MessageDigest bc = MessageDigest.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
-            final MessageDigest botan = MessageDigest.getInstance(algorithm, BotanProvider.PROVIDER_NAME);
-
-            botan.update("to reset".getBytes());
-            botan.reset();
-
-            bc.update("Rest support".getBytes());
-            botan.update("Rest support".getBytes());
-
-            final byte[] expected = bc.digest();
-            final byte[] actual = botan.digest();
-
-            Assert.assertArrayEquals("Digest mismatch with Bouncy Castle provider for algorithm "
-                    + algorithm, expected, actual);
+        if (!isSupportedByBouncyCastle) {
+            LOG.info(NOT_SUPPORTED_BY_BC, algorithm);
+            return;
         }
+
+        final MessageDigest bc = MessageDigest.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
+        final MessageDigest botan = MessageDigest.getInstance(algorithm, BotanProvider.NAME);
+
+        botan.update("to reset".getBytes());
+        botan.reset();
+
+        bc.update("Rest support".getBytes());
+        botan.update("Rest support".getBytes());
+
+        final byte[] expected = bc.digest();
+        final byte[] actual = botan.digest();
+
+        Assert.assertArrayEquals("Digest mismatch with Bouncy Castle provider for algorithm "
+                + algorithm, expected, actual);
     }
 
     @Test
     public void testSingleByteUpdate() throws GeneralSecurityException {
-        if (isSupportedByBouncyCastle) {
-            final MessageDigest bc = MessageDigest.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
-            final MessageDigest botan = MessageDigest.getInstance(algorithm, BotanProvider.PROVIDER_NAME);
-
-            botan.update((byte) 'H');
-            botan.update((byte) 'e');
-            botan.update((byte) 'l');
-            botan.update((byte) 'l');
-            botan.update((byte) 'o');
-
-            bc.update("Hello".getBytes());
-
-            final byte[] expected = bc.digest();
-            final byte[] actual = botan.digest();
-
-            Assert.assertArrayEquals("Digest mismatch with Bouncy Castle provider for algorithm "
-                    + algorithm, expected, actual);
+        if (!isSupportedByBouncyCastle) {
+            LOG.info(NOT_SUPPORTED_BY_BC, algorithm);
+            return;
         }
+
+        final MessageDigest bc = MessageDigest.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
+        final MessageDigest botan = MessageDigest.getInstance(algorithm, BotanProvider.NAME);
+
+        botan.update((byte) 'H');
+        botan.update((byte) 'e');
+        botan.update((byte) 'l');
+        botan.update((byte) 'l');
+        botan.update((byte) 'o');
+
+        bc.update("Hello".getBytes());
+
+        final byte[] expected = bc.digest();
+        final byte[] actual = botan.digest();
+
+        Assert.assertArrayEquals("Digest mismatch with Bouncy Castle provider for algorithm "
+                + algorithm, expected, actual);
     }
 
     @Test
     public void testBotanPerformance() throws GeneralSecurityException {
-        if (isSupportedByBouncyCastle) {
-            final MessageDigest bc = MessageDigest.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
-            final MessageDigest botan = MessageDigest.getInstance(algorithm, BotanProvider.PROVIDER_NAME);
-
-            final long startBc = System.nanoTime();
-            for (int i = 0; i < 1_000; i++) {
-                bc.update("some input".getBytes());
-            }
-            final byte[] expected = bc.digest();
-            final long endBc = System.nanoTime();
-
-            final long startBotan = System.nanoTime();
-            for (int i = 0; i < 1_000; i++) {
-                botan.update("some input".getBytes());
-            }
-            final byte[] actual = botan.digest();
-            final long endBotan = System.nanoTime();
-
-            double difference = (endBc - startBc) - (endBotan - startBotan);
-            difference /= (endBc - startBc);
-            difference *= 100;
-
-            System.out.println("BC    : " + (endBc - startBc) + " ns");
-            System.out.println("Botan : " + (endBotan - startBotan) + " ns");
-            System.out.println(String.format(algorithm + " - Botan faster/slower than Bouncy castle by: %.2f ",
-                    difference) + "%\n");
-
-            Assert.assertArrayEquals("Digest mismatch with Bouncy Castle provider for algorithm "
-                    + algorithm, expected, actual);
+        if (!isSupportedByBouncyCastle) {
+            LOG.info(NOT_SUPPORTED_BY_BC, algorithm);
+            return;
         }
+
+        final MessageDigest bc = MessageDigest.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
+        final MessageDigest botan = MessageDigest.getInstance(algorithm, BotanProvider.NAME);
+
+        final long startBc = System.nanoTime();
+        for (int i = 0; i < 1_000; i++) {
+            bc.update("some input".getBytes());
+        }
+        final byte[] expected = bc.digest();
+        final long endBc = System.nanoTime();
+
+        final long startBotan = System.nanoTime();
+        for (int i = 0; i < 1_000; i++) {
+            botan.update("some input".getBytes());
+        }
+        final byte[] actual = botan.digest();
+        final long endBotan = System.nanoTime();
+
+        double difference = (endBc - startBc) - (endBotan - startBotan);
+        difference /= (endBc - startBc);
+        difference *= 100;
+
+        LOG.info(new StringFormattedMessage(
+                "Performance against Bouncy Castle for algorithm %s: %.2f %%",
+                algorithm, difference));
+
+        Assert.assertArrayEquals("Digest mismatch with Bouncy Castle provider for algorithm "
+                + algorithm, expected, actual);
     }
 
 }

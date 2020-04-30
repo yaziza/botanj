@@ -12,6 +12,9 @@ package net.randombit.botan.mac;
 import java.security.GeneralSecurityException;
 import java.security.Security;
 import net.randombit.botan.BotanProvider;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.message.StringFormattedMessage;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.Assert;
 import org.junit.Before;
@@ -26,6 +29,10 @@ import java.util.Collection;
 
 @RunWith(Parameterized.class)
 public class BotanMacTest {
+
+    private static final Logger LOG = LogManager.getLogger(BotanMacTest.class.getSimpleName());
+
+    private static final String NOT_SUPPORTED_BY_BC = "Algorithm not supported by Bouncy Castle {}";
 
     @Parameterized.Parameters
     public static Collection<Object[]> parameters() {
@@ -61,7 +68,7 @@ public class BotanMacTest {
     @Test
     public void testMacOutputSize() throws GeneralSecurityException {
         final SecretKeySpec key = new SecretKeySpec(new byte[size], algorithm);
-        final Mac mac = Mac.getInstance(algorithm, BotanProvider.PROVIDER_NAME);
+        final Mac mac = Mac.getInstance(algorithm, BotanProvider.NAME);
 
         mac.init(key);
         final byte[] output = mac.doFinal("some input".getBytes());
@@ -72,110 +79,121 @@ public class BotanMacTest {
 
     @Test
     public void testAgainstBouncyCastle() throws GeneralSecurityException {
-        if (isSupportedByBouncyCastle) {
-            final SecretKeySpec key = new SecretKeySpec(new byte[size], algorithm);
-
-            final Mac bc = Mac.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
-            final Mac botan = Mac.getInstance(algorithm, BotanProvider.PROVIDER_NAME);
-
-            bc.init(key);
-            botan.init(key);
-
-            final byte[] expected = bc.doFinal("some input".getBytes());
-            final byte[] actual = botan.doFinal("some input".getBytes());
-
-            Assert.assertArrayEquals("MAC mismatch with Bouncy Castle provider for algorithm "
-                    + algorithm, expected, actual);
+        if (!isSupportedByBouncyCastle) {
+            LOG.info(NOT_SUPPORTED_BY_BC, algorithm);
+            return;
         }
+
+        final SecretKeySpec key = new SecretKeySpec(new byte[size], algorithm);
+
+        final Mac bc = Mac.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
+        final Mac botan = Mac.getInstance(algorithm, BotanProvider.NAME);
+
+        bc.init(key);
+        botan.init(key);
+
+        final byte[] expected = bc.doFinal("some input".getBytes());
+        final byte[] actual = botan.doFinal("some input".getBytes());
+
+        Assert.assertArrayEquals("MAC mismatch with Bouncy Castle provider for algorithm "
+                + algorithm, expected, actual);
     }
 
     @Test
     public void testRestDigest() throws GeneralSecurityException {
-        if (isSupportedByBouncyCastle) {
-            final SecretKeySpec key = new SecretKeySpec(new byte[size], algorithm);
-
-            final Mac bc = Mac.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
-            final Mac botan = Mac.getInstance(algorithm, BotanProvider.PROVIDER_NAME);
-
-            bc.init(key);
-            botan.init(key);
-
-            botan.update("hello world".getBytes());
-            botan.reset();
-
-            //TODO: check bc rest and remove this
-            botan.init(key);
-
-            final byte[] expected = bc.doFinal("some input".getBytes());
-            final byte[] actual = botan.doFinal("some input".getBytes());
-
-            Assert.assertArrayEquals("MAC mismatch with Bouncy Castle provider for algorithm "
-                    + algorithm, expected, actual);
+        if (!isSupportedByBouncyCastle) {
+            LOG.info(NOT_SUPPORTED_BY_BC, algorithm);
+            return;
         }
+
+        final SecretKeySpec key = new SecretKeySpec(new byte[size], algorithm);
+
+        final Mac bc = Mac.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
+        final Mac botan = Mac.getInstance(algorithm, BotanProvider.NAME);
+
+        bc.init(key);
+        botan.init(key);
+
+        botan.update("hello world".getBytes());
+        botan.reset();
+
+        //TODO: check bc rest and remove this
+        botan.init(key);
+
+        final byte[] expected = bc.doFinal("some input".getBytes());
+        final byte[] actual = botan.doFinal("some input".getBytes());
+
+        Assert.assertArrayEquals("MAC mismatch with Bouncy Castle provider for algorithm "
+                + algorithm, expected, actual);
     }
 
     @Test
     public void testSingleByteUpdate() throws GeneralSecurityException {
-        if (isSupportedByBouncyCastle) {
-            final SecretKeySpec key = new SecretKeySpec(new byte[size], algorithm);
-
-            final Mac bc = Mac.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
-            final Mac botan = Mac.getInstance(algorithm, BotanProvider.PROVIDER_NAME);
-
-            bc.init(key);
-            botan.init(key);
-
-            botan.update((byte) 'H');
-            botan.update((byte) 'e');
-            botan.update((byte) 'l');
-            botan.update((byte) 'l');
-            botan.update((byte) 'o');
-
-            final byte[] expected = bc.doFinal("Hello".getBytes());
-            final byte[] actual = botan.doFinal();
-
-            Assert.assertArrayEquals("MAC mismatch with Bouncy Castle provider for algorithm "
-                    + algorithm, expected, actual);
+        if (!isSupportedByBouncyCastle) {
+            LOG.info(NOT_SUPPORTED_BY_BC, algorithm);
+            return;
         }
+
+        final SecretKeySpec key = new SecretKeySpec(new byte[size], algorithm);
+
+        final Mac bc = Mac.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
+        final Mac botan = Mac.getInstance(algorithm, BotanProvider.NAME);
+
+        bc.init(key);
+        botan.init(key);
+
+        botan.update((byte) 'H');
+        botan.update((byte) 'e');
+        botan.update((byte) 'l');
+        botan.update((byte) 'l');
+        botan.update((byte) 'o');
+
+        final byte[] expected = bc.doFinal("Hello".getBytes());
+        final byte[] actual = botan.doFinal();
+
+        Assert.assertArrayEquals("MAC mismatch with Bouncy Castle provider for algorithm "
+                + algorithm, expected, actual);
     }
 
     @Test
     public void testBotanPerformance() throws GeneralSecurityException {
-        if (isSupportedByBouncyCastle) {
-            final SecretKeySpec key = new SecretKeySpec(new byte[size], algorithm);
-
-            final Mac bc = Mac.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
-            final Mac botan = Mac.getInstance(algorithm, BotanProvider.PROVIDER_NAME);
-
-            bc.init(key);
-            botan.init(key);
-
-            final long startBc = System.nanoTime();
-            for (int i = 0; i < 1_000; i++) {
-                bc.update("some input".getBytes());
-            }
-            final byte[] expected = bc.doFinal();
-            final long endBc = System.nanoTime();
-
-            final long startBotan = System.nanoTime();
-            for (int i = 0; i < 1_000; i++) {
-                botan.update("some input".getBytes());
-            }
-            final byte[] actual = botan.doFinal();
-            final long endBotan = System.nanoTime();
-
-            double difference = (endBc - startBc) - (endBotan - startBotan);
-            difference /= (endBc - startBc);
-            difference *= 100;
-
-            System.out.println("BC    : " + (endBc - startBc) + " ns");
-            System.out.println("Botan : " + (endBotan - startBotan + " ns"));
-            System.out.println(String.format(algorithm + " - Botan faster/slower than Bouncy castle by: %.2f ",
-                    difference) + "%\n");
-
-            Assert.assertArrayEquals("MAC mismatch with Bouncy Castle provider for algorithm "
-                    + algorithm, expected, actual);
+        if (!isSupportedByBouncyCastle) {
+            LOG.info(NOT_SUPPORTED_BY_BC, algorithm);
+            return;
         }
+
+        final SecretKeySpec key = new SecretKeySpec(new byte[size], algorithm);
+
+        final Mac bc = Mac.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
+        final Mac botan = Mac.getInstance(algorithm, BotanProvider.NAME);
+
+        bc.init(key);
+        botan.init(key);
+
+        final long startBc = System.nanoTime();
+        for (int i = 0; i < 1_000; i++) {
+            bc.update("some input".getBytes());
+        }
+        final byte[] expected = bc.doFinal();
+        final long endBc = System.nanoTime();
+
+        final long startBotan = System.nanoTime();
+        for (int i = 0; i < 1_000; i++) {
+            botan.update("some input".getBytes());
+        }
+        final byte[] actual = botan.doFinal();
+        final long endBotan = System.nanoTime();
+
+        double difference = (endBc - startBc) - (endBotan - startBotan);
+        difference /= (endBc - startBc);
+        difference *= 100;
+
+        LOG.info(new StringFormattedMessage(
+                "Performance against Bouncy Castle for algorithm %s: %.2f %%",
+                algorithm, difference));
+
+        Assert.assertArrayEquals("MAC mismatch with Bouncy Castle provider for algorithm "
+                + algorithm, expected, actual);
     }
 
 }

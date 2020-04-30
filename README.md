@@ -28,7 +28,7 @@ Botanj uses [JNR-FFI](https://github.com/jnr/jnr-ffi) for loading Botan native c
 An example describing the procedure to compute a MessageDigest object:
 
 ```java
-final MessageDigest digest = MessageDigest.getInstance("blake2b-512", BotanProvider.PROVIDER_NAME);
+final MessageDigest digest = MessageDigest.getInstance("blake2b-512", BotanProvider.NAME);
 final byte[] output = digest.digest("hello world".getBytes());
 ```
 
@@ -36,14 +36,14 @@ An example describing the procedure to compute a MAC object:
 
 ```java
 final SecretKeySpec key = new SecretKeySpec(key, "HMAC-SHA512");
-final Mac mac = Mac.getInstance("HMAC-SHA512", BotanProvider.PROVIDER_NAME);
+final Mac mac = Mac.getInstance("HMAC-SHA512", BotanProvider.NAME);
 mac.init(key);
 final byte[] output = mac.doFinal("hello world".getBytes());
 ```
 
 An example describing the procedure to encrypt using AES-256/CBC/PKCS7:
 ```java
-final Cipher cipher = Cipher.getInstance("AES-256/CBC/PKCS7", BotanProvider.PROVIDER_NAME);
+final Cipher cipher = Cipher.getInstance("AES-256/CBC/PKCS7", BotanProvider.NAME);
 cipher.init(Cipher.ENCRYPT_MODE, key, iv);
 final byte[] output = cipher.doFinal("hello world".getBytes());
 ```
