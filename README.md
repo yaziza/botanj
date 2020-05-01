@@ -20,7 +20,7 @@ Botanj uses [JNR-FFI](https://github.com/jnr/jnr-ffi) for loading Botan native c
 ## Building The Library
 * Install native [Botan](https://botan.randombit.net/handbook/building.html) Library under `src/main/resources/native`
 * Install Apache [Maven](https://maven.apache.org/)
-* Install Java 1.8+ (tested with [openjdk 8 / 11](https://openjdk.java.net/))
+* Install Java 11+ (tested with [openjdk 11](https://openjdk.java.net/))
 * Run tests against Bouncy castle Provider:
 `mvn test`
 

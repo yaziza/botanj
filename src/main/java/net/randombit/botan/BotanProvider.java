@@ -14,6 +14,7 @@ import java.security.Provider;
 public final class BotanProvider extends Provider {
 
     public static final String NAME = "Botan";
+    private static final String VERSION = "2.14.0";
     private static final String INFO = "Botan Java Security Provider";
 
     private static final String PACKAGE_NAME = BotanProvider.class.getPackage().getName();
@@ -24,7 +25,7 @@ public final class BotanProvider extends Provider {
     private static final BotanNative NATIVE = Botan.singleton();
 
     public BotanProvider() {
-        super(NAME, 0, INFO);
+        super(NAME, VERSION, INFO);
 
         Botan.checkAvailability();
 
