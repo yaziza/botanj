@@ -74,6 +74,11 @@ public abstract class BotanBlockCipher extends CipherSpi {
     private int mode;
 
     /**
+     * Disables cipher usage without initialization.
+     */
+    private boolean isInitialized = false;
+
+    /**
      * Holds the Initial Vector (IV).
      */
     private byte[] iv;
@@ -163,6 +168,7 @@ public abstract class BotanBlockCipher extends CipherSpi {
 
         // Translate java cipher mode to botan native mode (0: Encryption, 1: Decryption)
         this.mode = opmode - 1;
+        this.isInitialized = true;
 
         singleton().botan_cipher_init(cipherRef, algName, mode);
         singleton().botan_cipher_set_key(cipherRef.getValue(), encodedKey, keySize);
@@ -203,6 +209,8 @@ public abstract class BotanBlockCipher extends CipherSpi {
 
     @Override
     protected byte[] engineUpdate(byte[] input, int inputOffset, int inputLen) {
+        checkInitilization();
+
         if (inputLen == 0) {
             return EMPTY_BYTE_ARRAY;
         }
@@ -231,6 +239,8 @@ public abstract class BotanBlockCipher extends CipherSpi {
 
     @Override
     protected byte[] engineDoFinal(byte[] input, int inputOffset, int inputLen) throws IllegalBlockSizeException {
+        checkInitilization();
+
         if (!withPadding && (inputLen % blockSize) != 0) {
             throw new IllegalBlockSizeException("Data not block size aligned");
         }
@@ -280,6 +290,12 @@ public abstract class BotanBlockCipher extends CipherSpi {
         }
 
         return encodedKey;
+    }
+
+    private void checkInitilization() {
+        if (!isInitialized) {
+            throw new IllegalStateException("Cannot use cipher before initialization");
+        }
     }
 
     private void engineReset() {

@@ -153,6 +153,20 @@ public class BotanBlockCipherTest {
         Assert.assertNull("IV supplied", parameters);
     }
 
+    @Test(expected = IllegalStateException.class)
+    public void testCipherUpdateWithoutInitialization() throws GeneralSecurityException {
+        final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
+
+        cipher.update(new byte[128]);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testCipherDoFinalWithoutInitialization() throws GeneralSecurityException {
+        final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
+
+        cipher.doFinal();
+    }
+
     @Test
     public void testEncryptThenDecryptAgainstBouncyCastle() throws GeneralSecurityException {
         if (!isSupportedByBouncyCastle) {
