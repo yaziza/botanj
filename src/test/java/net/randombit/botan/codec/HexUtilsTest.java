@@ -10,6 +10,8 @@
 package net.randombit.botan.codec;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -31,6 +33,18 @@ public class HexUtilsTest {
     }
 
     @Test
+    @DisplayName("Test malformed input")
+    public void testMalformedInput() {
+        final String input = "some malformed input";
+
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> HexUtils.decode(input));
+        assertEquals("Cannot decode malformed input!", exception.getMessage());
+
+        exception = assertThrows(IllegalArgumentException.class, () -> HexUtils.decode(input.getBytes()));
+        assertEquals("Cannot decode malformed input!", exception.getMessage());
+    }
+
+    @Test
     @DisplayName("Test decoding bytes against Bouncy Castle")
     public void testDecode() {
         final String expected = "some input";
@@ -43,8 +57,8 @@ public class HexUtilsTest {
     @Test
     @DisplayName("Test encoding string against Bouncy Castle")
     public void testDecodeString() {
-        final String upperCase = "01 03 05 07 09 0B 0D 0F";
-        final String lowerCase = "01 03 05 07 09 0b 0d 0f";
+        final String upperCase = "01 23 45 67 89 AB CD EF";
+        final String lowerCase = "01 23 45 67 89 ab cd ef";
 
         assertArrayEquals(Hex.decode(upperCase), HexUtils.decode(upperCase), "Hex mismatch with Bouncy Castle");
         assertArrayEquals(Hex.decode(lowerCase), HexUtils.decode(lowerCase), "Hex mismatch with Bouncy Castle");
