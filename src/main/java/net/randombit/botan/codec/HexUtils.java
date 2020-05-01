@@ -9,11 +9,11 @@
 
 package net.randombit.botan.codec;
 
-import jnr.ffi.byref.NativeLongByReference;
+import static net.randombit.botan.Botan.singleton;
 
 import java.util.Arrays;
 
-import static net.randombit.botan.Botan.singleton;
+import jnr.ffi.byref.NativeLongByReference;
 
 public final class HexUtils {
 

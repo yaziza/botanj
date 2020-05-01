@@ -9,13 +9,13 @@
 
 package net.randombit.botan.digest;
 
-import jnr.ffi.byref.PointerByReference;
+import static net.randombit.botan.Botan.singleton;
 
 import java.security.MessageDigestSpi;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
-import static net.randombit.botan.Botan.singleton;
+import jnr.ffi.byref.PointerByReference;
 
 public class BotanMessageDigest extends MessageDigestSpi implements Cloneable {
 

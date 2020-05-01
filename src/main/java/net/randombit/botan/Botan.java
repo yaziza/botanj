@@ -10,6 +10,7 @@
 package net.randombit.botan;
 
 import java.security.GeneralSecurityException;
+
 import jnr.ffi.LibraryLoader;
 
 public final class Botan {

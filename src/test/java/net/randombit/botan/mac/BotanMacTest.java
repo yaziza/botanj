@@ -9,81 +9,54 @@
 
 package net.randombit.botan.mac;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import java.security.GeneralSecurityException;
 import java.security.Security;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvFileSource;
+
 import net.randombit.botan.BotanProvider;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringFormattedMessage;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
-import java.util.Arrays;
-import java.util.Collection;
-
-@RunWith(Parameterized.class)
+@DisplayName("Botan MAC tests")
 public class BotanMacTest {
 
     private static final Logger LOG = LogManager.getLogger(BotanMacTest.class.getSimpleName());
 
-    private static final String NOT_SUPPORTED_BY_BC = "Algorithm not supported by Bouncy Castle {}";
-
-    @Parameterized.Parameters
-    public static Collection<Object[]> parameters() {
-        return Arrays.asList(new Object[][]{
-                // HMAC
-                {"HMAC-SHA1", 20, true},
-                {"HMAC-SHA224", 28, true},
-                {"HMAC-SHA256", 32, true},
-                {"HMAC-SHA384", 48, true},
-                {"HMAC-SHA512", 64, true},
-                {"HMAC-SHA2", 64, false},
-                {"HMAC-MD5", 16, true},
-                {"HMAC-RIPEMD160", 20, true},
-        });
-    }
-
-    private final String algorithm;
-    private final int size;
-    private final boolean isSupportedByBouncyCastle;
-
-    public BotanMacTest(String algorithm, int size, boolean isSupportedByBouncyCastle) {
-        this.algorithm = algorithm;
-        this.size = size;
-        this.isSupportedByBouncyCastle = isSupportedByBouncyCastle;
-    }
-
-    @Before
-    public void setUp() throws Exception {
+    @BeforeAll
+    public static void setUp() {
         Security.addProvider(new BotanProvider());
         Security.addProvider(new BouncyCastleProvider());
     }
 
-    @Test
-    public void testMacOutputSize() throws GeneralSecurityException {
+    @ParameterizedTest
+    @CsvFileSource(resources = "/mac/mac.csv", numLinesToSkip = 1)
+    @DisplayName("Test MAC output size")
+    public void testMacOutputSize(String algorithm, int size) throws GeneralSecurityException {
         final SecretKeySpec key = new SecretKeySpec(new byte[size], algorithm);
         final Mac mac = Mac.getInstance(algorithm, BotanProvider.NAME);
 
         mac.init(key);
         final byte[] output = mac.doFinal("some input".getBytes());
 
-        Assert.assertEquals(algorithm + " output size in bytes", size, mac.getMacLength());
-        Assert.assertEquals(algorithm + " output size in bytes", size, output.length);
+        assertEquals(size, mac.getMacLength(), "Output size mismatch for algorithm: " + algorithm);
+        assertEquals(size, output.length, "Output size mismatch for algorithm: " + algorithm);
     }
 
-    @Test
-    public void testAgainstBouncyCastle() throws GeneralSecurityException {
-        if (!isSupportedByBouncyCastle) {
-            LOG.info(NOT_SUPPORTED_BY_BC, algorithm);
-            return;
-        }
-
+    @ParameterizedTest
+    @CsvFileSource(resources = "/mac/mac.csv", numLinesToSkip = 1)
+    @DisplayName("Test MAC output against Bouncy Castle")
+    public void testAgainstBouncyCastle(String algorithm, int size) throws GeneralSecurityException {
         final SecretKeySpec key = new SecretKeySpec(new byte[size], algorithm);
 
         final Mac bc = Mac.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
@@ -95,17 +68,14 @@ public class BotanMacTest {
         final byte[] expected = bc.doFinal("some input".getBytes());
         final byte[] actual = botan.doFinal("some input".getBytes());
 
-        Assert.assertArrayEquals("MAC mismatch with Bouncy Castle provider for algorithm "
-                + algorithm, expected, actual);
+        assertArrayEquals(expected, actual, "MAC mismatch with Bouncy Castle provider for algorithm: "
+                + algorithm);
     }
 
-    @Test
-    public void testRestDigest() throws GeneralSecurityException {
-        if (!isSupportedByBouncyCastle) {
-            LOG.info(NOT_SUPPORTED_BY_BC, algorithm);
-            return;
-        }
-
+    @ParameterizedTest
+    @CsvFileSource(resources = "/mac/mac.csv", numLinesToSkip = 1)
+    @DisplayName("Test MAC reset")
+    public void testRestDigest(String algorithm, int size) throws GeneralSecurityException {
         final SecretKeySpec key = new SecretKeySpec(new byte[size], algorithm);
 
         final Mac bc = Mac.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
@@ -123,17 +93,14 @@ public class BotanMacTest {
         final byte[] expected = bc.doFinal("some input".getBytes());
         final byte[] actual = botan.doFinal("some input".getBytes());
 
-        Assert.assertArrayEquals("MAC mismatch with Bouncy Castle provider for algorithm "
-                + algorithm, expected, actual);
+        assertArrayEquals(expected, actual, "MAC mismatch with Bouncy Castle provider for algorithm: "
+                + algorithm);
     }
 
-    @Test
-    public void testSingleByteUpdate() throws GeneralSecurityException {
-        if (!isSupportedByBouncyCastle) {
-            LOG.info(NOT_SUPPORTED_BY_BC, algorithm);
-            return;
-        }
-
+    @ParameterizedTest
+    @CsvFileSource(resources = "/mac/mac.csv", numLinesToSkip = 1)
+    @DisplayName("Test single Byte update")
+    public void testSingleByteUpdate(String algorithm, int size) throws GeneralSecurityException {
         final SecretKeySpec key = new SecretKeySpec(new byte[size], algorithm);
 
         final Mac bc = Mac.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
@@ -151,17 +118,14 @@ public class BotanMacTest {
         final byte[] expected = bc.doFinal("Hello".getBytes());
         final byte[] actual = botan.doFinal();
 
-        Assert.assertArrayEquals("MAC mismatch with Bouncy Castle provider for algorithm "
-                + algorithm, expected, actual);
+        assertArrayEquals(expected, actual, "MAC mismatch with Bouncy Castle provider for algorithm: "
+                + algorithm);
     }
 
-    @Test
-    public void testBotanPerformance() throws GeneralSecurityException {
-        if (!isSupportedByBouncyCastle) {
-            LOG.info(NOT_SUPPORTED_BY_BC, algorithm);
-            return;
-        }
-
+    @ParameterizedTest
+    @CsvFileSource(resources = "/mac/mac.csv", numLinesToSkip = 1)
+    @DisplayName("Test Botan performance against Bouncy Castle")
+    public void testBotanPerformance(String algorithm, int size) throws GeneralSecurityException {
         final SecretKeySpec key = new SecretKeySpec(new byte[size], algorithm);
 
         final Mac bc = Mac.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
@@ -192,8 +156,8 @@ public class BotanMacTest {
                 "Performance against Bouncy Castle for algorithm %s: %.2f %%",
                 algorithm, difference));
 
-        Assert.assertArrayEquals("MAC mismatch with Bouncy Castle provider for algorithm "
-                + algorithm, expected, actual);
+        assertArrayEquals(expected, actual, "MAC mismatch with Bouncy Castle provider for algorithm: "
+                + algorithm);
     }
 
 }

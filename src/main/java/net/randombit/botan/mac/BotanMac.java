@@ -9,16 +9,16 @@
 
 package net.randombit.botan.mac;
 
-import jnr.ffi.byref.PointerByReference;
+import static net.randombit.botan.Botan.singleton;
 
-import javax.crypto.MacSpi;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.spec.AlgorithmParameterSpec;
 import java.util.Arrays;
+import javax.crypto.MacSpi;
 
-import static net.randombit.botan.Botan.singleton;
+import jnr.ffi.byref.PointerByReference;
 
 public class BotanMac extends MacSpi {
 

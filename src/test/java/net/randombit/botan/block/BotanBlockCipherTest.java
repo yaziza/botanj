@@ -9,234 +9,219 @@
 
 package net.randombit.botan.block;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 import java.security.AlgorithmParameters;
-import javax.crypto.spec.IvParameterSpec;
-import net.randombit.botan.BotanProvider;
-import net.randombit.botan.codec.HexUtils;
-import net.randombit.botan.digest.BotanMessageDigestTest;
-import org.apache.logging.log4j.message.StringFormattedMessage;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import javax.crypto.Cipher;
-import javax.crypto.spec.SecretKeySpec;
 import java.security.GeneralSecurityException;
 import java.security.Security;
-import java.util.Arrays;
-import java.util.Collection;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
 
-import static javax.crypto.Cipher.DECRYPT_MODE;
-import static javax.crypto.Cipher.ENCRYPT_MODE;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvFileSource;
 
-@RunWith(Parameterized.class)
+import net.randombit.botan.BotanProvider;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.message.StringFormattedMessage;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+
+@DisplayName("Botan block cipher tests")
 public class BotanBlockCipherTest {
 
     private static final Logger LOG = LogManager.getLogger(BotanBlockCipherTest.class.getSimpleName());
 
-    private static final String NOT_SUPPORTED_BY_BC = "Algorithm not supported by Bouncy Castle {}";
-
-    @Parameterized.Parameters
-    public static Collection<Object[]> parameters() {
-        return Arrays.asList(new Object[][]{
-                // AES
-                {"AES/CBC/NoPadding", 16, 16, true, false},
-                {"AES/CBC/NoPadding", 16, 24, true, false},
-                {"AES/CBC/NoPadding", 16, 32, true, false},
-
-                {"AES/CBC/PKCS7", 16, 16, false, true},
-                {"AES/CBC/PKCS7", 16, 24, false, true},
-                {"AES/CBC/PKCS7", 16, 32, false, true},
-
-                {"AES/CBC/PKCS5Padding", 16, 16, true, true},
-                {"AES/CBC/PKCS5Padding", 16, 24, true, true},
-                {"AES/CBC/PKCS5Padding", 16, 32, true, true},
-
-                // TODO: check if Bouncy castle supports ISO padding
-                {"AES/CBC/OneAndZeros", 16, 16, false, true},
-                {"AES/CBC/OneAndZeros", 16, 24, false, true},
-                {"AES/CBC/OneAndZeros", 16, 32, false, true},
-
-                {"AES/CBC/X9.23", 16, 16, false, true},
-                {"AES/CBC/X9.23", 16, 24, false, true},
-                {"AES/CBC/X9.23", 16, 32, false, true},
-
-                {"AES/CBC/ESP", 16, 16, false, true},
-                {"AES/CBC/ESP", 16, 24, false, true},
-                {"AES/CBC/ESP", 16, 32, false, true},
-
-                // DES
-                {"DES/CBC/NoPadding", 8, 8, true, false},
-                {"DES/CBC/PKCS7", 8, 8, false, true},
-                {"DES/CBC/PKCS5Padding", 8, 8, true, true},
-                {"DES/CBC/X9.23", 8, 8, false, true},
-                {"DES/CBC/ESP", 8, 8, false, true},
-
-                // 3DES
-                {"DESede/CBC/NoPadding", 8, 16, true, false},
-                {"DESede/CBC/NoPadding", 8, 24, true, false},
-
-                {"DESede/CBC/PKCS5Padding", 8, 16, true, true},
-                {"DESede/CBC/PKCS5Padding", 8, 24, true, true},
-
-                {"DESede/CBC/PKCS7", 8, 16, false, true},
-                {"DESede/CBC/PKCS7", 8, 24, false, true},
-
-                {"DESede/CBC/X9.23", 8, 16, false, true},
-                {"DESede/CBC/X9.23", 8, 24, false, true},
-
-                {"DESede/CBC/ESP", 8, 16, false, true},
-                {"DESede/CBC/ESP", 8, 24, false, true},
-        });
-    }
-
-    private final String algorithm;
-    private final int blockSize;
-    private final int keySize;
-    private final boolean isSupportedByBouncyCastle;
-    private final boolean withPadding;
-
-    public BotanBlockCipherTest(String algorithm, int blockSize, int keySize,
-                                boolean isSupportedByBouncyCastle, boolean withPadding) {
-        this.algorithm = algorithm;
-        this.blockSize = blockSize;
-        this.keySize = keySize;
-        this.isSupportedByBouncyCastle = isSupportedByBouncyCastle;
-        this.withPadding = withPadding;
-    }
-
-    @Before
-    public void setUp() throws Exception {
+    @BeforeAll
+    public static void setUp() {
         Security.addProvider(new BotanProvider());
         Security.addProvider(new BouncyCastleProvider());
     }
 
-    @Test
-    public void testCipherBlockSize() throws GeneralSecurityException {
-        final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
+    @ParameterizedTest
+    @CsvFileSource(resources = {"/block/cbc_padding.csv", "/block/cbc_no_padding.csv"}, numLinesToSkip = 1)
+    @DisplayName("Test cipher block size")
+    public void testCipherBlockSize(String algorithm, int blockSize, int keySize) throws GeneralSecurityException {
         final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
+        final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
 
-        cipher.init(ENCRYPT_MODE, key);
-        cipher.doFinal("top secret input".getBytes());
+        cipher.init(Cipher.ENCRYPT_MODE, key);
 
-        Assert.assertEquals(algorithm + " block size in bytes", blockSize, cipher.getBlockSize());
+        assertEquals(blockSize, cipher.getBlockSize(),
+                "Cipher block size mismatch for algorithm: " + algorithm);
     }
 
-    @Test
-    public void testCipherParametersWithIv() throws GeneralSecurityException {
+    @ParameterizedTest
+    @CsvFileSource(resources = {"/block/cbc_padding.csv", "/block/cbc_no_padding.csv"}, numLinesToSkip = 1)
+    @DisplayName("Test cipher parameters IV set")
+    public void testCipherParametersWithIv(String algorithm, int blockSize, int keySize)
+            throws GeneralSecurityException {
+        final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
         final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
         final IvParameterSpec iv = new IvParameterSpec(new byte[blockSize]);
 
-        final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
-
-        cipher.init(ENCRYPT_MODE, key, iv);
+        cipher.init(Cipher.ENCRYPT_MODE, key, iv);
         AlgorithmParameters parameters = cipher.getParameters();
 
         String baseCipher = algorithm.substring(0, algorithm.indexOf('/'));
-        Assert.assertEquals(baseCipher + " mismatch ", baseCipher, parameters.getAlgorithm());
+        assertEquals(baseCipher, parameters.getAlgorithm(), "Cipher name mismatch: " + baseCipher);
     }
 
-    @Test
-    public void testCipherParametersWithoutIv() throws GeneralSecurityException {
+    @ParameterizedTest
+    @CsvFileSource(resources = {"/block/cbc_padding.csv", "/block/cbc_no_padding.csv"}, numLinesToSkip = 1)
+    @DisplayName("Test calling cipher update before initialization")
+    public void testCipherUpdateWithoutInitialization(String algorithm) throws GeneralSecurityException {
+        final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
+
+        final Exception exception = assertThrows(IllegalStateException.class, () -> cipher.update(new byte[128]));
+
+        assertEquals("Cipher not initialized", exception.getMessage());
+    }
+
+    @ParameterizedTest
+    @CsvFileSource(resources = {"/block/cbc_padding.csv", "/block/cbc_no_padding.csv"}, numLinesToSkip = 1)
+    @DisplayName("Test calling cipher doFinal before initialization")
+    public void testCipherDoFinalWithoutInitialization(String algorithm) throws GeneralSecurityException {
+        final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
+
+        final Exception exception = assertThrows(IllegalStateException.class, () -> cipher.doFinal());
+
+        assertEquals("Cipher not initialized", exception.getMessage());
+    }
+
+    @ParameterizedTest
+    @CsvFileSource(resources = "/block/cbc_no_padding.csv", numLinesToSkip = 1)
+    @DisplayName("Test calling cipher doFinal without input (No Padding)")
+    public void testCipherDoFinalWithoutInputNoPadding(String algorithm, int blockSize, int keySize)
+            throws GeneralSecurityException {
         final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
         final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
+        final IvParameterSpec iv = new IvParameterSpec(new byte[blockSize]);
 
-        cipher.init(ENCRYPT_MODE, key);
-        AlgorithmParameters parameters = cipher.getParameters();
+        cipher.init(Cipher.ENCRYPT_MODE, key, iv);
+        final byte[] output = cipher.doFinal();
 
-        Assert.assertNull("IV supplied", parameters);
+        assertEquals(0, output.length, "doFinal without input should produce no output");
     }
 
-    @Test(expected = IllegalStateException.class)
-    public void testCipherUpdateWithoutInitialization() throws GeneralSecurityException {
+    @ParameterizedTest
+    @CsvFileSource(resources = "/block/cbc_padding.csv", numLinesToSkip = 1)
+    @DisplayName("Test calling cipher doFinal without input (With Padding)")
+    public void testCipherDoFinalWithoutInputWithPadding(String algorithm, int blockSize, int keySize)
+            throws GeneralSecurityException {
         final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
+        final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
+        final IvParameterSpec iv = new IvParameterSpec(new byte[blockSize]);
 
-        cipher.update(new byte[128]);
+        cipher.init(Cipher.ENCRYPT_MODE, key, iv);
+        final byte[] output = cipher.doFinal();
+
+        assertEquals(blockSize, output.length, "doFinal without input should produce no output");
     }
 
-    @Test(expected = IllegalStateException.class)
-    public void testCipherDoFinalWithoutInitialization() throws GeneralSecurityException {
+    @ParameterizedTest
+    @CsvFileSource(resources = "/block/cbc_padding.csv", numLinesToSkip = 1)
+    @DisplayName("Test encrypting then decrypting cipher")
+    public void testEncryptThenDecrypt(String algorithm, int blockSize, int keySize) throws GeneralSecurityException {
         final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
+        final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
+        final IvParameterSpec iv = new IvParameterSpec(new byte[blockSize]);
 
-        cipher.doFinal();
+        final byte[] expected = "some plain text to be encrypted.".getBytes();
+
+        cipher.init(Cipher.ENCRYPT_MODE, key, iv);
+        final byte[] cipherText = cipher.doFinal(expected);
+
+        cipher.init(Cipher.DECRYPT_MODE, key, iv);
+        final byte[] plainText = cipher.doFinal(cipherText);
+
+        assertArrayEquals(expected, plainText, "Encrypt than decrypt mismatch for algorithm: " + algorithm);
     }
 
-    @Test
-    public void testEncryptThenDecryptAgainstBouncyCastle() throws GeneralSecurityException {
-        if (!isSupportedByBouncyCastle) {
-            LOG.info(NOT_SUPPORTED_BY_BC, algorithm);
-            return;
-        }
+    @ParameterizedTest
+    @CsvFileSource(resources = "/block/cbc_no_padding.csv", numLinesToSkip = 1)
+    @DisplayName("Test cipher encrypt(no padding) against bouncy castle")
+    public void testEncryptNoPaddingAgainstBouncyCastle(String algorithm, int blockSize, int keySize)
+            throws GeneralSecurityException {
+        final Cipher bc = Cipher.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
+        final Cipher botan = Cipher.getInstance(algorithm, BotanProvider.NAME);
 
         final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
         final IvParameterSpec iv = new IvParameterSpec(new byte[blockSize]);
 
-        final Cipher bc = Cipher.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
-        final Cipher botan = Cipher.getInstance(algorithm, BotanProvider.NAME);
+        bc.init(Cipher.ENCRYPT_MODE, key, iv);
+        botan.init(Cipher.ENCRYPT_MODE, key, iv);
 
-        bc.init(ENCRYPT_MODE, key, iv);
-        botan.init(ENCRYPT_MODE, key, iv);
-
-        final byte[] input = withPadding ? "some plain text to encrypt".getBytes()
-                : new byte[blockSize * Byte.SIZE * 10];
+        final byte[] input = new byte[blockSize * Byte.SIZE * 10];
 
         byte[] expected = bc.doFinal(input);
         byte[] actual = botan.doFinal(input);
 
-        Assert.assertArrayEquals("Encryption mismatch with Bouncy Castle provider for algorithm "
-                + algorithm, expected, actual);
-
-        bc.init(DECRYPT_MODE, key, iv);
-        botan.init(DECRYPT_MODE, key, iv);
-
-        expected = bc.doFinal(expected);
-        actual = botan.doFinal(actual);
-
-        Assert.assertArrayEquals("Decryption mismatch with Bouncy Castle provider for algorithm "
-                + algorithm, expected, actual);
+        assertArrayEquals(expected, actual, "Encryption mismatch with Bouncy Castle provider for algorithm "
+                + algorithm);
     }
 
-    @Test
-    public void testEncryptThenDecrypt() throws GeneralSecurityException {
+    @ParameterizedTest
+    @CsvFileSource(resources = "/block/cbc_no_padding.csv", numLinesToSkip = 1)
+    @DisplayName("Test cipher data not block size aligned")
+    public void testEncryptDataNotBlockSizeAligned(String algorithm, int blockSize, int keySize)
+            throws GeneralSecurityException {
+        final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
+
         final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
         final IvParameterSpec iv = new IvParameterSpec(new byte[blockSize]);
 
-        final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
+        cipher.init(Cipher.ENCRYPT_MODE, key, iv);
+        cipher.update(new byte[2]);
 
-        final byte[] expected = withPadding ?
-                HexUtils.decode("0397f4f6820b1f9386f14403be5ac16e50213bd473b4874b9bcbf5f318ee686b1d") :
-                new byte[blockSize];
+        Exception exception = assertThrows(IllegalBlockSizeException.class, () -> cipher.doFinal());
+        assertEquals("Data not block size aligned", exception.getMessage());
 
-        cipher.init(ENCRYPT_MODE, key, iv);
-        final byte[] cipherText = cipher.doFinal(expected);
+        cipher.init(Cipher.ENCRYPT_MODE, key, iv);
 
-        cipher.init(DECRYPT_MODE, key, iv);
-        final byte[] plainText = cipher.doFinal(cipherText);
-
-        Assert.assertArrayEquals(algorithm + " encrypt than decrypt mismatch", expected, plainText);
+        exception = assertThrows(IllegalBlockSizeException.class, () -> cipher.doFinal(new byte[1]));
+        assertEquals("Data not block size aligned", exception.getMessage());
     }
 
-    @Test
-    public void testBotanPerformance() throws GeneralSecurityException {
-        if (!isSupportedByBouncyCastle) {
-            LOG.info(NOT_SUPPORTED_BY_BC, algorithm);
-            return;
-        }
+    @ParameterizedTest
+    @CsvFileSource(resources = "/block/cbc_padding.csv", numLinesToSkip = 1)
+    @DisplayName("Test cipher correct padding length")
+    public void testCorrectPaddingLength(String algorithm, int blockSize, int keySize)
+            throws GeneralSecurityException {
+        final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
 
+        final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
+        final IvParameterSpec iv = new IvParameterSpec(new byte[blockSize]);
+
+        cipher.init(Cipher.ENCRYPT_MODE, key, iv);
+        byte[] output = cipher.doFinal(new byte[0]);
+
+        assertEquals(blockSize, output.length, "Cipher padding incorrect size");
+
+        cipher.init(Cipher.ENCRYPT_MODE, key, iv);
+        output = cipher.doFinal(new byte[blockSize]);
+
+        assertEquals(blockSize * 2, output.length, "Cipher padding incorrect size");
+    }
+
+    @ParameterizedTest
+    @CsvFileSource(resources = "/block/cbc_no_padding.csv", numLinesToSkip = 1)
+    @DisplayName("Test Botan performance against Bouncy Castle ")
+    public void testBotanPerformanceAgainstBouncyCastle(String algorithm, int blockSize, int keySize)
+            throws GeneralSecurityException {
         final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
         final IvParameterSpec iv = new IvParameterSpec(new byte[blockSize]);
 
         final Cipher bc = Cipher.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
         final Cipher botan = Cipher.getInstance(algorithm, BotanProvider.NAME);
 
-        bc.init(ENCRYPT_MODE, key, iv);
-        botan.init(ENCRYPT_MODE, key, iv);
+        bc.init(Cipher.ENCRYPT_MODE, key, iv);
+        botan.init(Cipher.ENCRYPT_MODE, key, iv);
 
         byte[] input = new byte[10_240];
 
@@ -256,8 +241,8 @@ public class BotanBlockCipherTest {
                 "Performance against Bouncy Castle for algorithm %s: %.2f %%",
                 algorithm, difference));
 
-        Assert.assertArrayEquals("Cipher mismatch with Bouncy Castle provider for algorithm "
-                + algorithm, expected, actual);
+        assertArrayEquals(expected, actual, "Cipher mismatch with Bouncy Castle provider for algorithm "
+                + algorithm);
     }
 
 }
