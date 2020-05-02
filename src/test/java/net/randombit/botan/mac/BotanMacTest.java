@@ -11,6 +11,7 @@ package net.randombit.botan.mac;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.security.GeneralSecurityException;
 import java.security.Security;
@@ -23,6 +24,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
 
 import net.randombit.botan.BotanProvider;
+import net.randombit.botan.codec.HexUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringFormattedMessage;
@@ -51,6 +53,28 @@ public class BotanMacTest {
 
         assertEquals(size, mac.getMacLength(), "Output size mismatch for algorithm: " + algorithm);
         assertEquals(size, output.length, "Output size mismatch for algorithm: " + algorithm);
+    }
+
+    @ParameterizedTest
+    @CsvFileSource(resources = "/mac/mac.csv", numLinesToSkip = 1)
+    @DisplayName("Test calling MAC update before initialization")
+    public void testMacUpdateWithoutInitialization(String algorithm) throws GeneralSecurityException {
+        final Mac mac = Mac.getInstance(algorithm, BotanProvider.NAME);
+
+        final Exception exception = assertThrows(IllegalStateException.class, () -> mac.update(new byte[128]));
+
+        assertEquals("MAC not initialized", exception.getMessage());
+    }
+
+    @ParameterizedTest
+    @CsvFileSource(resources = "/mac/mac.csv", numLinesToSkip = 1)
+    @DisplayName("Test calling MAC doFinal before initialization")
+    public void testMacDoFinalWithoutInitialization(String algorithm) throws GeneralSecurityException {
+        final Mac mac = Mac.getInstance(algorithm, BotanProvider.NAME);
+
+        final Exception exception = assertThrows(IllegalStateException.class, () -> mac.doFinal());
+
+        assertEquals("MAC not initialized", exception.getMessage());
     }
 
     @ParameterizedTest
@@ -120,6 +144,22 @@ public class BotanMacTest {
 
         assertArrayEquals(expected, actual, "MAC mismatch with Bouncy Castle provider for algorithm: "
                 + algorithm);
+    }
+
+    @ParameterizedTest
+    @CsvFileSource(resources = "/mac/test_vectors.csv", numLinesToSkip = 1)
+    @DisplayName("Test MAC with test vectors")
+    public void testMacWithTestVectors(String algorithm, String key, String in, String out)
+            throws GeneralSecurityException {
+        final SecretKeySpec secretKey = new SecretKeySpec(HexUtils.decode(key), algorithm);
+        final Mac mac = Mac.getInstance(algorithm, BotanProvider.NAME);
+
+        mac.init(secretKey);
+
+        final byte[] output = mac.doFinal(HexUtils.decode(in));
+        final byte[] expected = HexUtils.decode(out);
+
+        assertArrayEquals(expected, output, "MAC mismatch with test vector");
     }
 
     @ParameterizedTest

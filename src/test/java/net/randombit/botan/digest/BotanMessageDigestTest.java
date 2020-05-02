@@ -125,8 +125,8 @@ public class BotanMessageDigestTest {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/digest/test_vectors.csv", numLinesToSkip = 1)
-    @DisplayName("Test digests against test vectors")
-    public void testAgainstTestVectors(String algorithm, String in, String out) throws NoSuchProviderException,
+    @DisplayName("Test digests with test vectors")
+    public void testDigestWithTestVectors(String algorithm, String in, String out) throws NoSuchProviderException,
             NoSuchAlgorithmException {
         final MessageDigest digest = MessageDigest.getInstance(algorithm, BotanProvider.NAME);
 
