@@ -14,6 +14,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.Security;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -22,6 +24,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
 
 import net.randombit.botan.BotanProvider;
+import net.randombit.botan.codec.HexUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringFormattedMessage;
@@ -118,6 +121,21 @@ public class BotanMessageDigestTest {
 
         assertArrayEquals(expected, actual, "Digest mismatch with Bouncy Castle provider for algorithm: "
                 + algorithm);
+    }
+
+    @ParameterizedTest
+    @CsvFileSource(resources = "/digest/test_vectors.csv", numLinesToSkip = 1)
+    @DisplayName("Test digests against test vectors")
+    public void testAgainstTestVectors(String algorithm, String in, String out) throws NoSuchProviderException,
+            NoSuchAlgorithmException {
+        final MessageDigest digest = MessageDigest.getInstance(algorithm, BotanProvider.NAME);
+
+        final byte[] input = HexUtils.decode(in);
+        final byte[] expected = HexUtils.decode(out);
+
+        final byte[] actual = digest.digest(input);
+
+        assertArrayEquals(expected, actual, "Digest mismatch with test vector");
     }
 
     @ParameterizedTest

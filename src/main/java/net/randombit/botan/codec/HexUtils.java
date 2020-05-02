@@ -18,6 +18,8 @@ import jnr.ffi.byref.NativeLongByReference;
 
 public final class HexUtils {
 
+    private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
+
     private static final Character[] ALLOWED_CHARS = {
             'a', 'A', 'b', 'B', 'c', 'C',
             'd', 'D', 'e', 'E', 'f', 'F',
@@ -64,6 +66,10 @@ public final class HexUtils {
      * @return decoded output
      */
     public static byte[] decode(byte[] input) {
+        if (input.length == 0) {
+            return EMPTY_BYTE_ARRAY;
+        }
+
         verifyInput(input);
 
         final byte[] result = new byte[input.length];
