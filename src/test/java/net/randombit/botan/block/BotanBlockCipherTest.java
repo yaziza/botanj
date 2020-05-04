@@ -18,11 +18,13 @@ import java.security.GeneralSecurityException;
 import java.security.Security;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
 
@@ -70,6 +72,18 @@ public class BotanBlockCipherTest {
 
         String baseCipher = algorithm.substring(0, algorithm.indexOf('/'));
         assertEquals(baseCipher, parameters.getAlgorithm(), "Cipher name mismatch: " + baseCipher);
+    }
+
+    @Test
+    @DisplayName("Test unsupprted padding algorithm")
+    public void testUnsupportedPadingAlgorithm() throws GeneralSecurityException {
+        final String padding = "some padding";
+
+        final Exception exception = assertThrows(NoSuchPaddingException.class, () ->
+                Cipher.getInstance("AES/CBC/" + padding, BotanProvider.NAME)
+        );
+
+        assertEquals("Padding algorithm not supported: " + padding, exception.getMessage());
     }
 
     @ParameterizedTest

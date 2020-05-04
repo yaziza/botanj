@@ -10,6 +10,7 @@
 package net.randombit.botan.codec;
 
 import static net.randombit.botan.Botan.singleton;
+import static net.randombit.botan.Constants.EMPTY_BYTE_ARRAY;
 
 import java.util.Arrays;
 import java.util.List;
@@ -17,8 +18,6 @@ import java.util.List;
 import jnr.ffi.byref.NativeLongByReference;
 
 public final class HexUtils {
-
-    private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
 
     private static final Character[] ALLOWED_CHARS = {
             'a', 'A', 'b', 'B', 'c', 'C',

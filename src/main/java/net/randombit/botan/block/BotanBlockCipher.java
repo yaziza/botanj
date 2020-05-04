@@ -10,6 +10,9 @@
 package net.randombit.botan.block;
 
 import static net.randombit.botan.Botan.singleton;
+import static net.randombit.botan.Constants.BOTAN_DO_FINAL_FLAG;
+import static net.randombit.botan.Constants.BOTAN_UPDATE_FLAG;
+import static net.randombit.botan.Constants.EMPTY_BYTE_ARRAY;
 
 import java.security.AlgorithmParameters;
 import java.security.InvalidAlgorithmParameterException;
@@ -34,22 +37,7 @@ import jnr.ffi.byref.PointerByReference;
 public abstract class BotanBlockCipher extends CipherSpi {
 
     /**
-     * Calling botan_cipher_update() for sending more input.
-     */
-    private static final int BOTAN_UPDATE_FLAG = 0;
-
-    /**
-     * Calling botan_cipher_update() for finishing cipher operation.
-     */
-    private static final int BOTAN_DO_FINAL_FLAG = 1;
-
-    /**
-     * Holds an empty array of bytes
-     */
-    private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
-
-    /**
-     * Holds the name of the block cipher algorithm (e.g. AES-256/CBC/PKCS7).
+     * Holds the name of the block cipher algorithm (e.g. 'AES').
      */
     private final String name;
 
@@ -57,14 +45,17 @@ public abstract class BotanBlockCipher extends CipherSpi {
      * Holds the block size of the cipher in bytes.
      */
     private final int blockSize;
+
     /**
      * Holds the reference to the block cipher object referenced by botan.
      */
     private final PointerByReference cipherRef;
+
     /**
-     * Whether this modes is with padding or not
+     * Holds the padding algorithm (e.g. PKCS5)
      */
-    private final boolean withPadding;
+    private PaddingAlgorithm padding;
+
     /**
      * Holds the cipher operation mode in native botan terms (0: Encryption, 1: Decryption)
      */
@@ -93,19 +84,20 @@ public abstract class BotanBlockCipher extends CipherSpi {
      */
     private byte[] buffer;
 
-    private BotanBlockCipher(String name, int blockSize, boolean withPadding) {
+    private BotanBlockCipher(String name, int blockSize) {
         this.name = Objects.requireNonNull(name);
         this.blockSize = blockSize;
-        this.withPadding = withPadding;
         this.cipherRef = new PointerByReference();
     }
 
     /**
-     * Gets the standard name for the particular algorithm (e.g. AES).
+     * Gets the native botan cipher name (e.g. 'AES-128/CBC/PKCS7').
      *
-     * @return {@link String} containing the base cipher name
+     * @param padding padding algorithm
+     * @param keySize the key size
+     * @return {@link String} containing the Botan cipher name.
      */
-    abstract String getCipherName();
+    abstract String getBotanCipherName(String padding, int keySize);
 
     @Override
     protected void engineSetMode(String mode) throws NoSuchAlgorithmException {
@@ -114,7 +106,7 @@ public abstract class BotanBlockCipher extends CipherSpi {
 
     @Override
     protected void engineSetPadding(String padding) throws NoSuchPaddingException {
-        throw new NoSuchPaddingException("Padding algorithm not supported " + padding);
+        this.padding = PaddingAlgorithm.fromName(padding);
     }
 
     @Override
@@ -124,7 +116,7 @@ public abstract class BotanBlockCipher extends CipherSpi {
 
     @Override
     protected int engineGetOutputSize(int inputLen) {
-        if (!withPadding || mode == 1) {
+        if (isWithoutPadding() || mode == 1) {
             return inputLen;
         }
 
@@ -145,7 +137,7 @@ public abstract class BotanBlockCipher extends CipherSpi {
 
         if (iv != null && iv.length > 0) {
             try {
-                parameters = AlgorithmParameters.getInstance(getCipherName());
+                parameters = AlgorithmParameters.getInstance(name);
                 parameters.init(new IvParameterSpec(iv));
 
             } catch (NoSuchAlgorithmException | InvalidParameterSpecException e) {
@@ -161,7 +153,7 @@ public abstract class BotanBlockCipher extends CipherSpi {
         final byte[] encodedKey = checkKey(key);
         final long keySize = encodedKey.length;
 
-        final String algName = String.format(name, keySize * Byte.SIZE);
+        final String algName = getBotanCipherName(padding.getName(), encodedKey.length);
 
         // Translate java cipher mode to botan native mode (0: Encryption, 1: Decryption)
         this.mode = opmode - 1;
@@ -236,7 +228,7 @@ public abstract class BotanBlockCipher extends CipherSpi {
     @Override
     protected byte[] engineDoFinal(byte[] input, int inputOffset, int inputLen) throws IllegalBlockSizeException {
         boolean isBlockSizeAligned = (inputLen + buffer.length) % blockSize == 0;
-        if (!withPadding && !isBlockSizeAligned) {
+        if (isWithoutPadding() && !isBlockSizeAligned) {
             throw new IllegalBlockSizeException("Data not block size aligned");
         }
 
@@ -267,11 +259,13 @@ public abstract class BotanBlockCipher extends CipherSpi {
                 output, output.length, outputWritten,
                 finalInput, finalInput.length, inputConsumed);
 
+        final byte[] result = Arrays.copyOfRange(output, 0, outputWritten.intValue());
+
         if (BOTAN_DO_FINAL_FLAG == botanFlag) {
             engineReset();
         }
 
-        return Arrays.copyOfRange(output, 0, outputWritten.intValue());
+        return result;
     }
 
     private byte[] checkKey(Key key) throws InvalidKeyException {
@@ -310,138 +304,48 @@ public abstract class BotanBlockCipher extends CipherSpi {
         return result;
     }
 
+    private boolean isWithoutPadding() {
+        return PaddingAlgorithm.NO_PADDING == padding;
+    }
+
     // AES
-    public static final class AesCbcNoPadding extends BotanBlockCipher {
-        public AesCbcNoPadding() {
-            super("AES-%d/CBC/NoPadding", 16, false);
+    public static final class AesCbc extends BotanBlockCipher {
+
+        public AesCbc() {
+            super("AES", 16);
         }
 
-        public String getCipherName() {
-            return "AES";
+        @Override
+        String getBotanCipherName(String padding, int keySize) {
+            return String.format("AES-%d/CBC/%s", keySize * Byte.SIZE, padding);
         }
 
-    }
-
-    public static final class AesCbcPkcs7 extends BotanBlockCipher {
-        public AesCbcPkcs7() {
-            super("AES-%d/CBC/PKCS7", 16, true);
-        }
-
-        public String getCipherName() {
-            return "AES";
-        }
-    }
-
-    public static final class AesCbcIso extends BotanBlockCipher {
-        public AesCbcIso() {
-            super("AES-%d/CBC/OneAndZeros", 16, true);
-        }
-
-        public String getCipherName() {
-            return "AES";
-        }
-    }
-
-    public static final class AesCbcX923 extends BotanBlockCipher {
-        public AesCbcX923() {
-            super("AES-%d/CBC/X9.23", 16, true);
-        }
-
-        public String getCipherName() {
-            return "AES";
-        }
-    }
-
-    public static final class AesCbcEsp extends BotanBlockCipher {
-        public AesCbcEsp() {
-            super("AES-%d/CBC/ESP", 16, true);
-        }
-
-        String getCipherName() {
-            return "AES";
-        }
     }
 
     // DES
-    public static final class DesCbcNoPadding extends BotanBlockCipher {
-        public DesCbcNoPadding() {
-            super("DES/CBC/NoPadding", 8, false);
+    public static final class DesCbc extends BotanBlockCipher {
+        public DesCbc() {
+            super("DES", 8);
         }
 
-        public String getCipherName() {
-            return "DES";
-        }
-    }
-
-    public static final class DesCbcPkcs7 extends BotanBlockCipher {
-        public DesCbcPkcs7() {
-            super("DES/CBC/PKCS7", 8, true);
+        @Override
+        String getBotanCipherName(String padding, int keySize) {
+            return "DES/CBC/" + padding;
         }
 
-        public String getCipherName() {
-            return "DES";
-        }
-    }
-
-    public static final class DesCbcX923 extends BotanBlockCipher {
-        public DesCbcX923() {
-            super("DES/CBC/X9.23", 8, true);
-        }
-
-        public String getCipherName() {
-            return "DES";
-        }
-    }
-
-    public static final class DesCbcEsp extends BotanBlockCipher {
-        public DesCbcEsp() {
-            super("DES/CBC/ESP", 8, true);
-        }
-
-        public String getCipherName() {
-            return "DES";
-        }
     }
 
     // 3DES
-    public static final class DesEdeCbcNoPadding extends BotanBlockCipher {
-        public DesEdeCbcNoPadding() {
-            super("3DES/CBC/NoPadding", 8, false);
+    public static final class DesEdeCbc extends BotanBlockCipher {
+        public DesEdeCbc() {
+            super("DESede", 8);
         }
 
-        public String getCipherName() {
-            return "DESede";
-        }
-    }
-
-    public static final class DesEdeCbcPkcs7 extends BotanBlockCipher {
-        public DesEdeCbcPkcs7() {
-            super("3DES/CBC/PKCS7", 8, true);
+        @Override
+        String getBotanCipherName(String padding, int keySize) {
+            return "3DES/CBC/" + padding;
         }
 
-        public String getCipherName() {
-            return "DESede";
-        }
-    }
-
-    public static final class DesEdeCbcX923 extends BotanBlockCipher {
-        public DesEdeCbcX923() {
-            super("3DES/CBC/X9.23", 8, true);
-        }
-
-        public String getCipherName() {
-            return "DESede";
-        }
-    }
-
-    public static final class DesEdeCbcEsp extends BotanBlockCipher {
-        public DesEdeCbcEsp() {
-            super("3DES/CBC/ESP", 8, true);
-        }
-
-        public String getCipherName() {
-            return "DESede";
-        }
     }
 
 }

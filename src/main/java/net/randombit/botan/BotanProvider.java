@@ -174,46 +174,17 @@ public final class BotanProvider extends Provider {
     }
 
     private void addAesAlgorithm() {
-        put("Cipher.AES/CBC/NoPadding", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$AesCbcNoPadding");
-        put("Cipher.AES/CBC/PKCS7", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$AesCbcPkcs7");
-        put("Cipher.AES/CBC/PKCS5Padding", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$AesCbcPkcs7");
-        put("Cipher.AES/CBC/OneAndZeros", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$AesCbcIso");
-        put("Cipher.AES/CBC/X9.23", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$AesCbcX923");
-        put("Cipher.AES/CBC/ESP", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$AesCbcEsp");
+        put("Cipher.AES/CBC", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$AesCbc");
     }
 
     private void addDesAlgorithm() {
-        put("Cipher.DES/CBC/NoPadding", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesCbcNoPadding");
-        put("Cipher.DES/CBC/PKCS7", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesCbcPkcs7");
-        put("Cipher.DES/CBC/PKCS5Padding", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesCbcPkcs7");
-        put("Cipher.DES/CBC/OneAndZeros", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesCbcIso");
-        put("Cipher.DES/CBC/X9.23", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesCbcX923");
-        put("Cipher.DES/CBC/ESP", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesCbcEsp");
+        put("Cipher.DES/CBC", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesCbc");
     }
 
     private void addTrippleDesAlgorithm() {
-        put("Cipher.DESede/CBC/NoPadding", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesEdeCbcNoPadding");
-        put("Cipher.3DES/CBC/NoPadding", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesEdeCbcNoPadding");
-        put("Cipher.TripleDES/CBC/NoPadding", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesEdeCbcNoPadding");
-
-        put("Cipher.DESede/CBC/PKCS7", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesEdeCbcPkcs7");
-        put("Cipher.DESede/CBC/PKCS5Padding", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesEdeCbcPkcs7");
-        put("Cipher.3DES/CBC/PKCS7", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesEdeCbcPkcs7");
-        put("Cipher.3DES/CBC/PKCS5Padding", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesEdeCbcPkcs7");
-        put("Cipher.TripleDES/CBC/PKCS7", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesEdeCbcPkcs7");
-        put("Cipher.TripleDES/CBC/PKCS5Padding", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesEdeCbcPkcs7");
-
-        put("Cipher.DESede/CBC/OneAndZeros", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesEdeCbcIso");
-        put("Cipher.3DES/CBC/OneAndZeros", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesEdeCbcIso");
-        put("Cipher.TripleDES/CBC/OneAndZeros", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesEdeCbcIso");
-
-        put("Cipher.DESede/CBC/X9.23", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesEdeCbcX923");
-        put("Cipher.TripleDES/CBC/X9.23", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesEdeCbcX923");
-        put("Cipher.3DES/CBC/X9.23", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesEdeCbcX923");
-
-        put("Cipher.DESede/CBC/ESP", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesEdeCbcEsp");
-        put("Cipher.3DES/CBC/ESP", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesEdeCbcEsp");
-        put("Cipher.TripleDES/CBC/ESP", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesEdeCbcEsp");
+        put("Cipher.DESede/CBC", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesEdeCbc");
+        put("Cipher.3DES/CBC", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesEdeCbc");
+        put("Cipher.TripleDES/CBC", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesEdeCbc");
     }
 
 }

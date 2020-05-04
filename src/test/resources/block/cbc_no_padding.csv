@@ -1,13 +1,13 @@
 algorithm, blocksize, keysize
 
-# AES
+# AES-CBC
 AES/CBC/NoPadding, 16, 16
 AES/CBC/NoPadding, 16, 24
 AES/CBC/NoPadding, 16, 32
 
-# DES
+# DES-CBC
 DES/CBC/NoPadding, 8, 8
 
-#3DES
+#3DES-CBC
 DESede/CBC/NoPadding, 8, 16
 DESede/CBC/NoPadding, 8, 24
