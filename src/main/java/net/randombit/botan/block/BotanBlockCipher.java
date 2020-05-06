@@ -42,6 +42,11 @@ public abstract class BotanBlockCipher extends CipherSpi {
     private final String name;
 
     /**
+     * Holds the {@link CipherMode}.
+     */
+    private final CipherMode cipherMode;
+
+    /**
      * Holds the block size of the cipher in bytes.
      */
     private final int blockSize;
@@ -84,8 +89,9 @@ public abstract class BotanBlockCipher extends CipherSpi {
      */
     private byte[] buffer;
 
-    private BotanBlockCipher(String name, int blockSize) {
+    private BotanBlockCipher(String name, CipherMode cipherMode, int blockSize) {
         this.name = Objects.requireNonNull(name);
+        this.cipherMode = Objects.requireNonNull(cipherMode);
         this.blockSize = blockSize;
         this.cipherRef = new PointerByReference();
     }
@@ -99,6 +105,13 @@ public abstract class BotanBlockCipher extends CipherSpi {
      */
     abstract String getBotanCipherName(String padding, int keySize);
 
+    /**
+     * Whether the operation modes requires data block aligned or not.
+     *
+     * @return {@code true} if data must be block size aligned, {@code false} otherwise.
+     */
+    abstract boolean requiresDataBlockAligned();
+
     @Override
     protected void engineSetMode(String mode) throws NoSuchAlgorithmException {
         throw new NoSuchAlgorithmException("Cipher mode not supported " + mode);
@@ -107,6 +120,9 @@ public abstract class BotanBlockCipher extends CipherSpi {
     @Override
     protected void engineSetPadding(String padding) throws NoSuchPaddingException {
         this.padding = PaddingAlgorithm.fromName(padding);
+        if (!cipherMode.isPaddingSupported(this.padding)) {
+            throw new NoSuchPaddingException("Padding algorithm " + padding + " not allowed for mode " + cipherMode);
+        }
     }
 
     @Override
@@ -228,7 +244,7 @@ public abstract class BotanBlockCipher extends CipherSpi {
     @Override
     protected byte[] engineDoFinal(byte[] input, int inputOffset, int inputLen) throws IllegalBlockSizeException {
         boolean isBlockSizeAligned = (inputLen + buffer.length) % blockSize == 0;
-        if (isWithoutPadding() && !isBlockSizeAligned) {
+        if (isWithoutPadding() && requiresDataBlockAligned() && !isBlockSizeAligned) {
             throw new IllegalBlockSizeException("Data not block size aligned");
         }
 
@@ -312,7 +328,7 @@ public abstract class BotanBlockCipher extends CipherSpi {
     public static final class AesCbc extends BotanBlockCipher {
 
         public AesCbc() {
-            super("AES", 16);
+            super("AES", CipherMode.CBC, 16);
         }
 
         @Override
@@ -320,12 +336,71 @@ public abstract class BotanBlockCipher extends CipherSpi {
             return String.format("AES-%d/CBC/%s", keySize * Byte.SIZE, padding);
         }
 
+        @Override
+        boolean requiresDataBlockAligned() {
+            return true;
+        }
+
+    }
+
+    public static final class AesCfb extends BotanBlockCipher {
+
+        public AesCfb() {
+            super("AES", CipherMode.CFB, 16);
+        }
+
+        @Override
+        String getBotanCipherName(String padding, int keySize) {
+            return String.format("AES-%d/CFB", keySize * Byte.SIZE);
+        }
+
+        @Override
+        boolean requiresDataBlockAligned() {
+            return false;
+        }
+
+    }
+
+    public static final class AesOfb extends BotanBlockCipher {
+
+        public AesOfb() {
+            super("AES", CipherMode.OFB, 16);
+        }
+
+        @Override
+        String getBotanCipherName(String padding, int keySize) {
+            return String.format("AES-%d/OFB", keySize * Byte.SIZE);
+        }
+
+        @Override
+        boolean requiresDataBlockAligned() {
+            return false;
+        }
+
+    }
+
+    public static final class AesCtr extends BotanBlockCipher {
+
+        public AesCtr() {
+            super("AES", CipherMode.CTR, 16);
+        }
+
+        @Override
+        String getBotanCipherName(String padding, int keySize) {
+            return String.format("AES-%d/CTR", keySize * Byte.SIZE);
+        }
+
+        @Override
+        boolean requiresDataBlockAligned() {
+            return false;
+        }
+
     }
 
     // DES
     public static final class DesCbc extends BotanBlockCipher {
         public DesCbc() {
-            super("DES", 8);
+            super("DES", CipherMode.CBC, 8);
         }
 
         @Override
@@ -333,17 +408,129 @@ public abstract class BotanBlockCipher extends CipherSpi {
             return "DES/CBC/" + padding;
         }
 
+        @Override
+        boolean requiresDataBlockAligned() {
+            return true;
+        }
+
+    }
+
+    public static final class DesCfb extends BotanBlockCipher {
+        public DesCfb() {
+            super("DES", CipherMode.CFB, 8);
+        }
+
+        @Override
+        String getBotanCipherName(String padding, int keySize) {
+            return "DES/CFB";
+        }
+
+        @Override
+        boolean requiresDataBlockAligned() {
+            return false;
+        }
+
+    }
+
+    public static final class DesOfb extends BotanBlockCipher {
+        public DesOfb() {
+            super("DES", CipherMode.OFB, 8);
+        }
+
+        @Override
+        String getBotanCipherName(String padding, int keySize) {
+            return "DES/OFB";
+        }
+
+        @Override
+        boolean requiresDataBlockAligned() {
+            return false;
+        }
+
+    }
+
+    public static final class DesCtr extends BotanBlockCipher {
+        public DesCtr() {
+            super("DES", CipherMode.CTR, 8);
+        }
+
+        @Override
+        String getBotanCipherName(String padding, int keySize) {
+            return "DES/CTR";
+        }
+
+        @Override
+        boolean requiresDataBlockAligned() {
+            return false;
+        }
+
     }
 
     // 3DES
     public static final class DesEdeCbc extends BotanBlockCipher {
         public DesEdeCbc() {
-            super("DESede", 8);
+            super("DESede", CipherMode.CBC, 8);
         }
 
         @Override
         String getBotanCipherName(String padding, int keySize) {
             return "3DES/CBC/" + padding;
+        }
+
+        @Override
+        boolean requiresDataBlockAligned() {
+            return true;
+        }
+
+    }
+
+    public static final class DesEdeCfb extends BotanBlockCipher {
+        public DesEdeCfb() {
+            super("DESede", CipherMode.CFB, 8);
+        }
+
+        @Override
+        String getBotanCipherName(String padding, int keySize) {
+            return "3DES/CFB";
+        }
+
+        @Override
+        boolean requiresDataBlockAligned() {
+            return false;
+        }
+
+    }
+
+    public static final class DesEdeOfb extends BotanBlockCipher {
+        public DesEdeOfb() {
+            super("DESede", CipherMode.OFB, 8);
+        }
+
+        @Override
+        String getBotanCipherName(String padding, int keySize) {
+            return "3DES/OFB";
+        }
+
+        @Override
+        boolean requiresDataBlockAligned() {
+            return false;
+        }
+
+    }
+
+    public static final class DesEdeCtr extends BotanBlockCipher {
+        public DesEdeCtr() {
+            super("DESede", CipherMode.CTR, 8);
+        }
+
+        @Override
+        String getBotanCipherName(String padding, int keySize) {
+            return "3DES/CTR";
+        }
+
+        @Override
+        boolean requiresDataBlockAligned() {
+            return false;
         }
 
     }

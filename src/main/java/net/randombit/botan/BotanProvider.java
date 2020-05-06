@@ -175,16 +175,40 @@ public final class BotanProvider extends Provider {
 
     private void addAesAlgorithm() {
         put("Cipher.AES/CBC", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$AesCbc");
+
+        put("Cipher.AES/CFB", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$AesCfb");
+
+        put("Cipher.AES/OFB", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$AesOfb");
+
+        put("Cipher.AES/CTR", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$AesCtr");
     }
 
     private void addDesAlgorithm() {
         put("Cipher.DES/CBC", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesCbc");
+
+        put("Cipher.DES/CFB", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesCfb");
+
+        put("Cipher.DES/OFB", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesOfb");
+
+        put("Cipher.DES/CTR", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesCtr");
     }
 
     private void addTrippleDesAlgorithm() {
         put("Cipher.DESede/CBC", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesEdeCbc");
         put("Cipher.3DES/CBC", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesEdeCbc");
         put("Cipher.TripleDES/CBC", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesEdeCbc");
+
+        put("Cipher.DESede/CFB", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesEdeCfb");
+        put("Cipher.3DES/CFB", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesEdeCfb");
+        put("Cipher.TripleDES/CFB", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesEdeCfb");
+
+        put("Cipher.DESede/OFB", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesEdeOfb");
+        put("Cipher.3DES/OFB", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesEdeOfb");
+        put("Cipher.TripleDES/OFB", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesEdeOfb");
+
+        put("Cipher.DESede/CTR", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesEdeCtr");
+        put("Cipher.3DES/CTR", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesEdeCtr");
+        put("Cipher.TripleDES/CTR", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesEdeCtr");
     }
 
 }

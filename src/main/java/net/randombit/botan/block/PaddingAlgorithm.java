@@ -16,11 +16,34 @@ import javax.crypto.NoSuchPaddingException;
 
 public enum PaddingAlgorithm {
 
+    /**
+     * No padding.
+     */
     NO_PADDING("NoPadding"),
+
+    /**
+     * PKCS5.
+     */
     PKCS5_PADDING("PKCS5"),
+
+    /**
+     * PKCS7.
+     */
     PKCS7_PADDING("PKCS7"),
+
+    /**
+     * ISO 7816-4 Padding.
+     */
     One_And_Zeros("OneAndZeros"),
+
+    /**
+     * ANSI X9.23 Padding.
+     */
     X923_PADDING("X9.23"),
+
+    /**
+     * IP Encapsulating Security Payload (ESP) pading.
+     */
     ESP_PADDING("ESP");
 
     private final String name;

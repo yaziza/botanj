@@ -29,6 +29,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
 
 import net.randombit.botan.BotanProvider;
+import net.randombit.botan.codec.HexUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringFormattedMessage;
@@ -46,7 +47,8 @@ public class BotanBlockCipherTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = {"/block/cbc_padding.csv", "/block/cbc_no_padding.csv"}, numLinesToSkip = 1)
+    @CsvFileSource(resources = {"/block/cbc_padding.csv", "/block/cbc_no_padding.csv", "/block/cfb_no_padding.csv",
+            "/block/ofb_no_padding.csv", "/block/ctr_no_padding.csv"}, numLinesToSkip = 1)
     @DisplayName("Test cipher block size")
     public void testCipherBlockSize(String algorithm, int blockSize, int keySize) throws GeneralSecurityException {
         final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
@@ -59,7 +61,8 @@ public class BotanBlockCipherTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = {"/block/cbc_padding.csv", "/block/cbc_no_padding.csv"}, numLinesToSkip = 1)
+    @CsvFileSource(resources = {"/block/cbc_no_padding.csv", "/block/cfb_no_padding.csv", "/block/ofb_no_padding.csv",
+            "/block/ctr_no_padding.csv"}, numLinesToSkip = 1)
     @DisplayName("Test cipher parameters IV set")
     public void testCipherParametersWithIv(String algorithm, int blockSize, int keySize)
             throws GeneralSecurityException {
@@ -87,7 +90,7 @@ public class BotanBlockCipherTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = {"/block/cbc_padding.csv", "/block/cbc_no_padding.csv"}, numLinesToSkip = 1)
+    @CsvFileSource(resources = {"/block/cbc_padding.csv"}, numLinesToSkip = 1)
     @DisplayName("Test calling cipher update before initialization")
     public void testCipherUpdateWithoutInitialization(String algorithm) throws GeneralSecurityException {
         final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
@@ -98,7 +101,7 @@ public class BotanBlockCipherTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = {"/block/cbc_padding.csv", "/block/cbc_no_padding.csv"}, numLinesToSkip = 1)
+    @CsvFileSource(resources = "/block/cfb_no_padding.csv", numLinesToSkip = 1)
     @DisplayName("Test calling cipher doFinal before initialization")
     public void testCipherDoFinalWithoutInitialization(String algorithm) throws GeneralSecurityException {
         final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
@@ -139,7 +142,8 @@ public class BotanBlockCipherTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/block/cbc_padding.csv", numLinesToSkip = 1)
+    @CsvFileSource(resources = {"/block/cbc_padding.csv", "/block/cfb_no_padding.csv", "/block/ofb_no_padding.csv",
+            "/block/ctr_no_padding.csv"}, numLinesToSkip = 1)
     @DisplayName("Test encrypting then decrypting cipher")
     public void testEncryptThenDecrypt(String algorithm, int blockSize, int keySize) throws GeneralSecurityException {
         final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
@@ -158,7 +162,8 @@ public class BotanBlockCipherTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/block/cbc_no_padding.csv", numLinesToSkip = 1)
+    @CsvFileSource(resources = {"/block/cbc_no_padding.csv", "/block/cfb_no_padding.csv", "/block/ofb_no_padding.csv",
+            "/block/ctr_no_padding.csv"}, numLinesToSkip = 1)
     @DisplayName("Test cipher encrypt(no padding) against bouncy castle")
     public void testEncryptNoPaddingAgainstBouncyCastle(String algorithm, int blockSize, int keySize)
             throws GeneralSecurityException {
@@ -224,8 +229,26 @@ public class BotanBlockCipherTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/block/cbc_no_padding.csv", numLinesToSkip = 1)
-    @DisplayName("Test Botan performance against Bouncy Castle ")
+    @CsvFileSource(resources = "/block/cbc_test_vectors.csv", numLinesToSkip = 1)
+    @DisplayName("Test block cipher encryption with test vectors")
+    public void testCipherWithTestVectors(String algorithm, String key, String iv, String in, String out)
+            throws GeneralSecurityException {
+        final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
+
+        final SecretKeySpec keyBytes = new SecretKeySpec(HexUtils.decode(key), algorithm);
+        final IvParameterSpec ivBytes = new IvParameterSpec(HexUtils.decode(iv));
+
+        cipher.init(Cipher.ENCRYPT_MODE, keyBytes, ivBytes);
+
+        byte[] cipherText = cipher.doFinal(HexUtils.decode(in));
+
+        assertArrayEquals(HexUtils.decode(out), cipherText, "Encryption mismatch with test vector");
+    }
+
+    @ParameterizedTest
+    @CsvFileSource(resources = {"/block/cbc_no_padding.csv", "/block/cfb_no_padding.csv", "/block/ofb_no_padding.csv",
+            "/block/ctr_no_padding.csv"}, numLinesToSkip = 1)
+    @DisplayName("Test Botan performance against Bouncy Castle")
     public void testBotanPerformanceAgainstBouncyCastle(String algorithm, int blockSize, int keySize)
             throws GeneralSecurityException {
         final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);

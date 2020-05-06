@@ -51,10 +51,12 @@ final byte[] output = cipher.doFinal("hello world".getBytes());
 ## Supported Primitives
 
 ### Ciphers, hashes, MACs, and checksums
-* Hash functions: SHA-1, SHA-2, SHA-3, MD4, MD5, RIPEMD-160, BLAKE2b
-* Message Authentication codes: HMAC
-* Cipher modes: CBC
+* Authenticated cipher modes: (WIP)
+* Cipher modes: CBC, CTR, CFB, OFB
 * Block ciphers: AES, DES/3DES
+* Stream ciphers: Not yet supported
+* Hash functions: SHA-1, SHA-2, SHA-3, MD4, MD5, RIPEMD-160, BLAKE2b
+* Message Authentication codes: HMAC, Poly1305 (WIP)
 
 ### Public Key Cryptography
 * Not yet supported

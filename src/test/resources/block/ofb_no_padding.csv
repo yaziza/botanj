@@ -1,0 +1,11 @@
+# AES
+AES/OFB/NoPadding, 16, 16
+AES/OFB/NoPadding, 16, 24
+AES/OFB/NoPadding, 16, 32
+
+# DES
+DES/OFB/NoPadding, 8, 8
+
+#3DES
+DESede/OFB/NoPadding, 8, 16
+DESede/OFB/NoPadding, 8, 24
