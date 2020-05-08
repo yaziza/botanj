@@ -238,7 +238,7 @@ public class BotanBlockCipherTest {
         final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
 
         final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
-        final GCMParameterSpec iv = new GCMParameterSpec(128, new byte[blockSize]);
+        final GCMParameterSpec iv = new GCMParameterSpec(128, new byte[12]);
 
         final byte[] input = "some plain text".getBytes();
         final byte[] aad = "some associated data".getBytes();
@@ -263,7 +263,7 @@ public class BotanBlockCipherTest {
         final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
 
         final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
-        final GCMParameterSpec iv = new GCMParameterSpec(128, new byte[blockSize]);
+        final GCMParameterSpec iv = new GCMParameterSpec(128, new byte[12]);
 
         final byte[] input = "some plain text".getBytes();
 
@@ -274,6 +274,24 @@ public class BotanBlockCipherTest {
         final byte[] plainText = cipher.doFinal(cipherText);
 
         assertArrayEquals(input, plainText, "Encrypt then decrypt mismatch");
+    }
+
+    @ParameterizedTest
+    @CsvFileSource(resources = "/block/gcm_no_padding.csv", numLinesToSkip = 1)
+    @DisplayName("Test GCM mode with invalid tag length")
+    public void testGcmWithInvalidTagLength(String algorithm, int blockSize, int keySize)
+            throws GeneralSecurityException {
+
+        final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
+
+        final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
+        final GCMParameterSpec iv = new GCMParameterSpec(66, new byte[12]);
+
+        final Exception exception = assertThrows(IllegalArgumentException.class, () ->
+                cipher.init(Cipher.ENCRYPT_MODE, key, iv)
+        );
+
+        assertEquals("Invalid tag length: 66", exception.getMessage());
     }
 
     @ParameterizedTest

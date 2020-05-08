@@ -41,6 +41,14 @@ mac.init(key);
 final byte[] output = mac.doFinal("hello world".getBytes());
 ```
 
+An example describing the procedure to encrypt using AES-256/GCM:
+```java
+final Cipher cipher = Cipher.getInstance("AES-256/GCM/NoPadding", BotanProvider.NAME);
+cipher.init(Cipher.ENCRYPT_MODE, key, iv);
+cipher.updateAAD(aad);
+final byte[] output = cipher.doFinal("hello world".getBytes());
+```
+
 An example describing the procedure to encrypt using AES-256/CBC/PKCS7:
 ```java
 final Cipher cipher = Cipher.getInstance("AES-256/CBC/PKCS7", BotanProvider.NAME);

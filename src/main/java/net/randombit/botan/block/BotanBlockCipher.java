@@ -200,7 +200,12 @@ public abstract class BotanBlockCipher extends CipherSpi {
 
         } else if (params instanceof GCMParameterSpec) {
             iv = ((GCMParameterSpec) params).getIV();
-            // TODO: add tag length
+            final int tLen = ((GCMParameterSpec) params).getTLen();
+
+            if (tLen != 128) {
+                // TODO: 96 bit is also supported by botan
+                throw new IllegalArgumentException("Invalid tag length: " + tLen);
+            }
         }
     }
 
