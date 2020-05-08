@@ -19,6 +19,7 @@ import java.security.Security;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
+import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -229,6 +230,53 @@ public class BotanBlockCipherTest {
     }
 
     @ParameterizedTest
+    @CsvFileSource(resources = "/block/gcm_no_padding.csv", numLinesToSkip = 1)
+    @DisplayName("Test GCM mode encrypt then decrypt with AAD")
+    public void testGcmModeEncryptThenDecryptWithAad(String algorithm, int blockSize, int keySize)
+            throws GeneralSecurityException {
+
+        final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
+
+        final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
+        final GCMParameterSpec iv = new GCMParameterSpec(128, new byte[blockSize]);
+
+        final byte[] input = "some plain text".getBytes();
+        final byte[] aad = "some associated data".getBytes();
+
+        cipher.init(Cipher.ENCRYPT_MODE, key, iv);
+        cipher.updateAAD(aad);
+        final byte[] cipherText = cipher.doFinal(input);
+
+        cipher.init(Cipher.DECRYPT_MODE, key, iv);
+        cipher.updateAAD(aad);
+        final byte[] plainText = cipher.doFinal(cipherText);
+
+        assertArrayEquals(input, plainText, "Encrypt then decrypt mismatch");
+    }
+
+    @ParameterizedTest
+    @CsvFileSource(resources = "/block/gcm_no_padding.csv", numLinesToSkip = 1)
+    @DisplayName("Test GCM mode encrypt then decrypt without AAD")
+    public void testGcmModeEncryptThenDecryptWithoutAad(String algorithm, int blockSize, int keySize)
+            throws GeneralSecurityException {
+
+        final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
+
+        final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
+        final GCMParameterSpec iv = new GCMParameterSpec(128, new byte[blockSize]);
+
+        final byte[] input = "some plain text".getBytes();
+
+        cipher.init(Cipher.ENCRYPT_MODE, key, iv);
+        final byte[] cipherText = cipher.doFinal(input);
+
+        cipher.init(Cipher.DECRYPT_MODE, key, iv);
+        final byte[] plainText = cipher.doFinal(cipherText);
+
+        assertArrayEquals(input, plainText, "Encrypt then decrypt mismatch");
+    }
+
+    @ParameterizedTest
     @CsvFileSource(resources = "/block/cbc_test_vectors.csv", numLinesToSkip = 1)
     @DisplayName("Test block cipher encryption with test vectors")
     public void testCipherWithTestVectors(String algorithm, String key, String iv, String in, String out)
@@ -247,7 +295,7 @@ public class BotanBlockCipherTest {
 
     @ParameterizedTest
     @CsvFileSource(resources = {"/block/cbc_no_padding.csv", "/block/cfb_no_padding.csv", "/block/ofb_no_padding.csv",
-            "/block/ctr_no_padding.csv"}, numLinesToSkip = 1)
+            "/block/ctr_no_padding.csv", "/block/gcm_no_padding.csv"}, numLinesToSkip = 1)
     @DisplayName("Test Botan performance against Bouncy Castle")
     public void testBotanPerformanceAgainstBouncyCastle(String algorithm, int blockSize, int keySize)
             throws GeneralSecurityException {

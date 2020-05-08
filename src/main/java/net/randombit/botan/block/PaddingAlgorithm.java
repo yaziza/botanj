@@ -22,27 +22,27 @@ public enum PaddingAlgorithm {
     NO_PADDING("NoPadding"),
 
     /**
-     * PKCS5.
+     * PKCS#5 padding.
      */
     PKCS5_PADDING("PKCS5"),
 
     /**
-     * PKCS7.
+     * PKCS#7 padding.
      */
     PKCS7_PADDING("PKCS7"),
 
     /**
-     * ISO 7816-4 Padding.
+     * ISO 7816-4 padding.
      */
     One_And_Zeros("OneAndZeros"),
 
     /**
-     * ANSI X9.23 Padding.
+     * ANSI X9.23 padding.
      */
     X923_PADDING("X9.23"),
 
     /**
-     * IP Encapsulating Security Payload (ESP) pading.
+     * IP Encapsulating Security Payload (ESP) padding.
      */
     ESP_PADDING("ESP");
 
@@ -64,6 +64,15 @@ public enum PaddingAlgorithm {
         return getNormalized(algorithm.get(0));
     }
 
+    /**
+     * Most Java providers( e.g. SUN and Bouncy Castle) indicates PKCS5
+     * where PKCS7 padding should be used. This method is for supporting such
+     * legacy systems migrating to Botanj and to enable testing against other
+     * providers.
+     *
+     * @param padding the {@link PaddingAlgorithm} to be normalized
+     * @return the normalized {@link PaddingAlgorithm}.
+     */
     private static PaddingAlgorithm getNormalized(PaddingAlgorithm padding) {
         return (padding == PKCS5_PADDING) ? PKCS7_PADDING : padding;
     }

@@ -29,6 +29,7 @@ import javax.crypto.CipherSpi;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
+import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
 
 import jnr.ffi.byref.NativeLongByReference;
@@ -67,14 +68,15 @@ public abstract class BotanBlockCipher extends CipherSpi {
     private int mode;
 
     /**
-     * Disables cipher usage without initialization.
-     */
-    private boolean isInitialized = false;
-
-    /**
      * Holds the Initial Vector (IV).
      */
     private byte[] iv;
+
+    /**
+     * Whether this cipher has been properly initialized and can start
+     * encrypting/decrypting.
+     */
+    private boolean canStart;
 
     /**
      * Botan update granularity for this cipher. botan_cipher_update() must be
@@ -132,6 +134,10 @@ public abstract class BotanBlockCipher extends CipherSpi {
 
     @Override
     protected int engineGetOutputSize(int inputLen) {
+        if (CipherMode.GCM == cipherMode) {
+            return inputLen + blockSize;
+        }
+
         if (isWithoutPadding() || mode == 1) {
             return inputLen;
         }
@@ -173,7 +179,6 @@ public abstract class BotanBlockCipher extends CipherSpi {
 
         // Translate java cipher mode to botan native mode (0: Encryption, 1: Decryption)
         this.mode = opmode - 1;
-        this.isInitialized = true;
         this.buffer = EMPTY_BYTE_ARRAY;
 
         singleton().botan_cipher_init(cipherRef, algName, mode);
@@ -192,6 +197,10 @@ public abstract class BotanBlockCipher extends CipherSpi {
         if (params instanceof IvParameterSpec) {
             iv = ((IvParameterSpec) params).getIV();
             singleton().botan_cipher_start(cipherRef.getValue(), iv, iv.length);
+
+        } else if (params instanceof GCMParameterSpec) {
+            iv = ((GCMParameterSpec) params).getIV();
+            // TODO: add tag length
         }
     }
 
@@ -204,6 +213,21 @@ public abstract class BotanBlockCipher extends CipherSpi {
         } catch (InvalidParameterSpecException e) {
             throw new InvalidAlgorithmParameterException("Parameters must be convertible to IvParameterSpec", e);
         }
+    }
+
+    @Override
+    protected void engineUpdateAAD(byte[] src, int offset, int len) {
+        if (CipherMode.GCM != cipherMode) {
+            String format = "Cipher '%s' does not support this method for mode '%s'.";
+            throw new UnsupportedOperationException(String.format(format, name, cipherMode));
+        }
+
+        final byte[] fromOffset = Arrays.copyOfRange(src, offset, src.length);
+
+        singleton().botan_cipher_set_associated_data(cipherRef.getValue(), fromOffset, len);
+        singleton().botan_cipher_start(cipherRef.getValue(), iv, iv.length);
+
+        canStart = true;
     }
 
     @Override
@@ -253,6 +277,11 @@ public abstract class BotanBlockCipher extends CipherSpi {
 
     private byte[] doCipher(byte[] input, int inputOffset, int inputLen, int botanFlag) {
         boolean isEmptyInput = (inputLen == 0) && (buffer.length == 0);
+
+        if (CipherMode.GCM == cipherMode && !canStart) {
+            //GCM mode called without AAD
+            singleton().botan_cipher_start(cipherRef.getValue(), iv, iv.length);
+        }
 
         if (isEmptyInput && Cipher.DECRYPT_MODE == mode) {
             return EMPTY_BYTE_ARRAY;
@@ -388,6 +417,24 @@ public abstract class BotanBlockCipher extends CipherSpi {
         @Override
         String getBotanCipherName(String padding, int keySize) {
             return String.format("AES-%d/CTR", keySize * Byte.SIZE);
+        }
+
+        @Override
+        boolean requiresDataBlockAligned() {
+            return false;
+        }
+
+    }
+
+    public static final class AesGcm extends BotanBlockCipher {
+
+        public AesGcm() {
+            super("AES", CipherMode.GCM, 16);
+        }
+
+        @Override
+        String getBotanCipherName(String padding, int keySize) {
+            return String.format("AES-%d/GCM(16)", keySize * Byte.SIZE);
         }
 
         @Override

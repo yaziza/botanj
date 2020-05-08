@@ -12,6 +12,16 @@ package net.randombit.botan.block;
 public enum CipherMode {
 
     /**
+     * Galois counter Mode.
+     */
+    GCM(PaddingAlgorithm.NO_PADDING),
+
+    /**
+     * Counter mode.
+     */
+    CTR(PaddingAlgorithm.NO_PADDING),
+
+    /**
      * Cipher block chaining mode.
      */
     CBC(PaddingAlgorithm.values()),
@@ -24,12 +34,7 @@ public enum CipherMode {
     /**
      * Output feedback mode.
      */
-    OFB(PaddingAlgorithm.NO_PADDING),
-
-    /**
-     * Couter mode.
-     */
-    CTR(PaddingAlgorithm.NO_PADDING);
+    OFB(PaddingAlgorithm.NO_PADDING);
 
     private final PaddingAlgorithm[] supportedPadding;
 
