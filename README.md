@@ -25,14 +25,14 @@ Botanj uses [JNR-FFI](https://github.com/jnr/jnr-ffi) for loading Botan native c
 `mvn test`
 
 ## Using Botanj
-An example describing the procedure to compute a MessageDigest object:
+* An example describing the procedure to compute a MessageDigest object:
 
 ```java
 final MessageDigest digest = MessageDigest.getInstance("blake2b-512", BotanProvider.NAME);
 final byte[] output = digest.digest("hello world".getBytes());
 ```
 
-An example describing the procedure to compute a MAC object:
+* An example describing the procedure to compute a MAC object:
 
 ```java
 final SecretKeySpec key = new SecretKeySpec(key, "HMAC-SHA512");
@@ -41,17 +41,17 @@ mac.init(key);
 final byte[] output = mac.doFinal("hello world".getBytes());
 ```
 
-An example describing the procedure to encrypt using AES-256/GCM:
+* An example describing the procedure to encrypt using AES-256/GCM:
 
-:warning: Never reruse the IV with the same key :warning:
 ```java
 final Cipher cipher = Cipher.getInstance("AES-256/GCM/NoPadding", BotanProvider.NAME);
+// Never reruse the IV with the same key
 cipher.init(Cipher.ENCRYPT_MODE, key, iv);
 cipher.updateAAD(aad);
 final byte[] output = cipher.doFinal("hello world".getBytes());
 ```
 
-An example describing the procedure to encrypt using AES-256/CBC/PKCS7:
+* An example describing the procedure to encrypt using AES-256/CBC/PKCS7:
 ```java
 final Cipher cipher = Cipher.getInstance("AES-256/CBC/PKCS7", BotanProvider.NAME);
 cipher.init(Cipher.ENCRYPT_MODE, key, iv);

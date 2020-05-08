@@ -37,6 +37,8 @@ import jnr.ffi.byref.PointerByReference;
 
 public abstract class BotanBlockCipher extends CipherSpi {
 
+    private static final String ERR_MSG_GCM_WITHOUT_IV = "GCM does not support empty nonces!";
+
     /**
      * Holds the name of the block cipher algorithm (e.g. 'AES').
      */
@@ -96,6 +98,10 @@ public abstract class BotanBlockCipher extends CipherSpi {
         this.cipherMode = Objects.requireNonNull(cipherMode);
         this.blockSize = blockSize;
         this.cipherRef = new PointerByReference();
+    }
+
+    private static boolean isNullOrEmpty(byte[] value) {
+        return value == null || value.length == 0;
     }
 
     /**
@@ -205,7 +211,7 @@ public abstract class BotanBlockCipher extends CipherSpi {
             final int tLen = ((GCMParameterSpec) params).getTLen();
 
             if (tLen != 128) {
-                // TODO: 96 bit is also supported by botan
+                // TODO: Botan allow any of the values 128, 120, 112, 104, or 96 bits as a tag size.
                 throw new IllegalArgumentException("Invalid tag length: " + tLen);
             }
         }
@@ -232,7 +238,17 @@ public abstract class BotanBlockCipher extends CipherSpi {
         final byte[] fromOffset = Arrays.copyOfRange(src, offset, src.length);
 
         singleton().botan_cipher_set_associated_data(cipherRef.getValue(), fromOffset, len);
-        singleton().botan_cipher_start(cipherRef.getValue(), iv, iv.length);
+
+        if (isNullOrEmpty(iv)) {
+            if (CipherMode.GCM == cipherMode) {
+                throw new IllegalArgumentException(ERR_MSG_GCM_WITHOUT_IV);
+            }
+            if (CipherMode.SIV == cipherMode) {
+                singleton().botan_cipher_start(cipherRef.getValue(), EMPTY_BYTE_ARRAY, 0);
+            }
+        } else {
+            singleton().botan_cipher_start(cipherRef.getValue(), iv, iv.length);
+        }
 
         canStart = true;
     }
@@ -285,11 +301,6 @@ public abstract class BotanBlockCipher extends CipherSpi {
     private byte[] doCipher(byte[] input, int inputOffset, int inputLen, int botanFlag) {
         boolean isEmptyInput = (inputLen == 0) && (buffer.length == 0);
 
-        if ((CipherMode.GCM == cipherMode || CipherMode.SIV == cipherMode) && !canStart) {
-            // GCM/SIV mode called without AAD
-            singleton().botan_cipher_start(cipherRef.getValue(), iv, iv.length);
-        }
-
         if (isEmptyInput && Cipher.DECRYPT_MODE == mode) {
             return EMPTY_BYTE_ARRAY;
         }
@@ -300,6 +311,13 @@ public abstract class BotanBlockCipher extends CipherSpi {
             inputLen = blockSize;
         }
 
+        if (CipherMode.SIV == cipherMode && !canStart) {
+            startSivMode();
+        }
+
+        if (CipherMode.GCM == cipherMode && !canStart) {
+            startGcmMode();
+        }
 
         final NativeLongByReference outputWritten = new NativeLongByReference();
         final NativeLongByReference inputConsumed = new NativeLongByReference();
@@ -354,6 +372,22 @@ public abstract class BotanBlockCipher extends CipherSpi {
         }
 
         return result;
+    }
+
+    private void startGcmMode() {
+        if (isNullOrEmpty(iv)) {
+            throw new IllegalArgumentException(ERR_MSG_GCM_WITHOUT_IV);
+        } else {
+            singleton().botan_cipher_start(cipherRef.getValue(), iv, iv.length);
+        }
+    }
+
+    private void startSivMode() {
+        if (isNullOrEmpty(iv)) {
+            singleton().botan_cipher_start(cipherRef.getValue(), EMPTY_BYTE_ARRAY, 0);
+        } else {
+            singleton().botan_cipher_start(cipherRef.getValue(), iv, iv.length);
+        }
     }
 
     private boolean isWithoutPadding() {

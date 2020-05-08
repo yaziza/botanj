@@ -278,6 +278,64 @@ public class BotanBlockCipherTest {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/block/gcm_no_padding.csv", numLinesToSkip = 1)
+    @DisplayName("Test GCM mode encrypt then decrypt without IV")
+    public void testGcmModeEncryptThenDecryptWithoutIv(String algorithm, int blockSize, int keySize)
+            throws GeneralSecurityException {
+
+        final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
+
+        final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
+
+        cipher.init(Cipher.ENCRYPT_MODE, key);
+
+        Exception exception = assertThrows(IllegalArgumentException.class, () ->
+                cipher.updateAAD("some AAD".getBytes())
+        );
+
+        assertEquals(exception.getMessage(), "GCM does not support empty nonces!");
+    }
+
+    @ParameterizedTest
+    @CsvFileSource(resources = "/block/gcm_no_padding.csv", numLinesToSkip = 1)
+    @DisplayName("Test GCM mode encrypt then decrypt with empty IV")
+    public void testGcmModeEncryptThenDecryptWithEmptyIv(String algorithm, int blockSize, int keySize)
+            throws GeneralSecurityException {
+
+        final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
+
+        final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
+        final GCMParameterSpec iv = new GCMParameterSpec(128, new byte[0]);
+
+        cipher.init(Cipher.ENCRYPT_MODE, key);
+
+        Exception exception = assertThrows(IllegalArgumentException.class, () ->
+                cipher.updateAAD("some AAD".getBytes())
+        );
+
+        assertEquals(exception.getMessage(), "GCM does not support empty nonces!");
+    }
+
+    @ParameterizedTest
+    @CsvFileSource(resources = "/block/gcm_no_padding.csv", numLinesToSkip = 1)
+    @DisplayName("Test GCM mode encrypt then decrypt without IV nor AAD")
+    public void testGcmModeEncryptThenDecryptWithoutIvNorAad(String algorithm, int blockSize, int keySize)
+            throws GeneralSecurityException {
+
+        final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
+
+        final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
+
+        cipher.init(Cipher.ENCRYPT_MODE, key);
+
+        Exception exception = assertThrows(IllegalArgumentException.class, () ->
+                cipher.doFinal("some plain text".getBytes())
+        );
+
+        assertEquals(exception.getMessage(), "GCM does not support empty nonces!");
+    }
+
+    @ParameterizedTest
+    @CsvFileSource(resources = "/block/gcm_no_padding.csv", numLinesToSkip = 1)
     @DisplayName("Test GCM mode with invalid tag length")
     public void testGcmWithInvalidTagLength(String algorithm, int blockSize, int keySize)
             throws GeneralSecurityException {
@@ -336,6 +394,51 @@ public class BotanBlockCipherTest {
         final byte[] cipherText = cipher.doFinal(input);
 
         cipher.init(Cipher.DECRYPT_MODE, key, iv);
+        final byte[] plainText = cipher.doFinal(cipherText);
+
+        assertArrayEquals(input, plainText, "Encrypt then decrypt mismatch");
+    }
+
+    @ParameterizedTest
+    @CsvFileSource(resources = "/block/siv_no_padding.csv", numLinesToSkip = 1)
+    @DisplayName("Test SIV mode encrypt then decrypt without IV")
+    public void testSivModeEncryptThenDecryptWithoutIv(String algorithm, int blockSize, int keySize)
+            throws GeneralSecurityException {
+
+        final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
+
+        final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
+
+        final byte[] input = "some plain text".getBytes();
+        final byte[] aad = "some associated data".getBytes();
+
+        cipher.init(Cipher.ENCRYPT_MODE, key);
+        cipher.updateAAD(aad);
+        final byte[] cipherText = cipher.doFinal(input);
+
+        cipher.init(Cipher.DECRYPT_MODE, key);
+        cipher.updateAAD(aad);
+        final byte[] plainText = cipher.doFinal(cipherText);
+
+        assertArrayEquals(input, plainText, "Encrypt then decrypt mismatch");
+    }
+
+    @ParameterizedTest
+    @CsvFileSource(resources = "/block/siv_no_padding.csv", numLinesToSkip = 1)
+    @DisplayName("Test SIV mode encrypt then decrypt without IV nor AAD")
+    public void testSivModeEncryptThenDecryptWithoutIvNorAdd(String algorithm, int blockSize, int keySize)
+            throws GeneralSecurityException {
+
+        final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
+
+        final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
+
+        final byte[] input = "some plain text".getBytes();
+
+        cipher.init(Cipher.ENCRYPT_MODE, key);
+        final byte[] cipherText = cipher.doFinal(input);
+
+        cipher.init(Cipher.DECRYPT_MODE, key);
         final byte[] plainText = cipher.doFinal(cipherText);
 
         assertArrayEquals(input, plainText, "Encrypt then decrypt mismatch");
