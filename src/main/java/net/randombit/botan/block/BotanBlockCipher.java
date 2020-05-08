@@ -134,7 +134,7 @@ public abstract class BotanBlockCipher extends CipherSpi {
 
     @Override
     protected int engineGetOutputSize(int inputLen) {
-        if (CipherMode.GCM == cipherMode) {
+        if (CipherMode.GCM == cipherMode || CipherMode.SIV == cipherMode) {
             return inputLen + blockSize;
         }
 
@@ -196,8 +196,10 @@ public abstract class BotanBlockCipher extends CipherSpi {
 
         if (params instanceof IvParameterSpec) {
             iv = ((IvParameterSpec) params).getIV();
-            singleton().botan_cipher_start(cipherRef.getValue(), iv, iv.length);
 
+            if (CipherMode.SIV != cipherMode) {
+                singleton().botan_cipher_start(cipherRef.getValue(), iv, iv.length);
+            }
         } else if (params instanceof GCMParameterSpec) {
             iv = ((GCMParameterSpec) params).getIV();
             final int tLen = ((GCMParameterSpec) params).getTLen();
@@ -222,7 +224,7 @@ public abstract class BotanBlockCipher extends CipherSpi {
 
     @Override
     protected void engineUpdateAAD(byte[] src, int offset, int len) {
-        if (CipherMode.GCM != cipherMode) {
+        if (CipherMode.GCM != cipherMode && CipherMode.SIV != cipherMode) {
             String format = "Cipher '%s' does not support this method for mode '%s'.";
             throw new UnsupportedOperationException(String.format(format, name, cipherMode));
         }
@@ -283,8 +285,8 @@ public abstract class BotanBlockCipher extends CipherSpi {
     private byte[] doCipher(byte[] input, int inputOffset, int inputLen, int botanFlag) {
         boolean isEmptyInput = (inputLen == 0) && (buffer.length == 0);
 
-        if (CipherMode.GCM == cipherMode && !canStart) {
-            //GCM mode called without AAD
+        if ((CipherMode.GCM == cipherMode || CipherMode.SIV == cipherMode) && !canStart) {
+            // GCM/SIV mode called without AAD
             singleton().botan_cipher_start(cipherRef.getValue(), iv, iv.length);
         }
 
@@ -440,6 +442,24 @@ public abstract class BotanBlockCipher extends CipherSpi {
         @Override
         String getBotanCipherName(String padding, int keySize) {
             return String.format("AES-%d/GCM(16)", keySize * Byte.SIZE);
+        }
+
+        @Override
+        boolean requiresDataBlockAligned() {
+            return false;
+        }
+
+    }
+
+    public static final class AesSiv extends BotanBlockCipher {
+
+        public AesSiv() {
+            super("AES", CipherMode.SIV, 16);
+        }
+
+        @Override
+        String getBotanCipherName(String padding, int keySize) {
+            return String.format("AES-%d/SIV", (keySize / 2) * Byte.SIZE);
         }
 
         @Override

@@ -183,6 +183,8 @@ public final class BotanProvider extends Provider {
         put("Cipher.AES/CTR", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$AesCtr");
 
         put("Cipher.AES/GCM", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$AesGcm");
+
+        put("Cipher.AES/SIV", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$AesSiv");
     }
 
     private void addDesAlgorithm() {

@@ -42,6 +42,8 @@ final byte[] output = mac.doFinal("hello world".getBytes());
 ```
 
 An example describing the procedure to encrypt using AES-256/GCM:
+
+:warning: Never reruse the IV with the same key :warning:
 ```java
 final Cipher cipher = Cipher.getInstance("AES-256/GCM/NoPadding", BotanProvider.NAME);
 cipher.init(Cipher.ENCRYPT_MODE, key, iv);
@@ -59,7 +61,7 @@ final byte[] output = cipher.doFinal("hello world".getBytes());
 ## Supported Primitives
 
 ### Ciphers, hashes, MACs, and checksums
-* Authenticated cipher modes: GCM
+* Authenticated cipher modes: GCM, SIV
 * Cipher modes: CBC, CTR, CFB, OFB
 * Block ciphers: AES, DES/3DES
 * Stream ciphers: Not yet supported

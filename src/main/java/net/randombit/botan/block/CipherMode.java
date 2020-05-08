@@ -17,6 +17,11 @@ public enum CipherMode {
     GCM(PaddingAlgorithm.NO_PADDING),
 
     /**
+     * Synthetic Initialization Vector.
+     */
+    SIV(PaddingAlgorithm.NO_PADDING),
+
+    /**
      * Counter mode.
      */
     CTR(PaddingAlgorithm.NO_PADDING),

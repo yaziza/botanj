@@ -295,6 +295,53 @@ public class BotanBlockCipherTest {
     }
 
     @ParameterizedTest
+    @CsvFileSource(resources = "/block/siv_no_padding.csv", numLinesToSkip = 1)
+    @DisplayName("Test SIV mode encrypt then decrypt with AAD")
+    public void testSivModeEncryptThenDecryptWithAad(String algorithm, int blockSize, int keySize)
+            throws GeneralSecurityException {
+
+        final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
+
+        final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
+        final IvParameterSpec iv = new IvParameterSpec(new byte[blockSize]);
+
+        final byte[] input = "some plain text".getBytes();
+        final byte[] aad = "some associated data".getBytes();
+
+        cipher.init(Cipher.ENCRYPT_MODE, key, iv);
+        cipher.updateAAD(aad);
+        final byte[] cipherText = cipher.doFinal(input);
+
+        cipher.init(Cipher.DECRYPT_MODE, key, iv);
+        cipher.updateAAD(aad);
+        final byte[] plainText = cipher.doFinal(cipherText);
+
+        assertArrayEquals(input, plainText, "Encrypt then decrypt mismatch");
+    }
+
+    @ParameterizedTest
+    @CsvFileSource(resources = "/block/siv_no_padding.csv", numLinesToSkip = 1)
+    @DisplayName("Test SIV mode encrypt then decrypt without AAD")
+    public void testSivModeEncryptThenDecryptWithoutAad(String algorithm, int blockSize, int keySize)
+            throws GeneralSecurityException {
+
+        final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
+
+        final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
+        final IvParameterSpec iv = new IvParameterSpec(new byte[blockSize]);
+
+        final byte[] input = "some plain text".getBytes();
+
+        cipher.init(Cipher.ENCRYPT_MODE, key, iv);
+        final byte[] cipherText = cipher.doFinal(input);
+
+        cipher.init(Cipher.DECRYPT_MODE, key, iv);
+        final byte[] plainText = cipher.doFinal(cipherText);
+
+        assertArrayEquals(input, plainText, "Encrypt then decrypt mismatch");
+    }
+
+    @ParameterizedTest
     @CsvFileSource(resources = "/block/cbc_test_vectors.csv", numLinesToSkip = 1)
     @DisplayName("Test block cipher encryption with test vectors")
     public void testCipherWithTestVectors(String algorithm, String key, String iv, String in, String out)
