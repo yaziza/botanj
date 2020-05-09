@@ -185,6 +185,8 @@ public final class BotanProvider extends Provider {
         put("Cipher.AES/GCM", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$AesGcm");
 
         put("Cipher.AES/SIV", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$AesSiv");
+
+        put("Cipher.AES/EAX", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$AesEax");
     }
 
     private void addDesAlgorithm() {

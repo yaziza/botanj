@@ -61,7 +61,7 @@ final byte[] output = cipher.doFinal("hello world".getBytes());
 ## Supported Primitives
 
 ### Ciphers, hashes, MACs, and checksums
-* Authenticated cipher modes: GCM, SIV
+* Authenticated cipher modes: EAX, GCM, SIV
 * Cipher modes: CBC, CTR, CFB, OFB
 * Block ciphers: AES, DES/3DES
 * Stream ciphers: Not yet supported

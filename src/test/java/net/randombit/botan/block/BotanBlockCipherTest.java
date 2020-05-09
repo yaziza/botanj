@@ -16,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.security.AlgorithmParameters;
 import java.security.GeneralSecurityException;
 import java.security.Security;
+import java.security.spec.AlgorithmParameterSpec;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
@@ -361,7 +362,7 @@ public class BotanBlockCipherTest {
         final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
 
         final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
-        final IvParameterSpec iv = new IvParameterSpec(new byte[blockSize]);
+        final GCMParameterSpec iv = new GCMParameterSpec(128, new byte[blockSize]);
 
         final byte[] input = "some plain text".getBytes();
         final byte[] aad = "some associated data".getBytes();
@@ -386,7 +387,7 @@ public class BotanBlockCipherTest {
         final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
 
         final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
-        final IvParameterSpec iv = new IvParameterSpec(new byte[blockSize]);
+        final GCMParameterSpec iv = new GCMParameterSpec(128, new byte[blockSize]);
 
         final byte[] input = "some plain text".getBytes();
 
@@ -463,12 +464,12 @@ public class BotanBlockCipherTest {
 
     @ParameterizedTest
     @CsvFileSource(resources = {"/block/cbc_no_padding.csv", "/block/cfb_no_padding.csv", "/block/ofb_no_padding.csv",
-            "/block/ctr_no_padding.csv", "/block/gcm_no_padding.csv"}, numLinesToSkip = 1)
+            "/block/ctr_no_padding.csv", "/block/gcm_no_padding.csv", "/block/eax_no_padding.csv"}, numLinesToSkip = 1)
     @DisplayName("Test Botan performance against Bouncy Castle")
     public void testBotanPerformanceAgainstBouncyCastle(String algorithm, int blockSize, int keySize)
             throws GeneralSecurityException {
         final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
-        final IvParameterSpec iv = new IvParameterSpec(new byte[blockSize]);
+        final AlgorithmParameterSpec iv = constuctIv(algorithm, blockSize);
 
         final Cipher bc = Cipher.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
         final Cipher botan = Cipher.getInstance(algorithm, BotanProvider.NAME);
@@ -496,6 +497,14 @@ public class BotanBlockCipherTest {
 
         assertArrayEquals(expected, actual, "Cipher mismatch with Bouncy Castle provider for algorithm "
                 + algorithm);
+    }
+
+    private AlgorithmParameterSpec constuctIv(String algorithm, int blockSize) {
+        if (algorithm.contains("GCM") || algorithm.contains("EAX")) {
+            return new GCMParameterSpec(128, new byte[blockSize]);
+        }
+
+        return new IvParameterSpec(new byte[blockSize]);
     }
 
 }

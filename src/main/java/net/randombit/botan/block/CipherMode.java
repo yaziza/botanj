@@ -12,38 +12,46 @@ package net.randombit.botan.block;
 public enum CipherMode {
 
     /**
-     * Galois counter Mode.
+     * Galois counter mode.
      */
-    GCM(PaddingAlgorithm.NO_PADDING),
+    GCM(true, PaddingAlgorithm.NO_PADDING),
 
     /**
      * Synthetic Initialization Vector.
      */
-    SIV(PaddingAlgorithm.NO_PADDING),
+    SIV(true, PaddingAlgorithm.NO_PADDING),
+
+    /**
+     * Encrypt-then-authenticate-then-translate mode.
+     */
+    EAX(true, PaddingAlgorithm.NO_PADDING),
 
     /**
      * Counter mode.
      */
-    CTR(PaddingAlgorithm.NO_PADDING),
+    CTR(false, PaddingAlgorithm.NO_PADDING),
 
     /**
      * Cipher block chaining mode.
      */
-    CBC(PaddingAlgorithm.values()),
+    CBC(false, PaddingAlgorithm.values()),
 
     /**
      * Cipher feedback mode.
      */
-    CFB(PaddingAlgorithm.NO_PADDING),
+    CFB(false, PaddingAlgorithm.NO_PADDING),
 
     /**
      * Output feedback mode.
      */
-    OFB(PaddingAlgorithm.NO_PADDING);
+    OFB(false, PaddingAlgorithm.NO_PADDING);
 
     private final PaddingAlgorithm[] supportedPadding;
 
-    CipherMode(PaddingAlgorithm... algorithms) {
+    private final boolean isAuthenticated;
+
+    CipherMode(boolean isAuthenticated, PaddingAlgorithm... algorithms) {
+        this.isAuthenticated = isAuthenticated;
         this.supportedPadding = algorithms;
     }
 
@@ -56,4 +64,9 @@ public enum CipherMode {
 
         return false;
     }
+
+    public boolean isAuthenticated() {
+        return isAuthenticated;
+    }
+
 }

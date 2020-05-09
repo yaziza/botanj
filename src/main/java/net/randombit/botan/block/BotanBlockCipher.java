@@ -75,6 +75,11 @@ public abstract class BotanBlockCipher extends CipherSpi {
     private byte[] iv;
 
     /**
+     * Holds the tag length for AEAD ciphers.
+     */
+    private int tLen;
+
+    /**
      * Whether this cipher has been properly initialized and can start
      * encrypting/decrypting.
      */
@@ -140,8 +145,8 @@ public abstract class BotanBlockCipher extends CipherSpi {
 
     @Override
     protected int engineGetOutputSize(int inputLen) {
-        if (CipherMode.GCM == cipherMode || CipherMode.SIV == cipherMode) {
-            return inputLen + blockSize;
+        if (cipherMode.isAuthenticated()) {
+            return inputLen + (tLen / Byte.SIZE);
         }
 
         if (isWithoutPadding() || mode == 1) {
@@ -203,17 +208,23 @@ public abstract class BotanBlockCipher extends CipherSpi {
         if (params instanceof IvParameterSpec) {
             iv = ((IvParameterSpec) params).getIV();
 
-            if (CipherMode.SIV != cipherMode) {
+            if (!cipherMode.isAuthenticated()) {
                 singleton().botan_cipher_start(cipherRef.getValue(), iv, iv.length);
             }
         } else if (params instanceof GCMParameterSpec) {
             iv = ((GCMParameterSpec) params).getIV();
-            final int tLen = ((GCMParameterSpec) params).getTLen();
+            tLen = ((GCMParameterSpec) params).getTLen();
 
-            if (tLen != 128) {
+            if (CipherMode.GCM == cipherMode && tLen != 128) {
                 // TODO: Botan allow any of the values 128, 120, 112, 104, or 96 bits as a tag size.
                 throw new IllegalArgumentException("Invalid tag length: " + tLen);
             }
+
+            if (CipherMode.EAX == cipherMode && tLen != 128) {
+                // TODO: check allowed tLen for EAX
+                throw new IllegalArgumentException("Invalid tag length: " + tLen);
+            }
+
         }
     }
 
@@ -248,6 +259,10 @@ public abstract class BotanBlockCipher extends CipherSpi {
             }
         } else {
             singleton().botan_cipher_start(cipherRef.getValue(), iv, iv.length);
+        }
+
+        if (isNullOrEmpty(iv)) {
+            tLen = 128;
         }
 
         canStart = true;
@@ -311,12 +326,8 @@ public abstract class BotanBlockCipher extends CipherSpi {
             inputLen = blockSize;
         }
 
-        if (CipherMode.SIV == cipherMode && !canStart) {
-            startSivMode();
-        }
-
-        if (CipherMode.GCM == cipherMode && !canStart) {
-            startGcmMode();
+        if (cipherMode.isAuthenticated() && !canStart) {
+            startAeadMode();
         }
 
         final NativeLongByReference outputWritten = new NativeLongByReference();
@@ -374,16 +385,14 @@ public abstract class BotanBlockCipher extends CipherSpi {
         return result;
     }
 
-    private void startGcmMode() {
+    private void startAeadMode() {
         if (isNullOrEmpty(iv)) {
-            throw new IllegalArgumentException(ERR_MSG_GCM_WITHOUT_IV);
-        } else {
-            singleton().botan_cipher_start(cipherRef.getValue(), iv, iv.length);
-        }
-    }
+            if (CipherMode.GCM == cipherMode) {
+                throw new IllegalArgumentException(ERR_MSG_GCM_WITHOUT_IV);
+            }
 
-    private void startSivMode() {
-        if (isNullOrEmpty(iv)) {
+            // Set default tag length when no IV is supplied
+            tLen = 128;
             singleton().botan_cipher_start(cipherRef.getValue(), EMPTY_BYTE_ARRAY, 0);
         } else {
             singleton().botan_cipher_start(cipherRef.getValue(), iv, iv.length);
@@ -494,6 +503,24 @@ public abstract class BotanBlockCipher extends CipherSpi {
         @Override
         String getBotanCipherName(String padding, int keySize) {
             return String.format("AES-%d/SIV", (keySize / 2) * Byte.SIZE);
+        }
+
+        @Override
+        boolean requiresDataBlockAligned() {
+            return false;
+        }
+
+    }
+
+    public static final class AesEax extends BotanBlockCipher {
+
+        public AesEax() {
+            super("AES", CipherMode.EAX, 16);
+        }
+
+        @Override
+        String getBotanCipherName(String padding, int keySize) {
+            return String.format("AES-%d/EAX", keySize * Byte.SIZE);
         }
 
         @Override
