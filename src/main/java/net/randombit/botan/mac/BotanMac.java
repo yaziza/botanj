@@ -55,21 +55,11 @@ public class BotanMac extends MacSpi {
     }
 
     @Override
-    protected void engineInit(Key key, AlgorithmParameterSpec params)
-            throws InvalidKeyException, InvalidAlgorithmParameterException {
+    protected void engineInit(Key key, AlgorithmParameterSpec params) {
+        final String botanMacName = String.format(name, key.getEncoded().length * Byte.SIZE);
 
-        int err = singleton().botan_mac_init(macRef, name, 0);
-        if (err != 0) {
-            String msg = singleton().botan_error_description(err);
-            throw new InvalidAlgorithmParameterException(msg);
-        }
-
-        err = singleton().botan_mac_set_key(macRef.getValue(), key.getEncoded(),
-                key.getEncoded().length);
-        if (err != 0) {
-            String msg = singleton().botan_error_description(err);
-            throw new InvalidKeyException(msg);
-        }
+        singleton().botan_mac_init(macRef, botanMacName, 0);
+        singleton().botan_mac_set_key(macRef.getValue(), key.getEncoded(), key.getEncoded().length);
     }
 
     @Override
@@ -97,6 +87,13 @@ public class BotanMac extends MacSpi {
     @Override
     protected void engineReset() {
         singleton().botan_mac_clear(macRef.getValue());
+    }
+
+    // CMAC
+    public static final class CMac extends BotanMac {
+        public CMac() {
+            super("CMAC(AES-%d)", 16);
+        }
     }
 
     // HMAC

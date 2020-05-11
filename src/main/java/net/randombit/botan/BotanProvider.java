@@ -39,6 +39,7 @@ public final class BotanProvider extends Provider {
 
         // Message Authentication Codes
         addHmacAlgorithm();
+        addCmacAlgorithm();
 
         // Block Ciphers
         addAesAlgorithm();
@@ -171,6 +172,10 @@ public final class BotanProvider extends Provider {
         put("Mac.HMAC-SHA512", PACKAGE_NAME + MAC_PREFIX + "BotanMac$HMacSha512");
         put("Mac.HMAC-SHA2", PACKAGE_NAME + MAC_PREFIX + "BotanMac$HMacSha512");
         put("Alg.Alias.Mac.HmacSHA512", PACKAGE_NAME + MAC_PREFIX + "BotanMac$HMacSha512");
+    }
+
+    private void addCmacAlgorithm() {
+        put("Mac.CMAC", PACKAGE_NAME + MAC_PREFIX + "BotanMac$CMac");
     }
 
     private void addAesAlgorithm() {

@@ -66,7 +66,7 @@ final byte[] output = cipher.doFinal("hello world".getBytes());
 * Block ciphers: AES, DES/3DES
 * Stream ciphers: Not yet supported
 * Hash functions: SHA-1, SHA-2, SHA-3, MD4, MD5, RIPEMD-160, BLAKE2b
-* Message Authentication codes: HMAC
+* Message Authentication codes: HMAC, CMAC
 
 ### Public Key Cryptography
 * Not yet supported
