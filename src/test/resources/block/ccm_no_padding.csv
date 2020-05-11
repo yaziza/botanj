@@ -1,0 +1,5 @@
+algorithm, blocksize, keysize
+
+AES/CCM/NoPadding, 16, 16
+AES/CCM/NoPadding, 16, 24
+AES/CCM/NoPadding, 16, 32

@@ -15,6 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.security.AlgorithmParameters;
 import java.security.GeneralSecurityException;
+import java.security.InvalidAlgorithmParameterException;
 import java.security.Security;
 import java.security.spec.AlgorithmParameterSpec;
 import javax.crypto.Cipher;
@@ -346,7 +347,7 @@ public class BotanBlockCipherTest {
         final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
         final GCMParameterSpec iv = new GCMParameterSpec(66, new byte[12]);
 
-        final Exception exception = assertThrows(IllegalArgumentException.class, () ->
+        final Exception exception = assertThrows(InvalidAlgorithmParameterException.class, () ->
                 cipher.init(Cipher.ENCRYPT_MODE, key, iv)
         );
 
@@ -464,7 +465,8 @@ public class BotanBlockCipherTest {
 
     @ParameterizedTest
     @CsvFileSource(resources = {"/block/cbc_no_padding.csv", "/block/cfb_no_padding.csv", "/block/ofb_no_padding.csv",
-            "/block/ctr_no_padding.csv", "/block/gcm_no_padding.csv", "/block/eax_no_padding.csv"}, numLinesToSkip = 1)
+            "/block/ctr_no_padding.csv", "/block/gcm_no_padding.csv", "/block/eax_no_padding.csv",
+            "/block/ocb_no_padding.csv", "/block/ccm_no_padding.csv"}, numLinesToSkip = 1)
     @DisplayName("Test Botan performance against Bouncy Castle")
     public void testBotanPerformanceAgainstBouncyCastle(String algorithm, int blockSize, int keySize)
             throws GeneralSecurityException {
@@ -492,8 +494,8 @@ public class BotanBlockCipherTest {
         difference *= 100;
 
         LOG.info(new StringFormattedMessage(
-                "Performance against Bouncy Castle for algorithm %s: %.2f %%",
-                algorithm, difference));
+                "Performance against Bouncy Castle for algorithm with key size: %s(%d): %.2f %%",
+                algorithm, keySize, difference));
 
         assertArrayEquals(expected, actual, "Cipher mismatch with Bouncy Castle provider for algorithm "
                 + algorithm);
@@ -502,6 +504,10 @@ public class BotanBlockCipherTest {
     private AlgorithmParameterSpec constuctIv(String algorithm, int blockSize) {
         if (algorithm.contains("GCM") || algorithm.contains("EAX")) {
             return new GCMParameterSpec(128, new byte[blockSize]);
+        }
+
+        if (algorithm.contains("CCM") || algorithm.contains("OCB")) {
+            return new GCMParameterSpec(128, new byte[12]);
         }
 
         return new IvParameterSpec(new byte[blockSize]);

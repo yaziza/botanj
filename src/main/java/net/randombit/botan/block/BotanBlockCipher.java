@@ -105,10 +105,6 @@ public abstract class BotanBlockCipher extends CipherSpi {
         this.cipherRef = new PointerByReference();
     }
 
-    private static boolean isNullOrEmpty(byte[] value) {
-        return value == null || value.length == 0;
-    }
-
     /**
      * Gets the native botan cipher name (e.g. 'AES-128/CBC/PKCS7').
      *
@@ -149,7 +145,7 @@ public abstract class BotanBlockCipher extends CipherSpi {
             return inputLen + (tLen / Byte.SIZE);
         }
 
-        if (isWithoutPadding() || mode == 1) {
+        if (isWithoutPadding() || isDecrypting(mode)) {
             return inputLen;
         }
 
@@ -202,7 +198,7 @@ public abstract class BotanBlockCipher extends CipherSpi {
 
     @Override
     protected void engineInit(int opmode, Key key, AlgorithmParameterSpec params, SecureRandom random)
-            throws InvalidKeyException {
+            throws InvalidKeyException, InvalidAlgorithmParameterException {
         engineInit(opmode, key, random);
 
         if (params instanceof IvParameterSpec) {
@@ -217,14 +213,22 @@ public abstract class BotanBlockCipher extends CipherSpi {
 
             if (CipherMode.GCM == cipherMode && tLen != 128) {
                 // TODO: Botan allow any of the values 128, 120, 112, 104, or 96 bits as a tag size.
-                throw new IllegalArgumentException("Invalid tag length: " + tLen);
+                throw new InvalidAlgorithmParameterException("Invalid tag length: " + tLen);
             }
 
             if (CipherMode.EAX == cipherMode && tLen != 128) {
                 // TODO: check allowed tLen for EAX
-                throw new IllegalArgumentException("Invalid tag length: " + tLen);
+                throw new InvalidAlgorithmParameterException("Invalid tag length: " + tLen);
             }
 
+            if (CipherMode.CCM == cipherMode && (iv.length < 7 || iv.length > 13)) {
+                // TODO: allow CCM dynamic parameters
+                throw new InvalidAlgorithmParameterException("IV size must be between 7 and 13");
+            }
+
+            if (CipherMode.OCB == cipherMode && iv.length > 15) {
+                throw new InvalidAlgorithmParameterException("Max allowed IV size 15");
+            }
         }
     }
 
@@ -253,8 +257,7 @@ public abstract class BotanBlockCipher extends CipherSpi {
         if (isNullOrEmpty(iv)) {
             if (CipherMode.GCM == cipherMode) {
                 throw new IllegalArgumentException(ERR_MSG_GCM_WITHOUT_IV);
-            }
-            if (CipherMode.SIV == cipherMode) {
+            } else {
                 singleton().botan_cipher_start(cipherRef.getValue(), EMPTY_BYTE_ARRAY, 0);
             }
         } else {
@@ -403,6 +406,14 @@ public abstract class BotanBlockCipher extends CipherSpi {
         return PaddingAlgorithm.NO_PADDING == padding;
     }
 
+    private static boolean isDecrypting(int mode) {
+        return mode == 1;
+    }
+
+    private static boolean isNullOrEmpty(byte[] value) {
+        return value == null || value.length == 0;
+    }
+
     // AES
     public static final class AesCbc extends BotanBlockCipher {
 
@@ -494,6 +505,24 @@ public abstract class BotanBlockCipher extends CipherSpi {
 
     }
 
+    public static final class AesCcm extends BotanBlockCipher {
+
+        public AesCcm() {
+            super("AES", CipherMode.CCM, 16);
+        }
+
+        @Override
+        String getBotanCipherName(String padding, int keySize) {
+            return String.format("AES-%d/CCM(16,3)", keySize * Byte.SIZE);
+        }
+
+        @Override
+        boolean requiresDataBlockAligned() {
+            return false;
+        }
+
+    }
+
     public static final class AesSiv extends BotanBlockCipher {
 
         public AesSiv() {
@@ -521,6 +550,24 @@ public abstract class BotanBlockCipher extends CipherSpi {
         @Override
         String getBotanCipherName(String padding, int keySize) {
             return String.format("AES-%d/EAX", keySize * Byte.SIZE);
+        }
+
+        @Override
+        boolean requiresDataBlockAligned() {
+            return false;
+        }
+
+    }
+
+    public static final class AesOcb extends BotanBlockCipher {
+
+        public AesOcb() {
+            super("AES", CipherMode.OCB, 16);
+        }
+
+        @Override
+        String getBotanCipherName(String padding, int keySize) {
+            return String.format("AES-%d/OCB", keySize * Byte.SIZE);
         }
 
         @Override

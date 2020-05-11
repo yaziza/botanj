@@ -17,6 +17,11 @@ public enum CipherMode {
     GCM(true, PaddingAlgorithm.NO_PADDING),
 
     /**
+     * Counter with CBC-MAC
+     */
+    CCM(true, PaddingAlgorithm.NO_PADDING),
+
+    /**
      * Synthetic Initialization Vector.
      */
     SIV(true, PaddingAlgorithm.NO_PADDING),
@@ -25,6 +30,11 @@ public enum CipherMode {
      * Encrypt-then-authenticate-then-translate mode.
      */
     EAX(true, PaddingAlgorithm.NO_PADDING),
+
+    /**
+     * Offset Codebook Mode.
+     */
+    OCB(true, PaddingAlgorithm.NO_PADDING),
 
     /**
      * Counter mode.
