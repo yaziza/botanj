@@ -1,4 +1,4 @@
-algorithm, size
+algorithm, outputSize
 
 # SHA-1
 sha1, 20

@@ -352,7 +352,7 @@ public abstract class BotanBlockCipher extends CipherSpi {
         return result;
     }
 
-    private byte[] checkKey(Key key) throws InvalidKeyException {
+    private static byte[] checkKey(Key key) throws InvalidKeyException {
         if (!(key instanceof SecretKey)) {
             throw new InvalidKeyException("Only SecretKey is supported");
         }
@@ -361,6 +361,8 @@ public abstract class BotanBlockCipher extends CipherSpi {
         if (encodedKey == null) {
             throw new InvalidKeyException("key.getEncoded() == null");
         }
+
+        //TODO: check keysize
 
         return encodedKey;
     }

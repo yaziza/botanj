@@ -40,6 +40,7 @@ public final class BotanProvider extends Provider {
         // Message Authentication Codes
         addHmacAlgorithm();
         addCmacAlgorithm();
+        addPoly1305Algorithm();
 
         // Block Ciphers
         addAesAlgorithm();
@@ -152,30 +153,35 @@ public final class BotanProvider extends Provider {
 
     private void addHmacAlgorithm() {
         put("Mac.HMAC-MD5", PACKAGE_NAME + MAC_PREFIX + "BotanMac$HMacMd5");
-        put("Alg.Alias.Mac.HmacMD5", PACKAGE_NAME + MAC_PREFIX + "BotanMac$HMacMd5");
+        put("Alg.Alias.Mac.HmacMD5", "HMAC-MD5");
 
         put("Mac.HMAC-RIPEMD160", PACKAGE_NAME + MAC_PREFIX + "BotanMac$HMacRipeMd160");
-        put("Alg.Alias.Mac.HmacRipeMd160", PACKAGE_NAME + MAC_PREFIX + "BotanMac$HMacRipeMd160");
+        put("Alg.Alias.Mac.HmacRipeMd160", "HMAC-RIPEMD160");
 
         put("Mac.HMAC-SHA1", PACKAGE_NAME + MAC_PREFIX + "BotanMac$HMacSha1");
-        put("Alg.Alias.Mac.HmacSHA1", PACKAGE_NAME + MAC_PREFIX + "BotanMac$HMacSha1");
+        put("Alg.Alias.Mac.HmacSHA1", "HMAC-SHA1");
 
         put("Mac.HMAC-SHA224", PACKAGE_NAME + MAC_PREFIX + "BotanMac$HMacSha224");
-        put("Alg.Alias.Mac.HmacSHA224", PACKAGE_NAME + MAC_PREFIX + "BotanMac$HMacSha224");
+        put("Alg.Alias.Mac.HmacSHA224", "HMAC-SHA224");
 
         put("Mac.HMAC-SHA256", PACKAGE_NAME + MAC_PREFIX + "BotanMac$HMacSha256");
-        put("Alg.Alias.Mac.HmacSHA256", PACKAGE_NAME + MAC_PREFIX + "BotanMac$HMacSha256");
+        put("Alg.Alias.Mac.HmacSHA256", "HMAC-SHA256");
 
         put("Mac.HMAC-SHA384", PACKAGE_NAME + MAC_PREFIX + "BotanMac$HMacSha384");
-        put("Alg.Alias.Mac.HmacSHA384", PACKAGE_NAME + MAC_PREFIX + "BotanMac$HMacSha384");
+        put("Alg.Alias.Mac.HmacSHA384", "HMAC-SHA384");
 
         put("Mac.HMAC-SHA512", PACKAGE_NAME + MAC_PREFIX + "BotanMac$HMacSha512");
-        put("Mac.HMAC-SHA2", PACKAGE_NAME + MAC_PREFIX + "BotanMac$HMacSha512");
-        put("Alg.Alias.Mac.HmacSHA512", PACKAGE_NAME + MAC_PREFIX + "BotanMac$HMacSha512");
+        put("Alg.Alias.Mac.HMAC-SHA2", "HMAC-SHA512");
+        put("Alg.Alias.Mac.HmacSHA512", "HMAC-SHA512");
     }
 
     private void addCmacAlgorithm() {
         put("Mac.CMAC", PACKAGE_NAME + MAC_PREFIX + "BotanMac$CMac");
+        put("Alg.Alias.Mac.AESCMAC", "CMAC");
+    }
+
+    private void addPoly1305Algorithm() {
+        put("Mac.Poly1305", PACKAGE_NAME + MAC_PREFIX + "BotanMac$Poly1305");
     }
 
     private void addAesAlgorithm() {
@@ -210,20 +216,20 @@ public final class BotanProvider extends Provider {
 
     private void addTrippleDesAlgorithm() {
         put("Cipher.DESede/CBC", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesEdeCbc");
-        put("Cipher.3DES/CBC", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesEdeCbc");
-        put("Cipher.TripleDES/CBC", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesEdeCbc");
+        put("Alg.Alias.Cipher.3DES/CBC", "DESede/CBC");
+        put("Alg.Alias.Cipher.TripleDES/CBC", "DESede/CBC");
 
         put("Cipher.DESede/CFB", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesEdeCfb");
-        put("Cipher.3DES/CFB", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesEdeCfb");
-        put("Cipher.TripleDES/CFB", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesEdeCfb");
+        put("Alg.Alias.Cipher.3DES/CFB", "DESede/CFB");
+        put("Alg.Alias.Cipher.TripleDES/CFB", "DESede/CFB");
 
         put("Cipher.DESede/OFB", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesEdeOfb");
-        put("Cipher.3DES/OFB", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesEdeOfb");
-        put("Cipher.TripleDES/OFB", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesEdeOfb");
+        put("Cipher.3DES/OFB", "DESede/OFB");
+        put("Cipher.TripleDES/OFB", "TripleDES/OFB");
 
         put("Cipher.DESede/CTR", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesEdeCtr");
-        put("Cipher.3DES/CTR", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesEdeCtr");
-        put("Cipher.TripleDES/CTR", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesEdeCtr");
+        put("Cipher.3DES/CTR", "DESede/CTR");
+        put("Cipher.TripleDES/CTR", "DESede/CTR");
     }
 
 }

@@ -44,11 +44,7 @@ public class BotanMessageDigest extends MessageDigestSpi implements Cloneable {
         this.size = size;
         this.hashRef = new PointerByReference();
 
-        int err = singleton().botan_hash_init(hashRef, name, 0);
-        if (err != 0) {
-            String msg = singleton().botan_error_description(err);
-            throw new NoSuchAlgorithmException(msg);
-        }
+        singleton().botan_hash_init(hashRef, name, 0);
     }
 
     private BotanMessageDigest(String name, int size, PointerByReference hashRef) {

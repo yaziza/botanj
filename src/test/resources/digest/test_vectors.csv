@@ -1,4 +1,4 @@
-algorithm,in, out
+algorithm, in, out
 
 # SHA-1
 sha1, "", "DA39A3EE5E6B4B0D3255BFEF95601890AFD80709"

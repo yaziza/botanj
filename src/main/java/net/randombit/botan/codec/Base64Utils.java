@@ -45,6 +45,7 @@ public final class Base64Utils {
      * @return decoded output
      */
     public static byte[] decode(byte[] input) {
+        //TODO: verify input before decoding
         final byte[] result = new byte[base64InputLength(input)];
         final NativeLongByReference length = new NativeLongByReference();
 

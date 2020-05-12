@@ -17,10 +17,11 @@ import java.security.Key;
 import java.security.spec.AlgorithmParameterSpec;
 import java.util.Arrays;
 import javax.crypto.MacSpi;
+import javax.crypto.SecretKey;
 
 import jnr.ffi.byref.PointerByReference;
 
-public class BotanMac extends MacSpi {
+public abstract class BotanMac extends MacSpi {
 
     /**
      * Holds the name of the MAC algorithm.
@@ -49,17 +50,30 @@ public class BotanMac extends MacSpi {
         this.macRef = new PointerByReference();
     }
 
+    /**
+     * Gets the native botan cipher name (e.g. 'CMAC(AES-128)').
+     *
+     * @param keySize the key size
+     * @param keySize the key size
+     * @return {@link String} containing the Botan MAC name.
+     */
+    protected String getBotanMacName(int keySize) throws InvalidKeyException {
+        return name;
+    }
+
     @Override
     protected int engineGetMacLength() {
         return size;
     }
 
     @Override
-    protected void engineInit(Key key, AlgorithmParameterSpec params) {
-        final String botanMacName = String.format(name, key.getEncoded().length * Byte.SIZE);
+    protected void engineInit(Key key, AlgorithmParameterSpec params) throws InvalidKeyException {
+        checkKey(key);
 
-        singleton().botan_mac_init(macRef, botanMacName, 0);
-        singleton().botan_mac_set_key(macRef.getValue(), key.getEncoded(), key.getEncoded().length);
+        final int length = key.getEncoded().length;
+
+        singleton().botan_mac_init(macRef, getBotanMacName(length), 0);
+        singleton().botan_mac_set_key(macRef.getValue(), key.getEncoded(), length);
     }
 
     @Override
@@ -89,10 +103,37 @@ public class BotanMac extends MacSpi {
         singleton().botan_mac_clear(macRef.getValue());
     }
 
+    private static byte[] checkKey(Key key) throws InvalidKeyException {
+        if (!(key instanceof SecretKey)) {
+            throw new InvalidKeyException("Only SecretKey is supported");
+        }
+
+        final byte[] encodedKey = key.getEncoded();
+        if (encodedKey == null) {
+            throw new InvalidKeyException("key.getEncoded() == null");
+        }
+
+        //TODO: check keysize
+
+        return encodedKey;
+    }
+
     // CMAC
     public static final class CMac extends BotanMac {
         public CMac() {
-            super("CMAC(AES-%d)", 16);
+            super("CMAC", 16);
+        }
+
+        @Override
+        public String getBotanMacName(int keySize) {
+            return String.format("CMAC(AES-%d)", keySize * Byte.SIZE);
+        }
+    }
+
+    // HMAC
+    public static final class Poly1305 extends BotanMac {
+        public Poly1305() {
+            super("Poly1305", 16);
         }
     }
 

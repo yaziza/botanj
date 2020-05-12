@@ -44,15 +44,15 @@ public class BotanMacTest {
     @ParameterizedTest
     @CsvFileSource(resources = "/mac/mac.csv", numLinesToSkip = 1)
     @DisplayName("Test MAC output size")
-    public void testMacOutputSize(String algorithm, int size) throws GeneralSecurityException {
-        final SecretKeySpec key = new SecretKeySpec(new byte[size], algorithm);
+    public void testMacOutputSize(String algorithm, int keySize, int outputSize) throws GeneralSecurityException {
+        final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
         final Mac mac = Mac.getInstance(algorithm, BotanProvider.NAME);
 
         mac.init(key);
         final byte[] output = mac.doFinal("some input".getBytes());
 
-        assertEquals(size, mac.getMacLength(), "Output size mismatch for algorithm: " + algorithm);
-        assertEquals(size, output.length, "Output size mismatch for algorithm: " + algorithm);
+        assertEquals(outputSize, mac.getMacLength(), "Output size mismatch for algorithm: " + algorithm);
+        assertEquals(outputSize, output.length, "Output size mismatch for algorithm: " + algorithm);
     }
 
     @ParameterizedTest
@@ -80,8 +80,8 @@ public class BotanMacTest {
     @ParameterizedTest
     @CsvFileSource(resources = "/mac/mac.csv", numLinesToSkip = 1)
     @DisplayName("Test MAC output against Bouncy Castle")
-    public void testAgainstBouncyCastle(String algorithm, int size) throws GeneralSecurityException {
-        final SecretKeySpec key = new SecretKeySpec(new byte[size], algorithm);
+    public void testAgainstBouncyCastle(String algorithm, int keySize) throws GeneralSecurityException {
+        final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
 
         final Mac bc = Mac.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
         final Mac botan = Mac.getInstance(algorithm, BotanProvider.NAME);
@@ -99,8 +99,8 @@ public class BotanMacTest {
     @ParameterizedTest
     @CsvFileSource(resources = "/mac/mac.csv", numLinesToSkip = 1)
     @DisplayName("Test MAC reset")
-    public void testRestDigest(String algorithm, int size) throws GeneralSecurityException {
-        final SecretKeySpec key = new SecretKeySpec(new byte[size], algorithm);
+    public void testRestDigest(String algorithm, int keySize) throws GeneralSecurityException {
+        final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
 
         final Mac bc = Mac.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
         final Mac botan = Mac.getInstance(algorithm, BotanProvider.NAME);
@@ -124,8 +124,8 @@ public class BotanMacTest {
     @ParameterizedTest
     @CsvFileSource(resources = "/mac/mac.csv", numLinesToSkip = 1)
     @DisplayName("Test single Byte update")
-    public void testSingleByteUpdate(String algorithm, int size) throws GeneralSecurityException {
-        final SecretKeySpec key = new SecretKeySpec(new byte[size], algorithm);
+    public void testSingleByteUpdate(String algorithm, int keySize) throws GeneralSecurityException {
+        final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
 
         final Mac bc = Mac.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
         final Mac botan = Mac.getInstance(algorithm, BotanProvider.NAME);
@@ -165,8 +165,8 @@ public class BotanMacTest {
     @ParameterizedTest
     @CsvFileSource(resources = "/mac/mac.csv", numLinesToSkip = 1)
     @DisplayName("Test Botan performance against Bouncy Castle")
-    public void testBotanPerformance(String algorithm, int size) throws GeneralSecurityException {
-        final SecretKeySpec key = new SecretKeySpec(new byte[size], algorithm);
+    public void testBotanPerformance(String algorithm, int keySize) throws GeneralSecurityException {
+        final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
 
         final Mac bc = Mac.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
         final Mac botan = Mac.getInstance(algorithm, BotanProvider.NAME);
