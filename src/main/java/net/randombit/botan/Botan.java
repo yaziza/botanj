@@ -11,6 +11,7 @@ package net.randombit.botan;
 
 import java.security.GeneralSecurityException;
 
+import com.sun.jdi.NativeMethodException;
 import jnr.ffi.LibraryLoader;
 
 public final class Botan {
@@ -66,10 +67,10 @@ public final class Botan {
      * @param result int result from calling botan native
      * @throws {@link GeneralSecurityException} in case of error
      */
-    public static void checkNativeCall(int result) throws GeneralSecurityException {
+    public static void checkNativeCall(int result, String method) throws NativeMethodException {
         if (result != 0) {
             String description = NATIVE.botan_error_description(result);
-            throw new GeneralSecurityException(description);
+            throw new NativeMethodException(method + ": " + description);
         }
     }
 

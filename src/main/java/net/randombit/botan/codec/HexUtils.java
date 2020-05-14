@@ -9,6 +9,7 @@
 
 package net.randombit.botan.codec;
 
+import static net.randombit.botan.Botan.checkNativeCall;
 import static net.randombit.botan.Botan.singleton;
 import static net.randombit.botan.Constants.EMPTY_BYTE_ARRAY;
 
@@ -43,7 +44,8 @@ public final class HexUtils {
         final int resultSize = Math.multiplyExact(input.length, 2);
         final byte[] result = new byte[resultSize];
 
-        singleton().botan_hex_encode(input, input.length, result, 1);
+        final int err = singleton().botan_hex_encode(input, input.length, result, 1);
+        checkNativeCall(err, "botan_hex_encode");
 
         return result;
     }
@@ -74,7 +76,8 @@ public final class HexUtils {
         final byte[] result = new byte[input.length];
         final NativeLongByReference length = new NativeLongByReference();
 
-        singleton().botan_hex_decode(input, input.length, result, length);
+        final int err = singleton().botan_hex_decode(input, input.length, result, length);
+        checkNativeCall(err, "botan_hex_decode");
 
         return Arrays.copyOfRange(result, 0, length.intValue());
     }

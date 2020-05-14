@@ -9,6 +9,7 @@
 
 package net.randombit.botan.digest;
 
+import static net.randombit.botan.Botan.checkNativeCall;
 import static net.randombit.botan.Botan.singleton;
 
 import java.security.MessageDigestSpi;
@@ -44,7 +45,8 @@ public class BotanMessageDigest extends MessageDigestSpi implements Cloneable {
         this.size = size;
         this.hashRef = new PointerByReference();
 
-        singleton().botan_hash_init(hashRef, name, 0);
+        final int err = singleton().botan_hash_init(hashRef, name, 0);
+        checkNativeCall(err, "botan_hash_init");
     }
 
     private BotanMessageDigest(String name, int size, PointerByReference hashRef) {
@@ -69,13 +71,15 @@ public class BotanMessageDigest extends MessageDigestSpi implements Cloneable {
     protected void engineUpdate(byte[] input, int offset, int len) {
         final byte[] bytes = Arrays.copyOfRange(input, offset, input.length);
 
-        singleton().botan_hash_update(hashRef.getValue(), bytes, len);
+        final int err = singleton().botan_hash_update(hashRef.getValue(), bytes, len);
+        checkNativeCall(err, "botan_hash_update");
     }
 
     @Override
     protected byte[] engineDigest() {
         final byte[] result = new byte[size];
-        singleton().botan_hash_final(hashRef.getValue(), result);
+        final int err = singleton().botan_hash_final(hashRef.getValue(), result);
+        checkNativeCall(err, "botan_hash_final");
 
         return result;
     }
@@ -88,7 +92,8 @@ public class BotanMessageDigest extends MessageDigestSpi implements Cloneable {
     @Override
     public Object clone() {
         final PointerByReference clone = new PointerByReference();
-        singleton().botan_hash_copy_state(clone, hashRef.getValue());
+        final int err = singleton().botan_hash_copy_state(clone, hashRef.getValue());
+        checkNativeCall(err, "botan_hash_copy_state");
 
         return new BotanMessageDigest(name, size, clone);
     }

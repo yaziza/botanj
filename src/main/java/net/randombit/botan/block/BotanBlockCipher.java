@@ -9,6 +9,7 @@
 
 package net.randombit.botan.block;
 
+import static net.randombit.botan.Botan.checkNativeCall;
 import static net.randombit.botan.Botan.singleton;
 import static net.randombit.botan.Constants.BOTAN_DO_FINAL_FLAG;
 import static net.randombit.botan.Constants.BOTAN_UPDATE_FLAG;
@@ -38,6 +39,7 @@ import jnr.ffi.byref.PointerByReference;
 public abstract class BotanBlockCipher extends CipherSpi {
 
     private static final String ERR_MSG_GCM_WITHOUT_IV = "GCM does not support empty nonces!";
+    private static final String ERR_MSG_INVALID_KEY_SIZE = "Invalid key size %d for algorithm %s";
 
     /**
      * Holds the name of the block cipher algorithm (e.g. 'AES').
@@ -150,7 +152,8 @@ public abstract class BotanBlockCipher extends CipherSpi {
         }
 
         final NativeLongByReference outputSize = new NativeLongByReference();
-        singleton().botan_cipher_output_length(cipherRef.getValue(), inputLen, outputSize);
+        final int err = singleton().botan_cipher_output_length(cipherRef.getValue(), inputLen, outputSize);
+        checkNativeCall(err, "botan_cipher_output_length");
 
         return inputLen + blockSize - (inputLen % blockSize);
     }
@@ -179,20 +182,25 @@ public abstract class BotanBlockCipher extends CipherSpi {
 
     @Override
     protected void engineInit(int opmode, Key key, SecureRandom random) throws InvalidKeyException {
-        final byte[] encodedKey = checkKey(key);
+        final byte[] encodedKey = checkKey(key, name);
         final long keySize = encodedKey.length;
 
         final String algName = getBotanCipherName(padding.getName(), encodedKey.length);
+        final NativeLongByReference updateGranularity = new NativeLongByReference();
 
         // Translate java cipher mode to botan native mode (0: Encryption, 1: Decryption)
         this.mode = opmode - 1;
         this.buffer = EMPTY_BYTE_ARRAY;
 
-        singleton().botan_cipher_init(cipherRef, algName, mode);
-        singleton().botan_cipher_set_key(cipherRef.getValue(), encodedKey, keySize);
+        int err = singleton().botan_cipher_init(cipherRef, algName, mode);
+        checkNativeCall(err, "botan_cipher_init");
 
-        final NativeLongByReference updateGranularity = new NativeLongByReference();
-        singleton().botan_cipher_get_update_granularity(cipherRef.getValue(), updateGranularity);
+        err = singleton().botan_cipher_set_key(cipherRef.getValue(), encodedKey, keySize);
+        checkNativeCall(err, "botan_cipher_set_key");
+
+        err = singleton().botan_cipher_get_update_granularity(cipherRef.getValue(), updateGranularity);
+        checkNativeCall(err, "botan_cipher_get_update_granularity");
+
         this.updateGranularity = updateGranularity.intValue();
     }
 
@@ -205,7 +213,8 @@ public abstract class BotanBlockCipher extends CipherSpi {
             iv = ((IvParameterSpec) params).getIV();
 
             if (!cipherMode.isAuthenticated()) {
-                singleton().botan_cipher_start(cipherRef.getValue(), iv, iv.length);
+                final int err = singleton().botan_cipher_start(cipherRef.getValue(), iv, iv.length);
+                checkNativeCall(err, "botan_cipher_start");
             }
         } else if (params instanceof GCMParameterSpec) {
             iv = ((GCMParameterSpec) params).getIV();
@@ -252,16 +261,19 @@ public abstract class BotanBlockCipher extends CipherSpi {
 
         final byte[] fromOffset = Arrays.copyOfRange(src, offset, src.length);
 
-        singleton().botan_cipher_set_associated_data(cipherRef.getValue(), fromOffset, len);
+        int err = singleton().botan_cipher_set_associated_data(cipherRef.getValue(), fromOffset, len);
+        checkNativeCall(err, "botan_cipher_set_associated_data");
 
         if (isNullOrEmpty(iv)) {
             if (CipherMode.GCM == cipherMode) {
                 throw new IllegalArgumentException(ERR_MSG_GCM_WITHOUT_IV);
             } else {
-                singleton().botan_cipher_start(cipherRef.getValue(), EMPTY_BYTE_ARRAY, 0);
+                err = singleton().botan_cipher_start(cipherRef.getValue(), EMPTY_BYTE_ARRAY, 0);
+                checkNativeCall(err, "botan_cipher_start");
             }
         } else {
-            singleton().botan_cipher_start(cipherRef.getValue(), iv, iv.length);
+            err = singleton().botan_cipher_start(cipherRef.getValue(), iv, iv.length);
+            checkNativeCall(err, "botan_cipher_start");
         }
 
         if (isNullOrEmpty(iv)) {
@@ -339,9 +351,11 @@ public abstract class BotanBlockCipher extends CipherSpi {
         final byte[] finalInput = getDoFinalInput(input, inputOffset, inputLen);
         final byte[] output = new byte[engineGetOutputSize(inputLen + buffer.length)];
 
-        singleton().botan_cipher_update(cipherRef.getValue(), botanFlag,
+        final int err = singleton().botan_cipher_update(cipherRef.getValue(), botanFlag,
                 output, output.length, outputWritten,
                 finalInput, finalInput.length, inputConsumed);
+
+        checkNativeCall(err, "botan_cipher_update");
 
         final byte[] result = Arrays.copyOfRange(output, 0, outputWritten.intValue());
 
@@ -352,7 +366,7 @@ public abstract class BotanBlockCipher extends CipherSpi {
         return result;
     }
 
-    private static byte[] checkKey(Key key) throws InvalidKeyException {
+    private static byte[] checkKey(Key key, String algorithm) throws InvalidKeyException {
         if (!(key instanceof SecretKey)) {
             throw new InvalidKeyException("Only SecretKey is supported");
         }
@@ -362,18 +376,48 @@ public abstract class BotanBlockCipher extends CipherSpi {
             throw new InvalidKeyException("key.getEncoded() == null");
         }
 
-        //TODO: check keysize
+        final int keyLength = key.getEncoded().length;
+
+        switch (algorithm) {
+            case "AES":
+                if (keyLength != 16 && keyLength != 24 && keyLength != 32 &&
+                        keyLength != 48 && keyLength != 64) {
+                    // Size 48 and 64 are for SIV mode
+                    String msg = String.format(ERR_MSG_INVALID_KEY_SIZE, keyLength, algorithm);
+                    throw new InvalidKeyException(msg);
+                }
+                break;
+
+            case "DES":
+                if (keyLength != 8) {
+                    String msg = String.format(ERR_MSG_INVALID_KEY_SIZE, keyLength, algorithm);
+                    throw new InvalidKeyException(msg);
+                }
+                break;
+
+            case "DESede":
+                if (keyLength != 16 && keyLength != 24) {
+                    String msg = String.format(ERR_MSG_INVALID_KEY_SIZE, keyLength, algorithm);
+                    throw new InvalidKeyException(msg);
+                }
+                break;
+
+            default:
+                throw new IllegalStateException("Unsupported algorithm " + algorithm);
+        }
 
         return encodedKey;
     }
 
     private void engineReset() {
-        singleton().botan_cipher_reset(cipherRef.getValue());
+        int err = singleton().botan_cipher_reset(cipherRef.getValue());
+        checkNativeCall(err, "botan_cipher_reset");
 
         buffer = EMPTY_BYTE_ARRAY;
 
         if (iv != null) {
-            singleton().botan_cipher_start(cipherRef.getValue(), iv, iv.length);
+            err = singleton().botan_cipher_start(cipherRef.getValue(), iv, iv.length);
+            checkNativeCall(err, "botan_cipher_start");
         }
     }
 
@@ -398,9 +442,12 @@ public abstract class BotanBlockCipher extends CipherSpi {
 
             // Set default tag length when no IV is supplied
             tLen = 128;
-            singleton().botan_cipher_start(cipherRef.getValue(), EMPTY_BYTE_ARRAY, 0);
+
+            final int err = singleton().botan_cipher_start(cipherRef.getValue(), EMPTY_BYTE_ARRAY, 0);
+            checkNativeCall(err, "botan_cipher_start");
         } else {
-            singleton().botan_cipher_start(cipherRef.getValue(), iv, iv.length);
+            final int err = singleton().botan_cipher_start(cipherRef.getValue(), iv, iv.length);
+            checkNativeCall(err, "botan_cipher_start");
         }
     }
 

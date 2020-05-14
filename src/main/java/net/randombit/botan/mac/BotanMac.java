@@ -9,6 +9,7 @@
 
 package net.randombit.botan.mac;
 
+import static net.randombit.botan.Botan.checkNativeCall;
 import static net.randombit.botan.Botan.singleton;
 
 import java.security.InvalidAlgorithmParameterException;
@@ -72,8 +73,11 @@ public abstract class BotanMac extends MacSpi {
 
         final int length = key.getEncoded().length;
 
-        singleton().botan_mac_init(macRef, getBotanMacName(length), 0);
-        singleton().botan_mac_set_key(macRef.getValue(), key.getEncoded(), length);
+        int err = singleton().botan_mac_init(macRef, getBotanMacName(length), 0);
+        checkNativeCall(err, "botan_mac_init");
+
+        err = singleton().botan_mac_set_key(macRef.getValue(), key.getEncoded(), length);
+        checkNativeCall(err, "botan_mac_set_key");
     }
 
     @Override
@@ -87,13 +91,15 @@ public abstract class BotanMac extends MacSpi {
     protected void engineUpdate(byte[] input, int offset, int len) {
         final byte[] bytes = Arrays.copyOfRange(input, offset, input.length);
 
-        singleton().botan_mac_update(macRef.getValue(), bytes, len);
+        final int err = singleton().botan_mac_update(macRef.getValue(), bytes, len);
+        checkNativeCall(err, "botan_mac_update");
     }
 
     @Override
     protected byte[] engineDoFinal() {
         final byte[] result = new byte[size];
-        singleton().botan_mac_final(macRef.getValue(), result);
+        final int err = singleton().botan_mac_final(macRef.getValue(), result);
+        checkNativeCall(err, "botan_mac_final");
 
         return result;
     }

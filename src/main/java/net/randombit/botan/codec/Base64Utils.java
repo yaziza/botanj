@@ -9,6 +9,7 @@
 
 package net.randombit.botan.codec;
 
+import static net.randombit.botan.Botan.checkNativeCall;
 import static net.randombit.botan.Botan.singleton;
 
 import java.util.Arrays;
@@ -33,7 +34,8 @@ public final class Base64Utils {
         final byte[] result = new byte[outputSize];
         final NativeLongByReference length = new NativeLongByReference();
 
-        singleton().botan_base64_encode(input, input.length, result, length);
+        final int err = singleton().botan_base64_encode(input, input.length, result, length);
+        checkNativeCall(err, "botan_base64_encode");
 
         return result;
     }
@@ -49,7 +51,8 @@ public final class Base64Utils {
         final byte[] result = new byte[base64InputLength(input)];
         final NativeLongByReference length = new NativeLongByReference();
 
-        singleton().botan_base64_decode(new String(input), input.length, result, length);
+        final int err = singleton().botan_base64_decode(new String(input), input.length, result, length);
+        checkNativeCall(err, "botan_base64_decode");
 
         return Arrays.copyOfRange(result, 0, length.intValue());
     }
