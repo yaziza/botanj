@@ -11,12 +11,24 @@ package net.randombit.botan.codec;
 
 import static net.randombit.botan.Botan.checkNativeCall;
 import static net.randombit.botan.Botan.singleton;
+import static net.randombit.botan.Constants.EMPTY_BYTE_ARRAY;
 
 import java.util.Arrays;
+import java.util.List;
 
 import jnr.ffi.byref.NativeLongByReference;
 
 public final class Base64Utils {
+
+    private static Character[] ALLOWED_CHARS = {
+            'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
+            'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+            'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
+            'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/', '='
+    };
+
+    private static final List<Character> ALLOWED_CHARS_LIST = Arrays.asList(ALLOWED_CHARS);
 
     private Base64Utils() {
         // Not meant to be instantiated
@@ -47,7 +59,12 @@ public final class Base64Utils {
      * @return decoded output
      */
     public static byte[] decode(byte[] input) {
-        //TODO: verify input before decoding
+        if (input.length == 0) {
+            return EMPTY_BYTE_ARRAY;
+        }
+
+        verifyInput(input);
+
         final byte[] result = new byte[base64InputLength(input)];
         final NativeLongByReference length = new NativeLongByReference();
 
@@ -81,6 +98,16 @@ public final class Base64Utils {
         int n = input.length;
 
         return n - (n / 3) + 2;
+    }
+
+    private static void verifyInput(byte[] input) {
+        String inputStr = new String(input);
+
+        for (char chr : inputStr.toCharArray()) {
+            if (!ALLOWED_CHARS_LIST.contains(chr)) {
+                throw new IllegalArgumentException("Cannot decode malformed input!");
+            }
+        }
     }
 
 }

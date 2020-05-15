@@ -10,6 +10,8 @@
 package net.randombit.botan.codec;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.Base64;
 
@@ -58,6 +60,16 @@ public class Base64UtilsTest {
         final byte[] actual = Base64Utils.decode(encoded);
 
         assertArrayEquals(expected, actual, "Base64 mismatch with input");
+    }
+
+    @Test
+    @DisplayName("Test encoding malformed input")
+    public void testDecodeMalformedInput() {
+        final String input = "some malformed input";
+
+        final Exception exception = assertThrows(IllegalArgumentException.class, () -> Base64Utils.decode(input));
+
+        assertEquals("Cannot decode malformed input!", exception.getMessage());
     }
 
 }

@@ -74,5 +74,15 @@ public class HexUtilsTest {
         assertArrayEquals(input.getBytes(), decoded, "Hex mismatch with input");
     }
 
+    @Test
+    @DisplayName("Test encoding malformed input")
+    public void testDecodeMalformedInput() {
+        final String input = "some malformed input";
+
+        final Exception exception = assertThrows(IllegalArgumentException.class, () -> HexUtils.decode(input));
+
+        assertEquals("Cannot decode malformed input!", exception.getMessage());
+    }
+
 }
 
