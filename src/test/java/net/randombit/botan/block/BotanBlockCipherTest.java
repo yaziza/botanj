@@ -40,7 +40,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringFormattedMessage;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
-@DisplayName("Botan block cipher tests")
+@DisplayName("Botan block ciphers tests")
 public class BotanBlockCipherTest {
 
     private static final Logger LOG = LogManager.getLogger(BotanBlockCipherTest.class.getSimpleName());
