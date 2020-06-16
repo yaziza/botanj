@@ -2,7 +2,11 @@
 # https://docs.travis-ci.com/user/languages/java/
 language: java
 
-sudo: false
+sudo: required
+
+before_install:
+  - sudo apt-get update -y
+  - sudo apt-get install -y botan
 
 cache:
   directories:
