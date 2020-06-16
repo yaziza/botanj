@@ -16,7 +16,7 @@ import jnr.ffi.LibraryLoader;
 
 public final class Botan {
 
-    private static final String RELATIVE_LIB_PATH = "/native/lib/libbotan-2.dylib";
+    private static final String LIB_NAME = "botan-2";
 
     private static volatile BotanNative NATIVE;
     private static UnsatisfiedLinkError loadError;
@@ -37,8 +37,7 @@ public final class Botan {
                 result = NATIVE;
                 if (result == null) {
                     try {
-                        String libPath = Botan.class.getResource(RELATIVE_LIB_PATH).getPath();
-                        result = NATIVE = LibraryLoader.create(BotanNative.class).load(libPath);
+                        result = NATIVE = LibraryLoader.create(BotanNative.class).load(LIB_NAME);
                     } catch (UnsatisfiedLinkError t) {
                         // Don't rethrow the error, so that we can later on interrogate the
                         // value of loadError.
