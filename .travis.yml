@@ -2,11 +2,16 @@
 # https://docs.travis-ci.com/user/languages/java/
 language: java
 
+os: osx
+
 sudo: required
 
-before_install:
-  - sudo apt-get update -y
-  - sudo apt-get install -y botan
+addons:
+  homebrew:
+    taps: homebrew/cask-versions
+    packages:
+      - botan
+    update: true
 
 cache:
   directories:
