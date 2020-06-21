@@ -198,16 +198,6 @@ public interface BotanNative {
     int botan_hash_destroy(@In Pointer hash);
 
     /**
-     * Gets the name of this hash function.
-     *
-     * @param hash   hash object
-     * @param name   output buffer
-     * @param length on input, the length of buffer, on success the number of bytes written
-     * @return 0 on success, a negative value on failure
-     */
-    int botan_hash_name(@In Pointer hash, @In @Out byte[] name, @In @Out NativeLongByReference length);
-
-    /**
      * Initializes a message authentication code object.
      *
      * @param mac   MAC object
@@ -277,93 +267,16 @@ public interface BotanNative {
     int botan_mac_destroy(@In Pointer mac);
 
     /**
-     * Gets the name of this MAC.
+     * Gets the key length limits of this auth code
      *
-     * @param mac    MAC object
-     * @param name   output buffer
-     * @param length on input, the length of buffer, on success the number of bytes written
-     * @return 0 on success, a negative value on failure
+     * @param mac              MAC object
+     * @param minimumKeyLength if non-NULL, will be set to minimum keylength of MAC
+     * @param maximumKeyLength if non-NULL, will be set to maximum keylength of MAC
+     * @param keyLengthModulo  if non-NULL will be set to byte multiple of valid keys
      */
-    int botan_mac_name(@In Pointer mac, @In @Out byte[] name, @In @Out NativeLongByReference length);
-
-    /**
-     * Initializes a block cipher object.
-     *
-     * @param cipher cipher object
-     * @param name   name of the cipher
-     * @return 0 on success, a negative value on failure
-     */
-    int botan_block_cipher_init(@Out PointerByReference cipher, @In String name);
-
-    /**
-     * Destroys a block cipher object.
-     *
-     * @param cipher cipher object
-     * @return 0 if success, error if invalid object handle
-     */
-    //TODO: do we really need this ?
-    int botan_block_cipher_destroy(@In Pointer cipher);
-
-    /**
-     * Reinitializes the block cipher.
-     *
-     * @param cipher cipher object
-     * @return 0 on success, a negative value on failure
-     */
-    int botan_block_cipher_clear(@In Pointer cipher);
-
-    /**
-     * Sets the key for a block cipher instance.
-     *
-     * @param cipher cipher object
-     * @param key    buffer holding the key
-     * @param length size of the key buffer in bytes
-     * @return 0 on success, a negative value on failure
-     */
-    int botan_block_cipher_set_key(@In Pointer cipher, @In byte[] key, @In long length);
-
-    /**
-     * Returns the positive block size of this block cipher, or negative to
-     * indicate an error.
-     *
-     * @param cipher cipher object
-     * @return block size on success, a negative value on failure
-     */
-    int botan_block_cipher_block_size(@In Pointer cipher);
-
-    /**
-     * Encrypts one or more blocks with the cipher.
-     *
-     * @param cipher     cipher object
-     * @param plainText  the plain text
-     * @param cipherText the cipher text
-     * @param nrOfBlocks number of blocks to be encrypted
-     * @return 0 on success, a negative value on failure
-     */
-    int botan_block_cipher_encrypt_blocks(@In Pointer cipher, @In byte[] plainText,
-                                          @Out byte[] cipherText, @In long nrOfBlocks);
-
-    /**
-     * Decrypts one or more blocks with the cipher.
-     *
-     * @param cipher     cipher object
-     * @param cipherText the cipher text
-     * @param plainText  the plain text
-     * @param nrOfBlocks number of blocks to be decrypted
-     * @return 0 on success, a negative value on failure
-     */
-    int botan_block_cipher_decrypt_blocks(@In Pointer cipher, @In byte[] cipherText,
-                                          @Out byte[] plainText, @In long nrOfBlocks);
-
-    /**
-     * Gets the name of this block cipher.
-     *
-     * @param cipher     cipher object
-     * @param name       output buffer
-     * @param nameLength on input, the length of buffer, on success the number of bytes written
-     */
-    int botan_block_cipher_name(@In Pointer cipher, @Out byte[] name,
-                                @In @Out NativeLongByReference nameLength);
+    int botan_mac_get_keyspec(@In Pointer mac, @Out NativeLongByReference minimumKeyLength,
+                              @Out NativeLongByReference maximumKeyLength,
+                              @Out NativeLongByReference keyLengthModulo);
 
     /**
      * Initializes a cipher object.
@@ -374,16 +287,6 @@ public interface BotanNative {
      * @return 0 on success, a negative value on failure
      */
     int botan_cipher_init(@Out PointerByReference cipher, @In String name, @In long flags);
-
-    /**
-     * Returns the name of the cipher object.
-     *
-     * @param cipher cipher object
-     * @param name   output buffer
-     * @param length on input, the length of buffer, on success the number of bytes written
-     * @return 0 on success, a negative value on failure
-     */
-    int botan_cipher_name(@In Pointer cipher, @Out byte[] name, @In @Out NativeLongByReference length);
 
     /**
      * Returns the output length of this cipher, for a particular input length.
@@ -412,7 +315,7 @@ public interface BotanNative {
      * @param tagLength tag length
      * @return 0 on success, a negative value on failure
      */
-    int botan_cipher_get_tag_length(@In Pointer cipher, @In @Out NativeLongByReference tagLength);
+    int botan_cipher_get_tag_length(@In Pointer cipher, @Out NativeLongByReference tagLength);
 
     /**
      * Gets the default nonce length of this cipher.
@@ -421,7 +324,7 @@ public interface BotanNative {
      * @param nonceLength nonce length
      * @return 0 on success, a negative value on failure
      */
-    int botan_cipher_get_default_nonce_length(@In Pointer cipher, @In @Out NativeLongByReference nonceLength);
+    int botan_cipher_get_default_nonce_length(@In Pointer cipher, @Out NativeLongByReference nonceLength);
 
     /**
      * Returns the update granularity of the cipher; botan_cipher_update must be
@@ -431,7 +334,7 @@ public interface BotanNative {
      * @param updateGranularity update granularity
      * @return 0 on success, a negative value on failure
      */
-    int botan_cipher_get_update_granularity(@In Pointer cipher, @In @Out NativeLongByReference updateGranularity);
+    int botan_cipher_get_update_granularity(@In Pointer cipher, @Out NativeLongByReference updateGranularity);
 
     /**
      * Gets information about the supported key lengths.
@@ -442,8 +345,8 @@ public interface BotanNative {
      * @param modKeylen mod key length
      * @return 0 on success, a negative value on failure
      */
-    int botan_cipher_get_keyspec(@In Pointer cipher, @In @Out NativeLongByReference minKeylen,
-                                 @In @Out NativeLongByReference maxKeylen, @In @Out NativeLongByReference modKeylen);
+    int botan_cipher_get_keyspec(@In Pointer cipher, @Out NativeLongByReference minKeylen,
+                                 @Out NativeLongByReference maxKeylen, @Out NativeLongByReference modKeylen);
 
     /**
      * Sets the key for this cipher object.
@@ -520,6 +423,7 @@ public interface BotanNative {
      * @param cipher cipher object
      * @return 0 if success, error if invalid object handle
      */
+    //TODO: do we really need this ?
     int botan_cipher_destroy(@In Pointer cipher);
 
 }
