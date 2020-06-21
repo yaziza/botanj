@@ -61,7 +61,7 @@ public final class Botan {
     }
 
     /**
-     * Checks whether the native lib call was successful.
+     * Checks whether a native lib call was successful.
      *
      * @param result int result from calling botan native
      * @throws {@link GeneralSecurityException} in case of error

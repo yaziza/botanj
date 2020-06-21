@@ -86,7 +86,8 @@ public class BotanMessageDigest extends MessageDigestSpi implements Cloneable {
 
     @Override
     protected void engineReset() {
-        singleton().botan_hash_clear(hashRef.getValue());
+        final int err = singleton().botan_hash_clear(hashRef.getValue());
+        checkNativeCall(err, "botan_hash_clear");
     }
 
     @Override

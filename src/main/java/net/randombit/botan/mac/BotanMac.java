@@ -12,14 +12,14 @@ package net.randombit.botan.mac;
 import static net.randombit.botan.Botan.checkNativeCall;
 import static net.randombit.botan.Botan.singleton;
 
-import java.security.InvalidAlgorithmParameterException;
+import javax.crypto.MacSpi;
+import javax.crypto.SecretKey;
 import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.spec.AlgorithmParameterSpec;
 import java.util.Arrays;
-import javax.crypto.MacSpi;
-import javax.crypto.SecretKey;
 
+import jnr.ffi.byref.NativeLongByReference;
 import jnr.ffi.byref.PointerByReference;
 
 public abstract class BotanMac extends MacSpi {
@@ -38,7 +38,6 @@ public abstract class BotanMac extends MacSpi {
      * Holds the reference to the MAC object referenced by botan.
      */
     private final PointerByReference macRef;
-
 
     /**
      * Holds a dummy buffer for writing single bytes to the MAC.
@@ -70,11 +69,12 @@ public abstract class BotanMac extends MacSpi {
     @Override
     protected void engineInit(Key key, AlgorithmParameterSpec params) throws InvalidKeyException {
         checkKey(key);
-
         final int length = key.getEncoded().length;
 
         int err = singleton().botan_mac_init(macRef, getBotanMacName(length), 0);
         checkNativeCall(err, "botan_mac_init");
+
+        checkKeySize(length);
 
         err = singleton().botan_mac_set_key(macRef.getValue(), key.getEncoded(), length);
         checkNativeCall(err, "botan_mac_set_key");
@@ -106,10 +106,11 @@ public abstract class BotanMac extends MacSpi {
 
     @Override
     protected void engineReset() {
-        singleton().botan_mac_clear(macRef.getValue());
+        final int err = singleton().botan_mac_clear(macRef.getValue());
+        checkNativeCall(err, "botan_mac_clear");
     }
 
-    private static byte[] checkKey(Key key) throws InvalidKeyException {
+    private void checkKey(Key key) throws InvalidKeyException {
         if (!(key instanceof SecretKey)) {
             throw new InvalidKeyException("Only SecretKey is supported");
         }
@@ -118,10 +119,28 @@ public abstract class BotanMac extends MacSpi {
         if (encodedKey == null) {
             throw new InvalidKeyException("key.getEncoded() == null");
         }
+    }
 
-        //TODO: check keysize
+    private void checkKeySize(int keySize) throws InvalidKeyException {
+        final NativeLongByReference minimumLength = new NativeLongByReference();
+        final NativeLongByReference maximumLength = new NativeLongByReference();
+        final NativeLongByReference lengthModulo = new NativeLongByReference();
 
-        return encodedKey;
+        final int err = singleton().botan_mac_get_keyspec(macRef.getValue(), minimumLength, maximumLength, lengthModulo);
+        checkNativeCall(err, "botan_mac_get_keyspec");
+
+        if (keySize < minimumLength.intValue()) {
+            throw new InvalidKeyException("key.getEncoded() < minimum key length: " + minimumLength.intValue());
+        }
+
+        if (keySize > maximumLength.intValue()) {
+            throw new InvalidKeyException("key.getEncoded() > maximum key length: " + maximumLength.intValue());
+        }
+
+        if (keySize % lengthModulo.intValue() != 0) {
+            throw new InvalidKeyException("key.getEncoded() not multiple of key length modulo: "
+                    + lengthModulo.intValue());
+        }
     }
 
     // CMAC

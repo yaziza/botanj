@@ -9,10 +9,10 @@
 
 package net.randombit.botan.block;
 
+import javax.crypto.NoSuchPaddingException;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.crypto.NoSuchPaddingException;
 
 public enum PaddingAlgorithm {
 
