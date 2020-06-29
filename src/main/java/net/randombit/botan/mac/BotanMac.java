@@ -162,6 +162,13 @@ public abstract class BotanMac extends MacSpi {
         }
     }
 
+    // SipHash
+    public static final class SipHash extends BotanMac {
+        public SipHash() {
+            super("SipHash(2,4)", 8);
+        }
+    }
+
     // HMAC
     public static final class HMacMd5 extends BotanMac {
         public HMacMd5() {
