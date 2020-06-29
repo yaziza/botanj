@@ -25,7 +25,7 @@ public final class BotanProvider extends Provider {
     private static final BotanNative NATIVE = Botan.singleton();
 
     public BotanProvider() {
-        super(NAME, VERSION, INFO);
+        super(NAME, "", INFO);
 
         Botan.checkAvailability();
 
@@ -41,6 +41,7 @@ public final class BotanProvider extends Provider {
         addHmacAlgorithm();
         addCmacAlgorithm();
         addPoly1305Algorithm();
+        addSipHashAlgorithm();
 
         // Block Ciphers
         addAesAlgorithm();
@@ -54,8 +55,8 @@ public final class BotanProvider extends Provider {
     }
 
     @Override
-    public double getVersion() {
-        return NATIVE.botan_ffi_api_version();
+    public String getVersionStr() {
+        return NATIVE.botan_version_string();
     }
 
     @Override
@@ -182,6 +183,10 @@ public final class BotanProvider extends Provider {
 
     private void addPoly1305Algorithm() {
         put("Mac.Poly1305", PACKAGE_NAME + MAC_PREFIX + "BotanMac$Poly1305");
+    }
+
+    private void addSipHashAlgorithm() {
+        put("Mac.SipHash", PACKAGE_NAME + MAC_PREFIX + "BotanMac$SipHash");
     }
 
     private void addAesAlgorithm() {

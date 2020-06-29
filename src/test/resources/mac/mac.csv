@@ -8,6 +8,9 @@ AESCMAC, 32, 16
 # Poly1305
 Poly1305, 32, 16
 
+# SipHash (2,4)
+SipHash, 16, 8
+
 # HMAC
 HMAC-SHA1, 20, 20
 HMAC-SHA224, 16, 28

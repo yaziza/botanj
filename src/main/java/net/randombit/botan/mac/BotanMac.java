@@ -12,13 +12,12 @@ package net.randombit.botan.mac;
 import static net.randombit.botan.Botan.checkNativeCall;
 import static net.randombit.botan.Botan.singleton;
 
-import java.security.InvalidAlgorithmParameterException;
+import javax.crypto.MacSpi;
+import javax.crypto.SecretKey;
 import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.spec.AlgorithmParameterSpec;
 import java.util.Arrays;
-import javax.crypto.MacSpi;
-import javax.crypto.SecretKey;
 
 import jnr.ffi.byref.PointerByReference;
 
@@ -140,6 +139,13 @@ public abstract class BotanMac extends MacSpi {
     public static final class Poly1305 extends BotanMac {
         public Poly1305() {
             super("Poly1305", 16);
+        }
+    }
+
+    // SipHash
+    public static final class SipHash extends BotanMac {
+        public SipHash() {
+            super("SipHash(2,4)", 8);
         }
     }
 
