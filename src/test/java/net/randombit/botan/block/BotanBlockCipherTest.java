@@ -11,6 +11,7 @@ package net.randombit.botan.block;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.security.AlgorithmParameters;
@@ -18,6 +19,7 @@ import java.security.GeneralSecurityException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.Security;
 import java.security.spec.AlgorithmParameterSpec;
+import java.util.Arrays;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
@@ -127,6 +129,36 @@ public class BotanBlockCipherTest {
         final byte[] output = cipher.doFinal();
 
         assertEquals(0, output.length, "doFinal without input should produce no output");
+    }
+
+    @ParameterizedTest
+    @CsvFileSource(resources = "/block/cbc_no_padding.csv", numLinesToSkip = 1)
+    @DisplayName("Test calling cipher doFinal with output offset")
+    public void testCipherDoFinalWithOutputOffset(String algorithm, int blockSize, int keySize)
+            throws GeneralSecurityException {
+        final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
+        final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
+        final IvParameterSpec iv = new IvParameterSpec(new byte[blockSize]);
+
+        final byte[] output = new byte[64];
+        final int outputOffset = 22;
+
+        cipher.init(Cipher.ENCRYPT_MODE, key, iv);
+        int outputLength = cipher.doFinal(new byte[blockSize], 0, blockSize, output, outputOffset);
+
+        assertNotEquals(outputLength, output.length, "Cipher doFinal should only encrypt from offset");
+        assertEquals(outputLength, blockSize, "Cipher doFinal output length mismatch");
+
+        // 0 to outputOffset must stay the same
+        assertArrayEquals(new byte[outputOffset], Arrays.copyOfRange(output, 0, outputOffset));
+
+        // outputOffset + block size to array end must stay the same
+        assertArrayEquals(new byte[output.length - outputOffset - blockSize],
+                Arrays.copyOfRange(output, outputOffset + blockSize, output.length));
+
+        // data from outputOffset must be encrypted
+        assertArrayEquals(cipher.doFinal(new byte[blockSize]),
+                Arrays.copyOfRange(output, outputOffset, outputOffset + blockSize));
     }
 
     @ParameterizedTest
