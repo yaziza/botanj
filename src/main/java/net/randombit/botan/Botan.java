@@ -9,8 +9,6 @@
 
 package net.randombit.botan;
 
-import java.security.GeneralSecurityException;
-
 import com.sun.jdi.NativeMethodException;
 import jnr.ffi.LibraryLoader;
 
@@ -51,8 +49,9 @@ public final class Botan {
     }
 
     /**
-     * Checks whether or not the native library was successfully loaded. If not, throws the
-     * {@link UnsatisfiedLinkError} that was encountered while attempting to load the library.
+     * Checks whether or not the native library was successfully loaded.
+     *
+     * @throws {@link UnsatisfiedLinkError} that was encountered while attempting to load the library.
      */
     public static void checkAvailability() {
         if (loadError != null) {
@@ -64,7 +63,7 @@ public final class Botan {
      * Checks whether a native lib call was successful.
      *
      * @param result int result from calling botan native
-     * @throws {@link GeneralSecurityException} in case of error
+     * @throws {@link NativeMethodException} in case of error
      */
     public static void checkNativeCall(int result, String method) throws NativeMethodException {
         if (result != 0) {

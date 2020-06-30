@@ -14,13 +14,13 @@ import java.security.Provider;
 public final class BotanProvider extends Provider {
 
     public static final String NAME = "Botan";
-    private static final String VERSION = "2.14.0";
     private static final String INFO = "Botan Java Security Provider";
 
     private static final String PACKAGE_NAME = BotanProvider.class.getPackage().getName();
     private static final String DIGEST_PREFIX = ".digest.";
     private static final String MAC_PREFIX = ".mac.";
     private static final String BLOCK_CIPHER_PREFIX = ".block.";
+    private static final String STREAM_CIPHER_PREFIX = ".stream.";
 
     private static final BotanNative NATIVE = Botan.singleton();
 
@@ -47,6 +47,9 @@ public final class BotanProvider extends Provider {
         addAesAlgorithm();
         addDesAlgorithm();
         addTrippleDesAlgorithm();
+
+        // Stream Ciphers
+        addSalsaAlgorithm();
     }
 
     @Override
@@ -61,16 +64,14 @@ public final class BotanProvider extends Provider {
 
     @Override
     public String toString() {
-        return NATIVE.botan_version_string();
+        return INFO + " version: " + NATIVE.botan_version_string();
     }
 
     private void addMdAlgorithm() {
         put("MessageDigest.MD4", PACKAGE_NAME + DIGEST_PREFIX + "BotanMessageDigest$MD4");
-        put("Alg.Alias.MessageDigest.MD4", "MD4");
         put("Alg.Alias.MessageDigest.1.3.6.1.4.1.37476.3.2.1.99.1", "MD4");
 
         put("MessageDigest.MD5", PACKAGE_NAME + DIGEST_PREFIX + "BotanMessageDigest$MD5");
-        put("Alg.Alias.MessageDigest.MD5", "MD5");
         put("Alg.Alias.MessageDigest.1.2.840.113549.2.5", "MD5");
 
         put("MessageDigest.RIPEMD-160", PACKAGE_NAME + DIGEST_PREFIX + "BotanMessageDigest$RipeMd160");
@@ -235,6 +236,10 @@ public final class BotanProvider extends Provider {
         put("Cipher.DESede/CTR", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesEdeCtr");
         put("Cipher.3DES/CTR", "DESede/CTR");
         put("Cipher.TripleDES/CTR", "DESede/CTR");
+    }
+
+    private void addSalsaAlgorithm() {
+        put("Cipher.Salsa20/None/NoPadding", PACKAGE_NAME + STREAM_CIPHER_PREFIX + "BotanStreamCipher$Salsa20");
     }
 
 }
