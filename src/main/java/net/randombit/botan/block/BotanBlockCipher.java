@@ -286,9 +286,10 @@ public abstract class BotanBlockCipher extends CipherSpi {
 
     @Override
     protected int engineUpdate(byte[] input, int inputOffset, int inputLen, byte[] output, int outputOffset) {
-        output = engineUpdate(input, inputOffset, inputLen);
+        final byte[] result = engineUpdate(input, inputOffset, inputLen);
+        System.arraycopy(result, 0, output, outputOffset, result.length);
 
-        return output.length;
+        return result.length;
     }
 
     @Override
@@ -315,9 +316,10 @@ public abstract class BotanBlockCipher extends CipherSpi {
     @Override
     protected int engineDoFinal(byte[] input, int inputOffset, int inputLen, byte[] output, int outputOffset)
             throws IllegalBlockSizeException {
-        output = engineDoFinal(input, inputOffset, inputLen);
+        final byte[] result = engineDoFinal(input, inputOffset, inputLen);
+        System.arraycopy(result, 0, output, outputOffset, result.length);
 
-        return output.length;
+        return result.length;
     }
 
     @Override
