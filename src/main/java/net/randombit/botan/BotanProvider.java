@@ -49,7 +49,8 @@ public final class BotanProvider extends Provider {
         addTrippleDesAlgorithm();
 
         // Stream Ciphers
-        addSalsaAlgorithm();
+        addSalsa20Algorithm();
+        addChaCha20Algorithm();
     }
 
     @Override
@@ -238,8 +239,12 @@ public final class BotanProvider extends Provider {
         put("Cipher.TripleDES/CTR", "DESede/CTR");
     }
 
-    private void addSalsaAlgorithm() {
+    private void addSalsa20Algorithm() {
         put("Cipher.Salsa20/None/NoPadding", PACKAGE_NAME + STREAM_CIPHER_PREFIX + "BotanStreamCipher$Salsa20");
+    }
+
+    private void addChaCha20Algorithm() {
+        put("Cipher.ChaCha20/None/NoPadding", PACKAGE_NAME + STREAM_CIPHER_PREFIX + "BotanStreamCipher$ChaCha20");
     }
 
 }

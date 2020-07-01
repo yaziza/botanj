@@ -420,6 +420,7 @@ public abstract class BotanBlockCipher extends CipherSpi {
         buffer = EMPTY_BYTE_ARRAY;
 
         if (iv != null) {
+            //TODO: nonce reuse ?
             err = singleton().botan_cipher_start(cipherRef.getValue(), iv, iv.length);
             checkNativeCall(err, "botan_cipher_start");
         }
