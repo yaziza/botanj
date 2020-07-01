@@ -41,7 +41,7 @@ public class BotanStreamCipherTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = {"/stream/salsa20.csv"}, numLinesToSkip = 1)
+    @CsvFileSource(resources = {"/stream/salsa20.csv", "/stream/chacha20.csv"}, numLinesToSkip = 1)
     @DisplayName("Test calling cipher update before initialization")
     public void testCipherUpdateWithoutInitialization(String algorithm) throws GeneralSecurityException {
         final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
@@ -52,7 +52,7 @@ public class BotanStreamCipherTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/stream/salsa20.csv", numLinesToSkip = 1)
+    @CsvFileSource(resources = {"/stream/salsa20.csv", "/stream/chacha20.csv"}, numLinesToSkip = 1)
     @DisplayName("Test calling cipher doFinal before initialization")
     public void testCipherDoFinalWithoutInitialization(String algorithm) throws GeneralSecurityException {
         final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
@@ -63,7 +63,7 @@ public class BotanStreamCipherTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/stream/salsa20.csv", numLinesToSkip = 1)
+    @CsvFileSource(resources = {"/stream/salsa20.csv", "/stream/chacha20.csv"}, numLinesToSkip = 1)
     @DisplayName("Test encrypting then decrypting cipher")
     public void testEncryptThenDecrypt(String algorithm, String key, String nonce) throws GeneralSecurityException {
         final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
@@ -82,7 +82,7 @@ public class BotanStreamCipherTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/stream/salsa20.csv", numLinesToSkip = 1)
+    @CsvFileSource(resources = {"/stream/salsa20.csv", "/stream/chacha20.csv"}, numLinesToSkip = 1)
     @DisplayName("Test stream cipher encryption with test vectors")
     public void testCipherWithTestVectors(String algorithm, String key, String iv, String in, String out)
             throws GeneralSecurityException {

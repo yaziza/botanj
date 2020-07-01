@@ -7,8 +7,8 @@ Botanj - Java Security Provider (JSP)
 
 1. [Introduction](#introduction)
 2. [Building The Library](#building-the-library)
-3. [Using Botan JSP](#using-botanj)
-4. [Supported Primitives](#supported-primitives)
+3. [Supported Primitives](#supported-primitives)
+4. [Using Botan JSP](#using-botanj)
 
 ## Introduction
 Botanj is a Java Security Provider ([JSP](https://docs.oracle.com/en/java/javase/14/security/java-cryptography-architecture-jca-reference-guide.html#GUID-3E0744CE-6AC7-4A6D-A1F6-6C01199E6920))
@@ -23,6 +23,25 @@ Botanj uses [JNR-FFI](https://github.com/jnr/jnr-ffi) for loading Botan native c
 * Install Java 11+ (tested with [openjdk 11](https://openjdk.java.net/))
 * Run tests:
 `mvn test`
+
+## Supported Primitives
+
+### Ciphers, hashes, MACs, and checksums
+* Authenticated cipher modes: EAX, OCB, GCM, SIV, CCM
+* Cipher modes: CBC, CTR, CFB, OFB
+* Block ciphers: AES, DES/3DES
+* Stream ciphers: Salsa20, ChaCha20
+* Hash functions: SHA-1, SHA-2, SHA-3, MD4, MD5, RIPEMD-160, BLAKE2b
+* Message Authentication codes: HMAC, CMAC, Poly1305, SipHash
+
+### Public Key Cryptography
+* Not yet supported
+
+### Transport Layer Security (TLS) Protocol (JSSE)
+* Not yet supported
+
+### Public Key Infrastructure
+* Not yes supported
 
 ## Using Botanj
 * An example describing the procedure to compute a MessageDigest object:
@@ -58,21 +77,9 @@ cipher.init(Cipher.ENCRYPT_MODE, key, iv);
 final byte[] output = cipher.doFinal("hello world".getBytes());
 ```
 
-## Supported Primitives
-
-### Ciphers, hashes, MACs, and checksums
-* Authenticated cipher modes: EAX, OCB, GCM, SIV, CCM
-* Cipher modes: CBC, CTR, CFB, OFB
-* Block ciphers: AES, DES/3DES
-* Stream ciphers: Salsa20
-* Hash functions: SHA-1, SHA-2, SHA-3, MD4, MD5, RIPEMD-160, BLAKE2b
-* Message Authentication codes: HMAC, CMAC, Poly1305, SipHash
-
-### Public Key Cryptography
-* Not yet supported
-
-### Transport Layer Security (TLS) Protocol (JSSE)
-* Not yet supported
-
-### Public Key Infrastructure
-* Not yes supported
+* An example describing the procedure to encrypt using ChaCha20:
+```java
+final Cipher cipher = Cipher.getInstance("ChaCha20/None/NoPadding", BotanProvider.NAME);
+cipher.init(Cipher.ENCRYPT_MODE, key, iv);
+final byte[] output = cipher.doFinal("hello world".getBytes());
+```

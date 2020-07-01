@@ -57,7 +57,7 @@ public class BotanStreamCipher extends CipherSpi {
 
     @Override
     protected void engineSetMode(String mode) throws NoSuchAlgorithmException {
-        throw new NoSuchAlgorithmException("Cipher mode not supported " + mode);
+        throw new NoSuchAlgorithmException("No cipher modes allowed for stream ciphers!");
     }
 
     @Override
@@ -173,12 +173,12 @@ public class BotanStreamCipher extends CipherSpi {
         final NativeLongByReference outputWritten = new NativeLongByReference();
         final NativeLongByReference inputConsumed = new NativeLongByReference();
 
-        final byte[] finalInput = Arrays.copyOfRange(input, inputOffset, input.length);
         final byte[] output = new byte[inputLen];
+        final byte[] inputFromOffset = Arrays.copyOfRange(input, inputOffset, Math.addExact(inputOffset, inputLen));
 
         final int err = singleton().botan_cipher_update(cipherRef.getValue(), botanFlag,
                 output, output.length, outputWritten,
-                finalInput, finalInput.length, inputConsumed);
+                inputFromOffset, inputLen, inputConsumed);
 
         checkNativeCall(err, "botan_cipher_update");
 
@@ -196,6 +196,7 @@ public class BotanStreamCipher extends CipherSpi {
         checkNativeCall(err, "botan_cipher_reset");
 
         if (iv != null) {
+            //TODO: nonce reuse ?
             err = singleton().botan_cipher_start(cipherRef.getValue(), iv, iv.length);
             checkNativeCall(err, "botan_cipher_start");
         }
@@ -242,6 +243,14 @@ public class BotanStreamCipher extends CipherSpi {
     public static final class Salsa20 extends BotanStreamCipher {
         public Salsa20() {
             super("Salsa20");
+        }
+
+    }
+
+    // ChaCha20
+    public static final class ChaCha20 extends BotanStreamCipher {
+        public ChaCha20() {
+            super("ChaCha(20)");
         }
 
     }
