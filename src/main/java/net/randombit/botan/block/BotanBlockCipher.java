@@ -420,7 +420,7 @@ public abstract class BotanBlockCipher extends CipherSpi {
         buffer = EMPTY_BYTE_ARRAY;
 
         if (iv != null) {
-            //TODO: nonce reuse ?
+            //FIXME: nonce reuse - disable starting cipher with same IV
             err = singleton().botan_cipher_start(cipherRef.getValue(), iv, iv.length);
             checkNativeCall(err, "botan_cipher_start");
         }
@@ -429,7 +429,7 @@ public abstract class BotanBlockCipher extends CipherSpi {
     private byte[] getDoFinalInput(byte[] input, int inputOffset, int inputLen) {
         // resize buffer
         final int index = Math.addExact(inputLen, buffer.length);
-        byte[] result = Arrays.copyOf(buffer, index);
+        final byte[] result = Arrays.copyOf(buffer, index);
 
         if (inputLen > 0) {
             // append the new input

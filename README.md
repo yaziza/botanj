@@ -30,7 +30,7 @@ Botanj uses [JNR-FFI](https://github.com/jnr/jnr-ffi) for loading Botan native c
 * Authenticated cipher modes: EAX, OCB, GCM, SIV, CCM
 * Cipher modes: CBC, CTR, CFB, OFB
 * Block ciphers: AES, DES/3DES
-* Stream ciphers: Salsa20, ChaCha20
+* Stream ciphers: (X)Salsa20, (X)ChaCha20
 * Hash functions: SHA-1, SHA-2, SHA-3, MD4, MD5, RIPEMD-160, BLAKE2b
 * Message Authentication codes: HMAC, CMAC, Poly1305, SipHash
 
