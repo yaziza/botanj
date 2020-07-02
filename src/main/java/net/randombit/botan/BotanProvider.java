@@ -241,10 +241,12 @@ public final class BotanProvider extends Provider {
 
     private void addSalsa20Algorithm() {
         put("Cipher.Salsa20/None/NoPadding", PACKAGE_NAME + STREAM_CIPHER_PREFIX + "BotanStreamCipher$Salsa20");
+        put("Cipher.XSalsa20/None/NoPadding", PACKAGE_NAME + STREAM_CIPHER_PREFIX + "BotanStreamCipher$XSalsa20");
     }
 
     private void addChaCha20Algorithm() {
         put("Cipher.ChaCha20/None/NoPadding", PACKAGE_NAME + STREAM_CIPHER_PREFIX + "BotanStreamCipher$ChaCha20");
+        put("Cipher.XChaCha20/None/NoPadding", PACKAGE_NAME + STREAM_CIPHER_PREFIX + "BotanStreamCipher$XChaCha20");
     }
 
 }

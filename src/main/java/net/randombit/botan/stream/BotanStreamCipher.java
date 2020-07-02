@@ -33,7 +33,7 @@ import java.util.Objects;
 import jnr.ffi.byref.NativeLongByReference;
 import jnr.ffi.byref.PointerByReference;
 
-public class BotanStreamCipher extends CipherSpi {
+public abstract class BotanStreamCipher extends CipherSpi {
 
     /**
      * Holds the name of the cipher algorithm.
@@ -49,6 +49,18 @@ public class BotanStreamCipher extends CipherSpi {
      * Holds the Initial Vector (IV).
      */
     private byte[] iv;
+
+    /**
+     * Holds the cipher operation mode in native botan terms (0: Encryption, 1: Decryption)
+     */
+    private int mode;
+
+    /**
+     * Whether the eXtended-nonce construction is used.
+     *
+     * @return {@code true} if the eXtended-nonce is used, {@code false} otherwise.
+     */
+    abstract boolean withExtendedNonce();
 
     private BotanStreamCipher(String name) {
         this.name = Objects.requireNonNull(name);
@@ -102,7 +114,8 @@ public class BotanStreamCipher extends CipherSpi {
         final byte[] encodedKey = checkKey(key);
         final long keySize = encodedKey.length;
 
-        int err = singleton().botan_cipher_init(cipherRef, name, Math.subtractExact(opmode, 1));
+        mode = Math.subtractExact(opmode, 1);
+        int err = singleton().botan_cipher_init(cipherRef, name, mode);
         checkNativeCall(err, "botan_cipher_init");
 
         checkKeySize(keySize);
@@ -119,6 +132,10 @@ public class BotanStreamCipher extends CipherSpi {
 
         if (params instanceof IvParameterSpec) {
             iv = ((IvParameterSpec) params).getIV();
+
+            if (withExtendedNonce() && iv.length < 24) {
+                throw new InvalidAlgorithmParameterException("Nonce size too small for algorithm: " + name);
+            }
 
             final int err = singleton().botan_cipher_start(cipherRef.getValue(), iv, iv.length);
             checkNativeCall(err, "botan_cipher_start");
@@ -195,11 +212,15 @@ public class BotanStreamCipher extends CipherSpi {
         int err = singleton().botan_cipher_reset(cipherRef.getValue());
         checkNativeCall(err, "botan_cipher_reset");
 
-        if (iv != null) {
-            //TODO: nonce reuse ?
+        if (iv != null && isDecrypting(mode)) {
+            //TODO: throw exception when reusing cipher without calling init while encrypting
             err = singleton().botan_cipher_start(cipherRef.getValue(), iv, iv.length);
             checkNativeCall(err, "botan_cipher_start");
         }
+    }
+
+    private static boolean isDecrypting(int mode) {
+        return mode == 1;
     }
 
     private static byte[] checkKey(Key key) throws InvalidKeyException {
@@ -245,12 +266,42 @@ public class BotanStreamCipher extends CipherSpi {
             super("Salsa20");
         }
 
+        public boolean withExtendedNonce() {
+            return false;
+        }
+
+    }
+
+    public static final class XSalsa20 extends BotanStreamCipher {
+        public XSalsa20() {
+            super("Salsa20");
+        }
+
+        public boolean withExtendedNonce() {
+            return true;
+        }
+
     }
 
     // ChaCha20
     public static final class ChaCha20 extends BotanStreamCipher {
         public ChaCha20() {
             super("ChaCha(20)");
+        }
+
+        public boolean withExtendedNonce() {
+            return false;
+        }
+
+    }
+
+    public static final class XChaCha20 extends BotanStreamCipher {
+        public XChaCha20() {
+            super("ChaCha(20)");
+        }
+
+        public boolean withExtendedNonce() {
+            return true;
         }
 
     }
