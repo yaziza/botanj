@@ -45,10 +45,13 @@ public final class Base64Utils {
         final int outputSize = base64OutputLength(input);
 
         final byte[] result = new byte[outputSize];
-        final NativeLongByReference length = new NativeLongByReference();
+        final NativeLongByReference outputLength = new NativeLongByReference();
 
-        final int err = singleton().botan_base64_encode(input, input.length, result, length);
+        final int err = singleton().botan_base64_encode(input, input.length, result, outputLength);
         checkNativeCall(err, "botan_base64_encode");
+
+        //TODO: botan native output length does not match with result size
+        //return Arrays.copyOfRange(result, 0, outputLength.intValue());
 
         return result;
     }
@@ -67,12 +70,12 @@ public final class Base64Utils {
         verifyInput(input, Arrays.asList(ALLOWED_CHARS));
 
         final byte[] result = new byte[base64InputLength(input)];
-        final NativeLongByReference length = new NativeLongByReference();
+        final NativeLongByReference outputLength = new NativeLongByReference();
 
-        final int err = singleton().botan_base64_decode(new String(input), input.length, result, length);
+        final int err = singleton().botan_base64_decode(new String(input), input.length, result, outputLength);
         checkNativeCall(err, "botan_base64_decode");
 
-        return Arrays.copyOfRange(result, 0, length.intValue());
+        return Arrays.copyOfRange(result, 0, outputLength.intValue());
     }
 
     /**
@@ -86,19 +89,17 @@ public final class Base64Utils {
     }
 
     private static int base64OutputLength(byte[] output) {
-        int n = output.length;
+        int n = Math.addExact(output.length, 2);
 
-        // Throwing an exception if the result overflows
-        n = Math.multiplyExact(n, 4);
-        n = Math.addExact(n, 2);
+        n = (int) Math.floor(n / 3);
 
-        return n / 3;
+        return Math.multiplyExact(n, 4);
     }
 
     private static int base64InputLength(byte[] input) {
-        int n = input.length;
+        int n = input.length / 4;
 
-        return n - (n / 3) + 2;
+        return Math.multiplyExact(n, 3);
     }
 
 }
