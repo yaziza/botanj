@@ -9,8 +9,8 @@
 
 package net.randombit.botan.block;
 
-import static net.randombit.botan.Botan.checkNativeCall;
-import static net.randombit.botan.Botan.singleton;
+import static net.randombit.botan.BotanInstance.checkNativeCall;
+import static net.randombit.botan.BotanInstance.singleton;
 import static net.randombit.botan.BotanUtil.checkKeySize;
 import static net.randombit.botan.BotanUtil.checkSecretKey;
 import static net.randombit.botan.Constants.BOTAN_DO_FINAL_FLAG;
@@ -21,7 +21,6 @@ import javax.crypto.Cipher;
 import javax.crypto.CipherSpi;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SecretKey;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
 import java.security.AlgorithmParameters;

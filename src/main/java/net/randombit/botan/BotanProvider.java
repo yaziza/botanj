@@ -22,12 +22,12 @@ public final class BotanProvider extends Provider {
     private static final String BLOCK_CIPHER_PREFIX = ".block.";
     private static final String STREAM_CIPHER_PREFIX = ".stream.";
 
-    private static final BotanNative NATIVE = Botan.singleton();
+    private static final BotanNativeInterface NATIVE = BotanInstance.singleton();
 
     public BotanProvider() {
         super(NAME, "", INFO);
 
-        Botan.checkAvailability();
+        BotanInstance.checkAvailability();
 
         // Message Digests
         addMdAlgorithm();
