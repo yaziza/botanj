@@ -11,16 +11,19 @@ package net.randombit.botan.mac;
 
 import static net.randombit.botan.Botan.checkNativeCall;
 import static net.randombit.botan.Botan.singleton;
+import static net.randombit.botan.BotanUtil.checkKeySize;
+import static net.randombit.botan.BotanUtil.checkSecretKey;
 
 import javax.crypto.MacSpi;
-import javax.crypto.SecretKey;
 import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.spec.AlgorithmParameterSpec;
 import java.util.Arrays;
 
+import jnr.ffi.Pointer;
 import jnr.ffi.byref.NativeLongByReference;
 import jnr.ffi.byref.PointerByReference;
+import net.randombit.botan.BotanUtil;
 
 public abstract class BotanMac extends MacSpi {
 
@@ -68,13 +71,17 @@ public abstract class BotanMac extends MacSpi {
 
     @Override
     protected void engineInit(Key key, AlgorithmParameterSpec params) throws InvalidKeyException {
-        checkKey(key);
-        final int length = key.getEncoded().length;
+        final byte[] encodedKey = checkSecretKey(key);
+        final int length = encodedKey.length;
 
         int err = singleton().botan_mac_init(macRef, getBotanMacName(length), 0);
         checkNativeCall(err, "botan_mac_init");
 
-        checkKeySize(length);
+        BotanUtil.FourParameterFunction<Pointer, NativeLongByReference> getKeySpec = (a, b, c, d) -> {
+            return singleton().botan_mac_get_keyspec(a, b, c, d);
+        };
+
+        checkKeySize(macRef.getValue(), length, getKeySpec);
 
         err = singleton().botan_mac_set_key(macRef.getValue(), key.getEncoded(), length);
         checkNativeCall(err, "botan_mac_set_key");
@@ -108,39 +115,6 @@ public abstract class BotanMac extends MacSpi {
     protected void engineReset() {
         final int err = singleton().botan_mac_clear(macRef.getValue());
         checkNativeCall(err, "botan_mac_clear");
-    }
-
-    private void checkKey(Key key) throws InvalidKeyException {
-        if (!(key instanceof SecretKey)) {
-            throw new InvalidKeyException("Only SecretKey is supported");
-        }
-
-        final byte[] encodedKey = key.getEncoded();
-        if (encodedKey == null) {
-            throw new InvalidKeyException("key.getEncoded() == null");
-        }
-    }
-
-    private void checkKeySize(int keySize) throws InvalidKeyException {
-        final NativeLongByReference minimumLength = new NativeLongByReference();
-        final NativeLongByReference maximumLength = new NativeLongByReference();
-        final NativeLongByReference lengthModulo = new NativeLongByReference();
-
-        final int err = singleton().botan_mac_get_keyspec(macRef.getValue(), minimumLength, maximumLength, lengthModulo);
-        checkNativeCall(err, "botan_mac_get_keyspec");
-
-        if (keySize < minimumLength.intValue()) {
-            throw new InvalidKeyException("key.getEncoded() < minimum key length: " + minimumLength.intValue());
-        }
-
-        if (keySize > maximumLength.intValue()) {
-            throw new InvalidKeyException("key.getEncoded() > maximum key length: " + maximumLength.intValue());
-        }
-
-        if (keySize % lengthModulo.intValue() != 0) {
-            throw new InvalidKeyException("key.getEncoded() not multiple of key length modulo: "
-                    + lengthModulo.intValue());
-        }
     }
 
     // CMAC

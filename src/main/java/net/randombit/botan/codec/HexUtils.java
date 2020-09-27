@@ -11,6 +11,7 @@ package net.randombit.botan.codec;
 
 import static net.randombit.botan.Botan.checkNativeCall;
 import static net.randombit.botan.Botan.singleton;
+import static net.randombit.botan.BotanUtil.verifyInput;
 import static net.randombit.botan.Constants.EMPTY_BYTE_ARRAY;
 
 import java.util.Arrays;
@@ -71,7 +72,7 @@ public final class HexUtils {
             return EMPTY_BYTE_ARRAY;
         }
 
-        verifyInput(input);
+        verifyInput(input, Arrays.asList(ALLOWED_CHARS));
 
         final byte[] result = new byte[input.length];
         final NativeLongByReference length = new NativeLongByReference();
@@ -90,16 +91,6 @@ public final class HexUtils {
      */
     public static byte[] decode(String input) {
         return decode(input.getBytes());
-    }
-
-    private static void verifyInput(byte[] input) {
-        String inputStr = new String(input);
-
-        for (char chr : inputStr.toCharArray()) {
-            if (!ALLOWED_CHARS_LIST.contains(chr)) {
-                throw new IllegalArgumentException("Cannot decode malformed input!");
-            }
-        }
     }
 
 }

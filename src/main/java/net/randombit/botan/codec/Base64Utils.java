@@ -11,6 +11,7 @@ package net.randombit.botan.codec;
 
 import static net.randombit.botan.Botan.checkNativeCall;
 import static net.randombit.botan.Botan.singleton;
+import static net.randombit.botan.BotanUtil.verifyInput;
 import static net.randombit.botan.Constants.EMPTY_BYTE_ARRAY;
 
 import java.util.Arrays;
@@ -63,7 +64,7 @@ public final class Base64Utils {
             return EMPTY_BYTE_ARRAY;
         }
 
-        verifyInput(input);
+        verifyInput(input, Arrays.asList(ALLOWED_CHARS));
 
         final byte[] result = new byte[base64InputLength(input)];
         final NativeLongByReference length = new NativeLongByReference();
@@ -98,16 +99,6 @@ public final class Base64Utils {
         int n = input.length;
 
         return n - (n / 3) + 2;
-    }
-
-    private static void verifyInput(byte[] input) {
-        String inputStr = new String(input);
-
-        for (char chr : inputStr.toCharArray()) {
-            if (!ALLOWED_CHARS_LIST.contains(chr)) {
-                throw new IllegalArgumentException("Cannot decode malformed input!");
-            }
-        }
     }
 
 }
