@@ -23,6 +23,7 @@
     </properties>
 
     <dependencies>
+        <!-- lib dependencies-->
         <!-- https://mvnrepository.com/artifact/com.github.jnr/jnr-ffi -->
         <dependency>
             <groupId>com.github.jnr</groupId>
@@ -30,6 +31,7 @@
             <version>${jnr-ffi-version}</version>
         </dependency>
 
+        <!-- test dependencies-->
         <!-- https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>

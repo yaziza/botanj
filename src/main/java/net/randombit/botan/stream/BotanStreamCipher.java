@@ -11,13 +11,14 @@ package net.randombit.botan.stream;
 
 import static net.randombit.botan.Botan.checkNativeCall;
 import static net.randombit.botan.Botan.singleton;
+import static net.randombit.botan.BotanUtil.checkKeySize;
+import static net.randombit.botan.BotanUtil.checkSecretKey;
 import static net.randombit.botan.Constants.BOTAN_DO_FINAL_FLAG;
 import static net.randombit.botan.Constants.BOTAN_UPDATE_FLAG;
 import static net.randombit.botan.Constants.EMPTY_BYTE_ARRAY;
 
 import javax.crypto.CipherSpi;
 import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import java.security.AlgorithmParameters;
 import java.security.InvalidAlgorithmParameterException;
@@ -30,8 +31,10 @@ import java.security.spec.InvalidParameterSpecException;
 import java.util.Arrays;
 import java.util.Objects;
 
+import jnr.ffi.Pointer;
 import jnr.ffi.byref.NativeLongByReference;
 import jnr.ffi.byref.PointerByReference;
+import net.randombit.botan.BotanUtil;
 
 public abstract class BotanStreamCipher extends CipherSpi {
 
@@ -111,14 +114,18 @@ public abstract class BotanStreamCipher extends CipherSpi {
 
     @Override
     protected void engineInit(int opmode, Key key, SecureRandom random) throws InvalidKeyException {
-        final byte[] encodedKey = checkKey(key);
-        final long keySize = encodedKey.length;
+        final byte[] encodedKey = checkSecretKey(key);
+        final int keySize = encodedKey.length;
 
         mode = Math.subtractExact(opmode, 1);
         int err = singleton().botan_cipher_init(cipherRef, name, mode);
         checkNativeCall(err, "botan_cipher_init");
 
-        checkKeySize(keySize);
+        BotanUtil.FourParameterFunction<Pointer, NativeLongByReference> getKeySpec = (a, b, c, d) -> {
+            return singleton().botan_cipher_get_keyspec(a, b, c, d);
+        };
+
+        checkKeySize(cipherRef.getValue(), keySize, getKeySpec);
 
         err = singleton().botan_cipher_set_key(cipherRef.getValue(), encodedKey, keySize);
         checkNativeCall(err, "botan_cipher_set_key");
@@ -221,43 +228,6 @@ public abstract class BotanStreamCipher extends CipherSpi {
 
     private static boolean isDecrypting(int mode) {
         return mode == 1;
-    }
-
-    private static byte[] checkKey(Key key) throws InvalidKeyException {
-        if (!(key instanceof SecretKey)) {
-            throw new InvalidKeyException("Only SecretKey is supported");
-        }
-
-        final byte[] encodedKey = key.getEncoded();
-        if (encodedKey == null) {
-            throw new InvalidKeyException("key.getEncoded() == null");
-        }
-
-        return encodedKey;
-    }
-
-    private void checkKeySize(long keySize) throws InvalidKeyException {
-        final NativeLongByReference minimumLength = new NativeLongByReference();
-        final NativeLongByReference maximumLength = new NativeLongByReference();
-        final NativeLongByReference lengthModulo = new NativeLongByReference();
-
-        final int err = singleton().botan_cipher_get_keyspec(cipherRef.getValue(), minimumLength, maximumLength,
-                lengthModulo);
-        checkNativeCall(err, "botan_cipher_get_keyspec");
-
-        if (keySize < minimumLength.intValue()) {
-            throw new InvalidKeyException("key.getEncoded() < minimum key length: " + minimumLength.intValue());
-        }
-
-        if (keySize > maximumLength.intValue()) {
-            throw new InvalidKeyException("key.getEncoded() > maximum key length: " + maximumLength.intValue());
-        }
-
-        if (keySize % lengthModulo.intValue() != 0) {
-            throw new InvalidKeyException("key.getEncoded() not multiple of key length modulo: "
-                    + lengthModulo.intValue());
-        }
-
     }
 
     // Salsa20

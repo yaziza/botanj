@@ -11,6 +11,8 @@ package net.randombit.botan.block;
 
 import static net.randombit.botan.Botan.checkNativeCall;
 import static net.randombit.botan.Botan.singleton;
+import static net.randombit.botan.BotanUtil.checkKeySize;
+import static net.randombit.botan.BotanUtil.checkSecretKey;
 import static net.randombit.botan.Constants.BOTAN_DO_FINAL_FLAG;
 import static net.randombit.botan.Constants.BOTAN_UPDATE_FLAG;
 import static net.randombit.botan.Constants.EMPTY_BYTE_ARRAY;
@@ -33,8 +35,10 @@ import java.security.spec.InvalidParameterSpecException;
 import java.util.Arrays;
 import java.util.Objects;
 
+import jnr.ffi.Pointer;
 import jnr.ffi.byref.NativeLongByReference;
 import jnr.ffi.byref.PointerByReference;
+import net.randombit.botan.BotanUtil;
 
 public abstract class BotanBlockCipher extends CipherSpi {
 
@@ -183,8 +187,8 @@ public abstract class BotanBlockCipher extends CipherSpi {
 
     @Override
     protected void engineInit(int opmode, Key key, SecureRandom random) throws InvalidKeyException {
-        final byte[] encodedKey = checkKey(key, name);
-        final long keySize = encodedKey.length;
+        final byte[] encodedKey = checkSecretKey(key);
+        final int keySize = encodedKey.length;
 
         final String algName = getBotanCipherName(padding.getName(), encodedKey.length);
         final NativeLongByReference updateGranularity = new NativeLongByReference();
@@ -195,6 +199,12 @@ public abstract class BotanBlockCipher extends CipherSpi {
 
         int err = singleton().botan_cipher_init(cipherRef, algName, mode);
         checkNativeCall(err, "botan_cipher_init");
+
+        BotanUtil.FourParameterFunction<Pointer, NativeLongByReference> getKeySpec = (a, b, c, d) -> {
+            return singleton().botan_cipher_get_keyspec(a, b, c, d);
+        };
+
+        checkKeySize(cipherRef.getValue(), keySize, getKeySpec);
 
         err = singleton().botan_cipher_set_key(cipherRef.getValue(), encodedKey, keySize);
         checkNativeCall(err, "botan_cipher_set_key");
@@ -368,49 +378,6 @@ public abstract class BotanBlockCipher extends CipherSpi {
         }
 
         return result;
-    }
-
-    private static byte[] checkKey(Key key, String algorithm) throws InvalidKeyException {
-        if (!(key instanceof SecretKey)) {
-            throw new InvalidKeyException("Only SecretKey is supported");
-        }
-
-        final byte[] encodedKey = key.getEncoded();
-        if (encodedKey == null) {
-            throw new InvalidKeyException("key.getEncoded() == null");
-        }
-
-        final int keyLength = key.getEncoded().length;
-
-        switch (algorithm) {
-            case "AES":
-                if (keyLength != 16 && keyLength != 24 && keyLength != 32 &&
-                        keyLength != 48 && keyLength != 64) {
-                    // Size 48 and 64 are for SIV mode
-                    String msg = String.format(ERR_MSG_INVALID_KEY_SIZE, keyLength, algorithm);
-                    throw new InvalidKeyException(msg);
-                }
-                break;
-
-            case "DES":
-                if (keyLength != 8) {
-                    String msg = String.format(ERR_MSG_INVALID_KEY_SIZE, keyLength, algorithm);
-                    throw new InvalidKeyException(msg);
-                }
-                break;
-
-            case "DESede":
-                if (keyLength != 16 && keyLength != 24) {
-                    String msg = String.format(ERR_MSG_INVALID_KEY_SIZE, keyLength, algorithm);
-                    throw new InvalidKeyException(msg);
-                }
-                break;
-
-            default:
-                throw new IllegalStateException("Unsupported algorithm " + algorithm);
-        }
-
-        return encodedKey;
     }
 
     private void engineReset() {
