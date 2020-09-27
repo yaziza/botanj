@@ -9,8 +9,8 @@
 
 package net.randombit.botan.digest;
 
-import static net.randombit.botan.Botan.checkNativeCall;
-import static net.randombit.botan.Botan.singleton;
+import static net.randombit.botan.BotanInstance.checkNativeCall;
+import static net.randombit.botan.BotanInstance.singleton;
 
 import java.security.MessageDigestSpi;
 import java.security.NoSuchAlgorithmException;

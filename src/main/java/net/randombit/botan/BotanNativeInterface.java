@@ -15,7 +15,7 @@ import jnr.ffi.annotations.Out;
 import jnr.ffi.byref.NativeLongByReference;
 import jnr.ffi.byref.PointerByReference;
 
-public interface BotanNative {
+public interface BotanNativeInterface {
 
     /**
      * Converts an error code into a string. Returns "Unknown error"
@@ -25,15 +25,6 @@ public interface BotanNative {
      * @return {@link String} description
      */
     String botan_error_description(@In int err);
-
-    /**
-     * Returns the version of the currently supported FFI API. This is
-     * expressed in the form YYYYMMDD of the release date of this version
-     * of the API.
-     *
-     * @return api version
-     */
-    long botan_ffi_api_version();
 
     /**
      * Returns the version of the currently supported FFI API. This is
@@ -51,27 +42,6 @@ public interface BotanNative {
      * @return {@link String} version
      */
     String botan_version_string();
-
-    /**
-     * @return the major version of the library
-     */
-    long botan_version_major();
-
-    /**
-     * @return the minor version of the library
-     */
-    long botan_version_minor();
-
-    /**
-     * @return the patch version of the library
-     */
-    long botan_version_patch();
-
-    /**
-     * @return the date this version was released as an integer,
-     * or 0 if an unreleased version
-     */
-    long botan_version_datestamp();
 
     /**
      * Performs hex encoding.

@@ -9,8 +9,8 @@
 
 package net.randombit.botan.stream;
 
-import static net.randombit.botan.Botan.checkNativeCall;
-import static net.randombit.botan.Botan.singleton;
+import static net.randombit.botan.BotanInstance.checkNativeCall;
+import static net.randombit.botan.BotanInstance.singleton;
 import static net.randombit.botan.BotanUtil.checkKeySize;
 import static net.randombit.botan.BotanUtil.checkSecretKey;
 import static net.randombit.botan.Constants.BOTAN_DO_FINAL_FLAG;

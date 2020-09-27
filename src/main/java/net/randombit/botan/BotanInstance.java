@@ -12,30 +12,30 @@ package net.randombit.botan;
 import com.sun.jdi.NativeMethodException;
 import jnr.ffi.LibraryLoader;
 
-public final class Botan {
+public final class BotanInstance {
 
     private static final String LIB_NAME = "botan-2";
 
-    private static volatile BotanNative NATIVE;
+    private static volatile BotanNativeInterface NATIVE;
     private static UnsatisfiedLinkError loadError;
 
-    private Botan() {
+    private BotanInstance() {
         // Not meant to be instantiated
     }
 
     /**
-     * Returns a singleton instance of the {@link BotanNative} library.
+     * Returns a singleton instance of the {@link BotanNativeInterface} library.
      *
-     * @return {@link BotanNative} singleton instance
+     * @return {@link BotanNativeInterface} singleton instance
      */
-    public static BotanNative singleton() {
-        BotanNative result = NATIVE;
+    public static BotanNativeInterface singleton() {
+        BotanNativeInterface result = NATIVE;
         if (result == null) {
-            synchronized (Botan.class) {
+            synchronized (BotanInstance.class) {
                 result = NATIVE;
                 if (result == null) {
                     try {
-                        result = NATIVE = LibraryLoader.create(BotanNative.class).load(LIB_NAME);
+                        result = NATIVE = LibraryLoader.create(BotanNativeInterface.class).load(LIB_NAME);
                     } catch (UnsatisfiedLinkError t) {
                         // Don't rethrow the error, so that we can later on interrogate the
                         // value of loadError.
