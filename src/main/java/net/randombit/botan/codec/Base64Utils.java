@@ -42,18 +42,18 @@ public final class Base64Utils {
      * @return encoded output
      */
     public static byte[] encode(byte[] input) {
-        final int outputSize = base64OutputLength(input);
+        if (input.length == 0) {
+            return EMPTY_BYTE_ARRAY;
+        }
 
-        final byte[] result = new byte[outputSize];
+        final byte[] result = new byte[base64OutputLength(input)];
         final NativeLongByReference outputLength = new NativeLongByReference();
 
         final int err = singleton().botan_base64_encode(input, input.length, result, outputLength);
         checkNativeCall(err, "botan_base64_encode");
 
-        //TODO: botan native output length does not match with result size
-        //return Arrays.copyOfRange(result, 0, outputLength.intValue());
-
-        return result;
+        // remove botan native last empty byte
+        return Arrays.copyOfRange(result, 0, outputLength.intValue() - 1);
     }
 
     /**
