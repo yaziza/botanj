@@ -7,25 +7,23 @@
  *    Yasser Aziza - initial implementation
  */
 
-package net.randombit.botan.block;
+package net.randombit.botan.seckey.block;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.security.AlgorithmParameters;
-import java.security.GeneralSecurityException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.Security;
-import java.security.spec.AlgorithmParameterSpec;
-import java.util.Arrays;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
-import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+import java.security.AlgorithmParameters;
+import java.security.GeneralSecurityException;
+import java.security.Security;
+import java.security.spec.AlgorithmParameterSpec;
+import java.util.Arrays;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -52,8 +50,8 @@ public class BotanBlockCipherTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = {"/block/cbc_padding.csv", "/block/cbc_no_padding.csv", "/block/cfb_no_padding.csv",
-            "/block/ofb_no_padding.csv", "/block/ctr_no_padding.csv"}, numLinesToSkip = 1)
+    @CsvFileSource(resources = {"/seckey/block/cbc_padding.csv", "/seckey/block/cbc_no_padding.csv", "/seckey/block/cfb_no_padding.csv",
+            "/seckey/block/ofb_no_padding.csv", "/seckey/block/ctr_no_padding.csv"}, numLinesToSkip = 1)
     @DisplayName("Test cipher block size")
     public void testCipherBlockSize(String algorithm, int blockSize, int keySize) throws GeneralSecurityException {
         final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
@@ -66,8 +64,8 @@ public class BotanBlockCipherTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = {"/block/cbc_no_padding.csv", "/block/cfb_no_padding.csv", "/block/ofb_no_padding.csv",
-            "/block/ctr_no_padding.csv"}, numLinesToSkip = 1)
+    @CsvFileSource(resources = {"/seckey/block/cbc_no_padding.csv", "/seckey/block/cfb_no_padding.csv", "/seckey/block/ofb_no_padding.csv",
+            "/seckey/block/ctr_no_padding.csv"}, numLinesToSkip = 1)
     @DisplayName("Test cipher parameters IV set")
     public void testCipherParametersWithIv(String algorithm, int blockSize, int keySize)
             throws GeneralSecurityException {
@@ -95,7 +93,7 @@ public class BotanBlockCipherTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = {"/block/cbc_padding.csv"}, numLinesToSkip = 1)
+    @CsvFileSource(resources = {"/seckey/block/cbc_padding.csv"}, numLinesToSkip = 1)
     @DisplayName("Test calling cipher update before initialization")
     public void testCipherUpdateWithoutInitialization(String algorithm) throws GeneralSecurityException {
         final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
@@ -106,7 +104,7 @@ public class BotanBlockCipherTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/block/cfb_no_padding.csv", numLinesToSkip = 1)
+    @CsvFileSource(resources = "/seckey/block/cfb_no_padding.csv", numLinesToSkip = 1)
     @DisplayName("Test calling cipher doFinal before initialization")
     public void testCipherDoFinalWithoutInitialization(String algorithm) throws GeneralSecurityException {
         final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
@@ -117,7 +115,7 @@ public class BotanBlockCipherTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/block/cbc_no_padding.csv", numLinesToSkip = 1)
+    @CsvFileSource(resources = "/seckey/block/cbc_no_padding.csv", numLinesToSkip = 1)
     @DisplayName("Test calling cipher doFinal without input (No Padding)")
     public void testCipherDoFinalWithoutInputNoPadding(String algorithm, int blockSize, int keySize)
             throws GeneralSecurityException {
@@ -132,7 +130,7 @@ public class BotanBlockCipherTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/block/cbc_no_padding.csv", numLinesToSkip = 1)
+    @CsvFileSource(resources = "/seckey/block/cbc_no_padding.csv", numLinesToSkip = 1)
     @DisplayName("Test calling cipher doFinal with output offset")
     public void testCipherDoFinalWithOutputOffset(String algorithm, int blockSize, int keySize)
             throws GeneralSecurityException {
@@ -162,7 +160,7 @@ public class BotanBlockCipherTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/block/cbc_padding.csv", numLinesToSkip = 1)
+    @CsvFileSource(resources = "/seckey/block/cbc_padding.csv", numLinesToSkip = 1)
     @DisplayName("Test calling cipher doFinal without input (With Padding)")
     public void testCipherDoFinalWithoutInputWithPadding(String algorithm, int blockSize, int keySize)
             throws GeneralSecurityException {
@@ -177,8 +175,8 @@ public class BotanBlockCipherTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = {"/block/cbc_padding.csv", "/block/cfb_no_padding.csv", "/block/ofb_no_padding.csv",
-            "/block/ctr_no_padding.csv"}, numLinesToSkip = 1)
+    @CsvFileSource(resources = {"/seckey/block/cbc_padding.csv", "/seckey/block/cfb_no_padding.csv", "/seckey/block/ofb_no_padding.csv",
+            "/seckey/block/ctr_no_padding.csv"}, numLinesToSkip = 1)
     @DisplayName("Test encrypting then decrypting cipher")
     public void testEncryptThenDecrypt(String algorithm, int blockSize, int keySize) throws GeneralSecurityException {
         final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
@@ -197,8 +195,8 @@ public class BotanBlockCipherTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = {"/block/cbc_no_padding.csv", "/block/cfb_no_padding.csv", "/block/ofb_no_padding.csv",
-            "/block/ctr_no_padding.csv"}, numLinesToSkip = 1)
+    @CsvFileSource(resources = {"/seckey/block/cbc_no_padding.csv", "/seckey/block/cfb_no_padding.csv", "/seckey/block/ofb_no_padding.csv",
+            "/seckey/block/ctr_no_padding.csv"}, numLinesToSkip = 1)
     @DisplayName("Test cipher encrypt(no padding) against bouncy castle")
     public void testEncryptNoPaddingAgainstBouncyCastle(String algorithm, int blockSize, int keySize)
             throws GeneralSecurityException {
@@ -221,7 +219,7 @@ public class BotanBlockCipherTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/block/cbc_no_padding.csv", numLinesToSkip = 1)
+    @CsvFileSource(resources = "/seckey/block/cbc_no_padding.csv", numLinesToSkip = 1)
     @DisplayName("Test cipher data not block size aligned")
     public void testEncryptDataNotBlockSizeAligned(String algorithm, int blockSize, int keySize)
             throws GeneralSecurityException {
@@ -243,7 +241,7 @@ public class BotanBlockCipherTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/block/cbc_padding.csv", numLinesToSkip = 1)
+    @CsvFileSource(resources = "/seckey/block/cbc_padding.csv", numLinesToSkip = 1)
     @DisplayName("Test cipher correct padding length")
     public void testCorrectPaddingLength(String algorithm, int blockSize, int keySize)
             throws GeneralSecurityException {
@@ -264,222 +262,7 @@ public class BotanBlockCipherTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/block/gcm_no_padding.csv", numLinesToSkip = 1)
-    @DisplayName("Test GCM mode encrypt then decrypt with AAD")
-    public void testGcmModeEncryptThenDecryptWithAad(String algorithm, int blockSize, int keySize)
-            throws GeneralSecurityException {
-
-        final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
-
-        final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
-        final GCMParameterSpec iv = new GCMParameterSpec(128, new byte[12]);
-
-        final byte[] input = "some plain text".getBytes();
-        final byte[] aad = "some associated data".getBytes();
-
-        cipher.init(Cipher.ENCRYPT_MODE, key, iv);
-        cipher.updateAAD(aad);
-        final byte[] cipherText = cipher.doFinal(input);
-
-        cipher.init(Cipher.DECRYPT_MODE, key, iv);
-        cipher.updateAAD(aad);
-        final byte[] plainText = cipher.doFinal(cipherText);
-
-        assertArrayEquals(input, plainText, "Encrypt then decrypt mismatch");
-    }
-
-    @ParameterizedTest
-    @CsvFileSource(resources = "/block/gcm_no_padding.csv", numLinesToSkip = 1)
-    @DisplayName("Test GCM mode encrypt then decrypt without AAD")
-    public void testGcmModeEncryptThenDecryptWithoutAad(String algorithm, int blockSize, int keySize)
-            throws GeneralSecurityException {
-
-        final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
-
-        final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
-        final GCMParameterSpec iv = new GCMParameterSpec(128, new byte[12]);
-
-        final byte[] input = "some plain text".getBytes();
-
-        cipher.init(Cipher.ENCRYPT_MODE, key, iv);
-        final byte[] cipherText = cipher.doFinal(input);
-
-        cipher.init(Cipher.DECRYPT_MODE, key, iv);
-        final byte[] plainText = cipher.doFinal(cipherText);
-
-        assertArrayEquals(input, plainText, "Encrypt then decrypt mismatch");
-    }
-
-    @ParameterizedTest
-    @CsvFileSource(resources = "/block/gcm_no_padding.csv", numLinesToSkip = 1)
-    @DisplayName("Test GCM mode encrypt then decrypt without IV")
-    public void testGcmModeEncryptThenDecryptWithoutIv(String algorithm, int blockSize, int keySize)
-            throws GeneralSecurityException {
-
-        final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
-
-        final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
-
-        cipher.init(Cipher.ENCRYPT_MODE, key);
-
-        Exception exception = assertThrows(IllegalArgumentException.class, () ->
-                cipher.updateAAD("some AAD".getBytes())
-        );
-
-        assertEquals(exception.getMessage(), "GCM does not support empty nonces!");
-    }
-
-    @ParameterizedTest
-    @CsvFileSource(resources = "/block/gcm_no_padding.csv", numLinesToSkip = 1)
-    @DisplayName("Test GCM mode encrypt then decrypt with empty IV")
-    public void testGcmModeEncryptThenDecryptWithEmptyIv(String algorithm, int blockSize, int keySize)
-            throws GeneralSecurityException {
-
-        final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
-
-        final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
-        final GCMParameterSpec iv = new GCMParameterSpec(128, new byte[0]);
-
-        cipher.init(Cipher.ENCRYPT_MODE, key);
-
-        Exception exception = assertThrows(IllegalArgumentException.class, () ->
-                cipher.updateAAD("some AAD".getBytes())
-        );
-
-        assertEquals(exception.getMessage(), "GCM does not support empty nonces!");
-    }
-
-    @ParameterizedTest
-    @CsvFileSource(resources = "/block/gcm_no_padding.csv", numLinesToSkip = 1)
-    @DisplayName("Test GCM mode encrypt then decrypt without IV nor AAD")
-    public void testGcmModeEncryptThenDecryptWithoutIvNorAad(String algorithm, int blockSize, int keySize)
-            throws GeneralSecurityException {
-
-        final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
-
-        final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
-
-        cipher.init(Cipher.ENCRYPT_MODE, key);
-
-        Exception exception = assertThrows(IllegalArgumentException.class, () ->
-                cipher.doFinal("some plain text".getBytes())
-        );
-
-        assertEquals(exception.getMessage(), "GCM does not support empty nonces!");
-    }
-
-    @ParameterizedTest
-    @CsvFileSource(resources = "/block/gcm_no_padding.csv", numLinesToSkip = 1)
-    @DisplayName("Test GCM mode with invalid tag length")
-    public void testGcmWithInvalidTagLength(String algorithm, int blockSize, int keySize)
-            throws GeneralSecurityException {
-
-        final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
-
-        final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
-        final GCMParameterSpec iv = new GCMParameterSpec(66, new byte[12]);
-
-        final Exception exception = assertThrows(InvalidAlgorithmParameterException.class, () ->
-                cipher.init(Cipher.ENCRYPT_MODE, key, iv)
-        );
-
-        assertEquals("Invalid tag length: 66", exception.getMessage());
-    }
-
-    @ParameterizedTest
-    @CsvFileSource(resources = "/block/siv_no_padding.csv", numLinesToSkip = 1)
-    @DisplayName("Test SIV mode encrypt then decrypt with AAD")
-    public void testSivModeEncryptThenDecryptWithAad(String algorithm, int blockSize, int keySize)
-            throws GeneralSecurityException {
-
-        final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
-
-        final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
-        final GCMParameterSpec iv = new GCMParameterSpec(128, new byte[blockSize]);
-
-        final byte[] input = "some plain text".getBytes();
-        final byte[] aad = "some associated data".getBytes();
-
-        cipher.init(Cipher.ENCRYPT_MODE, key, iv);
-        cipher.updateAAD(aad);
-        final byte[] cipherText = cipher.doFinal(input);
-
-        cipher.init(Cipher.DECRYPT_MODE, key, iv);
-        cipher.updateAAD(aad);
-        final byte[] plainText = cipher.doFinal(cipherText);
-
-        assertArrayEquals(input, plainText, "Encrypt then decrypt mismatch");
-    }
-
-    @ParameterizedTest
-    @CsvFileSource(resources = "/block/siv_no_padding.csv", numLinesToSkip = 1)
-    @DisplayName("Test SIV mode encrypt then decrypt without AAD")
-    public void testSivModeEncryptThenDecryptWithoutAad(String algorithm, int blockSize, int keySize)
-            throws GeneralSecurityException {
-
-        final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
-
-        final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
-        final GCMParameterSpec iv = new GCMParameterSpec(128, new byte[blockSize]);
-
-        final byte[] input = "some plain text".getBytes();
-
-        cipher.init(Cipher.ENCRYPT_MODE, key, iv);
-        final byte[] cipherText = cipher.doFinal(input);
-
-        cipher.init(Cipher.DECRYPT_MODE, key, iv);
-        final byte[] plainText = cipher.doFinal(cipherText);
-
-        assertArrayEquals(input, plainText, "Encrypt then decrypt mismatch");
-    }
-
-    @ParameterizedTest
-    @CsvFileSource(resources = "/block/siv_no_padding.csv", numLinesToSkip = 1)
-    @DisplayName("Test SIV mode encrypt then decrypt without IV")
-    public void testSivModeEncryptThenDecryptWithoutIv(String algorithm, int blockSize, int keySize)
-            throws GeneralSecurityException {
-
-        final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
-
-        final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
-
-        final byte[] input = "some plain text".getBytes();
-        final byte[] aad = "some associated data".getBytes();
-
-        cipher.init(Cipher.ENCRYPT_MODE, key);
-        cipher.updateAAD(aad);
-        final byte[] cipherText = cipher.doFinal(input);
-
-        cipher.init(Cipher.DECRYPT_MODE, key);
-        cipher.updateAAD(aad);
-        final byte[] plainText = cipher.doFinal(cipherText);
-
-        assertArrayEquals(input, plainText, "Encrypt then decrypt mismatch");
-    }
-
-    @ParameterizedTest
-    @CsvFileSource(resources = "/block/siv_no_padding.csv", numLinesToSkip = 1)
-    @DisplayName("Test SIV mode encrypt then decrypt without IV nor AAD")
-    public void testSivModeEncryptThenDecryptWithoutIvNorAdd(String algorithm, int blockSize, int keySize)
-            throws GeneralSecurityException {
-
-        final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
-
-        final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
-
-        final byte[] input = "some plain text".getBytes();
-
-        cipher.init(Cipher.ENCRYPT_MODE, key);
-        final byte[] cipherText = cipher.doFinal(input);
-
-        cipher.init(Cipher.DECRYPT_MODE, key);
-        final byte[] plainText = cipher.doFinal(cipherText);
-
-        assertArrayEquals(input, plainText, "Encrypt then decrypt mismatch");
-    }
-
-    @ParameterizedTest
-    @CsvFileSource(resources = "/block/cbc_test_vectors.csv", numLinesToSkip = 1)
+    @CsvFileSource(resources = "/seckey/block/cbc_test_vectors.csv", numLinesToSkip = 1)
     @DisplayName("Test block cipher encryption with test vectors")
     public void testCipherWithTestVectors(String algorithm, String key, String iv, String in, String out)
             throws GeneralSecurityException {
@@ -496,14 +279,13 @@ public class BotanBlockCipherTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = {"/block/cbc_no_padding.csv", "/block/cfb_no_padding.csv", "/block/ofb_no_padding.csv",
-            "/block/ctr_no_padding.csv", "/block/gcm_no_padding.csv", "/block/eax_no_padding.csv",
-            "/block/ocb_no_padding.csv", "/block/ccm_no_padding.csv"}, numLinesToSkip = 1)
+    @CsvFileSource(resources = {"/seckey/block/cbc_no_padding.csv", "/seckey/block/cfb_no_padding.csv",
+            "/seckey/block/ofb_no_padding.csv",  "/seckey/block/ctr_no_padding.csv"}, numLinesToSkip = 1)
     @DisplayName("Test Botan performance against Bouncy Castle")
     public void testBotanPerformanceAgainstBouncyCastle(String algorithm, int blockSize, int keySize)
             throws GeneralSecurityException {
         final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
-        final AlgorithmParameterSpec iv = constuctIv(algorithm, blockSize);
+        final AlgorithmParameterSpec iv = new IvParameterSpec(new byte[blockSize]);
 
         final Cipher bc = Cipher.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
         final Cipher botan = Cipher.getInstance(algorithm, BotanProvider.NAME);
@@ -531,18 +313,6 @@ public class BotanBlockCipherTest {
 
         assertArrayEquals(expected, actual, "Cipher mismatch with Bouncy Castle provider for algorithm "
                 + algorithm);
-    }
-
-    private AlgorithmParameterSpec constuctIv(String algorithm, int blockSize) {
-        if (algorithm.contains("GCM") || algorithm.contains("EAX")) {
-            return new GCMParameterSpec(128, new byte[blockSize]);
-        }
-
-        if (algorithm.contains("CCM") || algorithm.contains("OCB")) {
-            return new GCMParameterSpec(128, new byte[12]);
-        }
-
-        return new IvParameterSpec(new byte[blockSize]);
     }
 
 }

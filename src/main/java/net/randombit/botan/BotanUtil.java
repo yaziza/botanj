@@ -62,11 +62,6 @@ public final class BotanUtil {
         return encodedKey;
     }
 
-    @FunctionalInterface
-    public interface FourParameterFunction<T, U> {
-        int apply(T t, U u, U v, U w);
-    }
-
     /**
      * Checks whether the provided key size is valid.
      *
@@ -96,6 +91,15 @@ public final class BotanUtil {
             throw new InvalidKeyException("key.getEncoded() not multiple of key length modulo: "
                     + lengthModulo.intValue());
         }
+    }
+
+    public static boolean isNullOrEmpty(byte[] value) {
+        return value == null || value.length == 0;
+    }
+
+    @FunctionalInterface
+    public interface FourParameterFunction<T, U> {
+        int apply(T t, U u, U v, U w);
     }
 
 }

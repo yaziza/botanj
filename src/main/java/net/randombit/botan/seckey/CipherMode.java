@@ -7,61 +7,60 @@
  *    Yasser Aziza - initial implementation
  */
 
-package net.randombit.botan.block;
+package net.randombit.botan.seckey;
+
+import net.randombit.botan.seckey.block.PaddingAlgorithm;
 
 public enum CipherMode {
 
     /**
      * Galois counter mode.
      */
-    GCM(true, PaddingAlgorithm.NO_PADDING),
+    GCM(PaddingAlgorithm.NO_PADDING),
 
     /**
      * Counter with CBC-MAC
      */
-    CCM(true, PaddingAlgorithm.NO_PADDING),
+    CCM(PaddingAlgorithm.NO_PADDING),
 
     /**
      * Synthetic Initialization Vector.
      */
-    SIV(true, PaddingAlgorithm.NO_PADDING),
+    SIV(PaddingAlgorithm.NO_PADDING),
 
     /**
      * Encrypt-then-authenticate-then-translate mode.
      */
-    EAX(true, PaddingAlgorithm.NO_PADDING),
+    EAX(PaddingAlgorithm.NO_PADDING),
 
     /**
      * Offset Codebook Mode.
      */
-    OCB(true, PaddingAlgorithm.NO_PADDING),
+    OCB(PaddingAlgorithm.NO_PADDING),
 
     /**
      * Counter mode.
      */
-    CTR(false, PaddingAlgorithm.NO_PADDING),
+    CTR(PaddingAlgorithm.NO_PADDING),
 
     /**
      * Cipher block chaining mode.
      */
-    CBC(false, PaddingAlgorithm.values()),
+    CBC(PaddingAlgorithm.values()),
 
     /**
      * Cipher feedback mode.
      */
-    CFB(false, PaddingAlgorithm.NO_PADDING),
+    CFB(PaddingAlgorithm.NO_PADDING),
 
     /**
      * Output feedback mode.
      */
-    OFB(false, PaddingAlgorithm.NO_PADDING);
+    OFB(PaddingAlgorithm.NO_PADDING);
 
     private final PaddingAlgorithm[] supportedPadding;
 
-    private final boolean isAuthenticated;
-
-    CipherMode(boolean isAuthenticated, PaddingAlgorithm... algorithms) {
-        this.isAuthenticated = isAuthenticated;
+    CipherMode(PaddingAlgorithm... algorithms) {
         this.supportedPadding = algorithms;
     }
 
@@ -73,10 +72,6 @@ public enum CipherMode {
         }
 
         return false;
-    }
-
-    public boolean isAuthenticated() {
-        return isAuthenticated;
     }
 
 }

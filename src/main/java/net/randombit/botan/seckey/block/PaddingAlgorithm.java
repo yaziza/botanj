@@ -7,7 +7,7 @@
  *    Yasser Aziza - initial implementation
  */
 
-package net.randombit.botan.block;
+package net.randombit.botan.seckey.block;
 
 import javax.crypto.NoSuchPaddingException;
 import java.util.List;

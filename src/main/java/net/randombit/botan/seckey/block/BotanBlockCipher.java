@@ -7,7 +7,7 @@
  *    Yasser Aziza - initial implementation
  */
 
-package net.randombit.botan.block;
+package net.randombit.botan.seckey.block;
 
 import static net.randombit.botan.BotanInstance.checkNativeCall;
 import static net.randombit.botan.BotanInstance.singleton;
@@ -18,36 +18,22 @@ import static net.randombit.botan.Constants.BOTAN_UPDATE_FLAG;
 import static net.randombit.botan.Constants.EMPTY_BYTE_ARRAY;
 
 import javax.crypto.Cipher;
-import javax.crypto.CipherSpi;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
-import javax.crypto.spec.GCMParameterSpec;
-import javax.crypto.spec.IvParameterSpec;
-import java.security.AlgorithmParameters;
-import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.security.spec.AlgorithmParameterSpec;
-import java.security.spec.InvalidParameterSpecException;
 import java.util.Arrays;
 import java.util.Objects;
 
 import jnr.ffi.Pointer;
 import jnr.ffi.byref.NativeLongByReference;
-import jnr.ffi.byref.PointerByReference;
 import net.randombit.botan.BotanUtil;
+import net.randombit.botan.seckey.BotanBaseAsymmetricCipher;
+import net.randombit.botan.seckey.CipherMode;
 
-public abstract class BotanBlockCipher extends CipherSpi {
-
-    private static final String ERR_MSG_GCM_WITHOUT_IV = "GCM does not support empty nonces!";
-    private static final String ERR_MSG_INVALID_KEY_SIZE = "Invalid key size %d for algorithm %s";
-
-    /**
-     * Holds the name of the block cipher algorithm (e.g. 'AES').
-     */
-    private final String name;
+public abstract class BotanBlockCipher extends BotanBaseAsymmetricCipher {
 
     /**
      * Holds the {@link CipherMode}.
@@ -60,35 +46,14 @@ public abstract class BotanBlockCipher extends CipherSpi {
     private final int blockSize;
 
     /**
-     * Holds the reference to the block cipher object referenced by botan.
-     */
-    private final PointerByReference cipherRef;
-
-    /**
      * Holds the padding algorithm (e.g. PKCS5)
      */
     private PaddingAlgorithm padding;
 
     /**
-     * Holds the cipher operation mode in native botan terms (0: Encryption, 1: Decryption)
-     */
-    private int mode;
-
-    /**
-     * Holds the Initial Vector (IV).
-     */
-    private byte[] iv;
-
-    /**
      * Holds the tag length for AEAD ciphers.
      */
     private int tLen;
-
-    /**
-     * Whether this cipher has been properly initialized and can start
-     * encrypting/decrypting.
-     */
-    private boolean canStart;
 
     /**
      * Botan update granularity for this cipher. botan_cipher_update() must be
@@ -104,10 +69,10 @@ public abstract class BotanBlockCipher extends CipherSpi {
     private byte[] buffer;
 
     private BotanBlockCipher(String name, CipherMode cipherMode, int blockSize) {
-        this.name = Objects.requireNonNull(name);
+        super(name);
+
         this.cipherMode = Objects.requireNonNull(cipherMode);
         this.blockSize = blockSize;
-        this.cipherRef = new PointerByReference();
     }
 
     /**
@@ -146,10 +111,6 @@ public abstract class BotanBlockCipher extends CipherSpi {
 
     @Override
     protected int engineGetOutputSize(int inputLen) {
-        if (cipherMode.isAuthenticated()) {
-            return Math.addExact(inputLen, (tLen / Byte.SIZE));
-        }
-
         if (isWithoutPadding() || isDecrypting(mode)) {
             return inputLen;
         }
@@ -163,38 +124,14 @@ public abstract class BotanBlockCipher extends CipherSpi {
     }
 
     @Override
-    protected byte[] engineGetIV() {
-        return iv;
-    }
-
-    @Override
-    protected AlgorithmParameters engineGetParameters() {
-        AlgorithmParameters parameters = null;
-
-        if (iv != null && iv.length > 0) {
-            try {
-                parameters = AlgorithmParameters.getInstance(name);
-                parameters.init(new IvParameterSpec(iv));
-
-            } catch (NoSuchAlgorithmException | InvalidParameterSpecException e) {
-                parameters = null;
-            }
-        }
-
-        return parameters;
-    }
-
-    @Override
     protected void engineInit(int opmode, Key key, SecureRandom random) throws InvalidKeyException {
         final byte[] encodedKey = checkSecretKey(key);
         final int keySize = encodedKey.length;
 
         final String algName = getBotanCipherName(padding.getName(), encodedKey.length);
-        final NativeLongByReference updateGranularity = new NativeLongByReference();
 
         // Translate java cipher mode to botan native mode (0: Encryption, 1: Decryption)
         this.mode = Math.subtractExact(opmode, 1);
-        this.buffer = EMPTY_BYTE_ARRAY;
 
         int err = singleton().botan_cipher_init(cipherRef, algName, mode);
         checkNativeCall(err, "botan_cipher_init");
@@ -208,97 +145,13 @@ public abstract class BotanBlockCipher extends CipherSpi {
         err = singleton().botan_cipher_set_key(cipherRef.getValue(), encodedKey, keySize);
         checkNativeCall(err, "botan_cipher_set_key");
 
+        final NativeLongByReference updateGranularity = new NativeLongByReference();
+
         err = singleton().botan_cipher_get_update_granularity(cipherRef.getValue(), updateGranularity);
         checkNativeCall(err, "botan_cipher_get_update_granularity");
 
         this.updateGranularity = updateGranularity.intValue();
-    }
-
-    @Override
-    protected void engineInit(int opmode, Key key, AlgorithmParameterSpec params, SecureRandom random)
-            throws InvalidKeyException, InvalidAlgorithmParameterException {
-        engineInit(opmode, key, random);
-
-        if (params instanceof IvParameterSpec) {
-            iv = ((IvParameterSpec) params).getIV();
-
-            if (!cipherMode.isAuthenticated()) {
-                final int err = singleton().botan_cipher_start(cipherRef.getValue(), iv, iv.length);
-                checkNativeCall(err, "botan_cipher_start");
-            }
-        } else if (params instanceof GCMParameterSpec) {
-            iv = ((GCMParameterSpec) params).getIV();
-            tLen = ((GCMParameterSpec) params).getTLen();
-
-            if (CipherMode.GCM == cipherMode && tLen != 128) {
-                // TODO: Botan allow any of the values 128, 120, 112, 104, or 96 bits as a tag size.
-                throw new InvalidAlgorithmParameterException("Invalid tag length: " + tLen);
-            }
-
-            if (CipherMode.EAX == cipherMode && tLen != 128) {
-                // TODO: check allowed tLen for EAX
-                throw new InvalidAlgorithmParameterException("Invalid tag length: " + tLen);
-            }
-
-            if (CipherMode.CCM == cipherMode && (iv.length < 7 || iv.length > 13)) {
-                // TODO: allow CCM dynamic parameters
-                throw new InvalidAlgorithmParameterException("IV size must be between 7 and 13");
-            }
-
-            if (CipherMode.OCB == cipherMode && iv.length > 15) {
-                throw new InvalidAlgorithmParameterException("Max allowed IV size 15");
-            }
-        }
-    }
-
-    @Override
-    protected void engineInit(int opmode, Key key, AlgorithmParameters params, SecureRandom random)
-            throws InvalidKeyException, InvalidAlgorithmParameterException {
-        try {
-            final IvParameterSpec parameterSpec = params.getParameterSpec(IvParameterSpec.class);
-            engineInit(opmode, key, parameterSpec, random);
-        } catch (InvalidParameterSpecException e) {
-            throw new InvalidAlgorithmParameterException("Parameters must be convertible to IvParameterSpec", e);
-        }
-    }
-
-    @Override
-    protected void engineUpdateAAD(byte[] src, int offset, int len) {
-        if (CipherMode.GCM != cipherMode && CipherMode.SIV != cipherMode) {
-            String format = "Cipher '%s' does not support this method for mode '%s'.";
-            throw new UnsupportedOperationException(String.format(format, name, cipherMode));
-        }
-
-        final byte[] fromOffset = Arrays.copyOfRange(src, offset, src.length);
-
-        int err = singleton().botan_cipher_set_associated_data(cipherRef.getValue(), fromOffset, len);
-        checkNativeCall(err, "botan_cipher_set_associated_data");
-
-        if (isNullOrEmpty(iv)) {
-            if (CipherMode.GCM == cipherMode) {
-                throw new IllegalArgumentException(ERR_MSG_GCM_WITHOUT_IV);
-            } else {
-                err = singleton().botan_cipher_start(cipherRef.getValue(), EMPTY_BYTE_ARRAY, 0);
-                checkNativeCall(err, "botan_cipher_start");
-            }
-        } else {
-            err = singleton().botan_cipher_start(cipherRef.getValue(), iv, iv.length);
-            checkNativeCall(err, "botan_cipher_start");
-        }
-
-        if (isNullOrEmpty(iv)) {
-            tLen = 128;
-        }
-
-        canStart = true;
-    }
-
-    @Override
-    protected int engineUpdate(byte[] input, int inputOffset, int inputLen, byte[] output, int outputOffset) {
-        final byte[] result = engineUpdate(input, inputOffset, inputLen);
-        System.arraycopy(result, 0, output, outputOffset, result.length);
-
-        return result.length;
+        this.buffer = EMPTY_BYTE_ARRAY;
     }
 
     @Override
@@ -320,15 +173,6 @@ public abstract class BotanBlockCipher extends CipherSpi {
 
         return (input.length == 0) ? EMPTY_BYTE_ARRAY
                 : doCipher(input, 0, input.length, BOTAN_UPDATE_FLAG);
-    }
-
-    @Override
-    protected int engineDoFinal(byte[] input, int inputOffset, int inputLen, byte[] output, int outputOffset)
-            throws IllegalBlockSizeException {
-        final byte[] result = engineDoFinal(input, inputOffset, inputLen);
-        System.arraycopy(result, 0, output, outputOffset, result.length);
-
-        return result.length;
     }
 
     @Override
@@ -354,10 +198,6 @@ public abstract class BotanBlockCipher extends CipherSpi {
             inputLen = blockSize;
         }
 
-        if (cipherMode.isAuthenticated() && !canStart) {
-            startAeadMode();
-        }
-
         final NativeLongByReference outputWritten = new NativeLongByReference();
         final NativeLongByReference inputConsumed = new NativeLongByReference();
 
@@ -374,22 +214,10 @@ public abstract class BotanBlockCipher extends CipherSpi {
 
         if (BOTAN_DO_FINAL_FLAG == botanFlag) {
             engineReset();
+            buffer = EMPTY_BYTE_ARRAY;
         }
 
         return result;
-    }
-
-    private void engineReset() {
-        int err = singleton().botan_cipher_reset(cipherRef.getValue());
-        checkNativeCall(err, "botan_cipher_reset");
-
-        buffer = EMPTY_BYTE_ARRAY;
-
-        if (iv != null) {
-            //FIXME: nonce reuse - disable starting cipher with same IV
-            err = singleton().botan_cipher_start(cipherRef.getValue(), iv, iv.length);
-            checkNativeCall(err, "botan_cipher_start");
-        }
     }
 
     private byte[] getDoFinalInput(byte[] input, int inputOffset, int inputLen) {
@@ -406,33 +234,13 @@ public abstract class BotanBlockCipher extends CipherSpi {
         return result;
     }
 
-    private void startAeadMode() {
-        if (isNullOrEmpty(iv)) {
-            if (CipherMode.GCM == cipherMode) {
-                throw new IllegalArgumentException(ERR_MSG_GCM_WITHOUT_IV);
-            }
-
-            // Set default tag length when no IV is supplied
-            tLen = 128;
-
-            final int err = singleton().botan_cipher_start(cipherRef.getValue(), EMPTY_BYTE_ARRAY, 0);
-            checkNativeCall(err, "botan_cipher_start");
-        } else {
-            final int err = singleton().botan_cipher_start(cipherRef.getValue(), iv, iv.length);
-            checkNativeCall(err, "botan_cipher_start");
-        }
-    }
-
     private boolean isWithoutPadding() {
         return PaddingAlgorithm.NO_PADDING == padding;
     }
 
-    private static boolean isDecrypting(int mode) {
-        return mode == 1;
-    }
-
-    private static boolean isNullOrEmpty(byte[] value) {
-        return value == null || value.length == 0;
+    @Override
+    protected boolean isValidNonce(int length) {
+        return true;
     }
 
     // AES
@@ -469,7 +277,6 @@ public abstract class BotanBlockCipher extends CipherSpi {
         boolean requiresDataBlockAligned() {
             return false;
         }
-
     }
 
     public static final class AesOfb extends BotanBlockCipher {
@@ -487,7 +294,6 @@ public abstract class BotanBlockCipher extends CipherSpi {
         boolean requiresDataBlockAligned() {
             return false;
         }
-
     }
 
     public static final class AesCtr extends BotanBlockCipher {
@@ -505,97 +311,6 @@ public abstract class BotanBlockCipher extends CipherSpi {
         boolean requiresDataBlockAligned() {
             return false;
         }
-
-    }
-
-    public static final class AesGcm extends BotanBlockCipher {
-
-        public AesGcm() {
-            super("AES", CipherMode.GCM, 16);
-        }
-
-        @Override
-        String getBotanCipherName(String padding, int keySize) {
-            return String.format("AES-%d/GCM(16)", keySize * Byte.SIZE);
-        }
-
-        @Override
-        boolean requiresDataBlockAligned() {
-            return false;
-        }
-
-    }
-
-    public static final class AesCcm extends BotanBlockCipher {
-
-        public AesCcm() {
-            super("AES", CipherMode.CCM, 16);
-        }
-
-        @Override
-        String getBotanCipherName(String padding, int keySize) {
-            return String.format("AES-%d/CCM(16,3)", keySize * Byte.SIZE);
-        }
-
-        @Override
-        boolean requiresDataBlockAligned() {
-            return false;
-        }
-
-    }
-
-    public static final class AesSiv extends BotanBlockCipher {
-
-        public AesSiv() {
-            super("AES", CipherMode.SIV, 16);
-        }
-
-        @Override
-        String getBotanCipherName(String padding, int keySize) {
-            return String.format("AES-%d/SIV", (keySize / 2) * Byte.SIZE);
-        }
-
-        @Override
-        boolean requiresDataBlockAligned() {
-            return false;
-        }
-
-    }
-
-    public static final class AesEax extends BotanBlockCipher {
-
-        public AesEax() {
-            super("AES", CipherMode.EAX, 16);
-        }
-
-        @Override
-        String getBotanCipherName(String padding, int keySize) {
-            return String.format("AES-%d/EAX", keySize * Byte.SIZE);
-        }
-
-        @Override
-        boolean requiresDataBlockAligned() {
-            return false;
-        }
-
-    }
-
-    public static final class AesOcb extends BotanBlockCipher {
-
-        public AesOcb() {
-            super("AES", CipherMode.OCB, 16);
-        }
-
-        @Override
-        String getBotanCipherName(String padding, int keySize) {
-            return String.format("AES-%d/OCB", keySize * Byte.SIZE);
-        }
-
-        @Override
-        boolean requiresDataBlockAligned() {
-            return false;
-        }
-
     }
 
     // DES
@@ -613,7 +328,6 @@ public abstract class BotanBlockCipher extends CipherSpi {
         boolean requiresDataBlockAligned() {
             return true;
         }
-
     }
 
     public static final class DesCfb extends BotanBlockCipher {
@@ -630,7 +344,6 @@ public abstract class BotanBlockCipher extends CipherSpi {
         boolean requiresDataBlockAligned() {
             return false;
         }
-
     }
 
     public static final class DesOfb extends BotanBlockCipher {
@@ -647,7 +360,6 @@ public abstract class BotanBlockCipher extends CipherSpi {
         boolean requiresDataBlockAligned() {
             return false;
         }
-
     }
 
     public static final class DesCtr extends BotanBlockCipher {
@@ -664,7 +376,6 @@ public abstract class BotanBlockCipher extends CipherSpi {
         boolean requiresDataBlockAligned() {
             return false;
         }
-
     }
 
     // 3DES
@@ -682,7 +393,6 @@ public abstract class BotanBlockCipher extends CipherSpi {
         boolean requiresDataBlockAligned() {
             return true;
         }
-
     }
 
     public static final class DesEdeCfb extends BotanBlockCipher {
@@ -699,7 +409,6 @@ public abstract class BotanBlockCipher extends CipherSpi {
         boolean requiresDataBlockAligned() {
             return false;
         }
-
     }
 
     public static final class DesEdeOfb extends BotanBlockCipher {
@@ -716,7 +425,6 @@ public abstract class BotanBlockCipher extends CipherSpi {
         boolean requiresDataBlockAligned() {
             return false;
         }
-
     }
 
     public static final class DesEdeCtr extends BotanBlockCipher {
@@ -733,7 +441,6 @@ public abstract class BotanBlockCipher extends CipherSpi {
         boolean requiresDataBlockAligned() {
             return false;
         }
-
     }
 
 }

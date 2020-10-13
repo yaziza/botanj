@@ -19,8 +19,8 @@ public final class BotanProvider extends Provider {
     private static final String PACKAGE_NAME = BotanProvider.class.getPackage().getName();
     private static final String DIGEST_PREFIX = ".digest.";
     private static final String MAC_PREFIX = ".mac.";
-    private static final String BLOCK_CIPHER_PREFIX = ".block.";
-    private static final String STREAM_CIPHER_PREFIX = ".stream.";
+    private static final String BLOCK_CIPHER_PREFIX = ".seckey.block.";
+    private static final String STREAM_CIPHER_PREFIX = ".seckey.stream.";
 
     private static final BotanNativeInterface NATIVE = BotanInstance.singleton();
 
