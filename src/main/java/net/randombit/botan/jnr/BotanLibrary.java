@@ -7,7 +7,7 @@
  *    Yasser Aziza - initial implementation
  */
 
-package net.randombit.botan;
+package net.randombit.botan.jnr;
 
 import jnr.ffi.Pointer;
 import jnr.ffi.annotations.In;
@@ -15,7 +15,7 @@ import jnr.ffi.annotations.Out;
 import jnr.ffi.byref.NativeLongByReference;
 import jnr.ffi.byref.PointerByReference;
 
-public interface BotanNativeInterface {
+public interface BotanLibrary {
 
     /**
      * Converts an error code into a string. Returns "Unknown error"

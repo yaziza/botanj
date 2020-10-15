@@ -9,8 +9,8 @@
 
 package net.randombit.botan.mac;
 
-import static net.randombit.botan.BotanInstance.checkNativeCall;
-import static net.randombit.botan.BotanInstance.singleton;
+import static net.randombit.botan.jnr.BotanInstance.checkNativeCall;
+import static net.randombit.botan.jnr.BotanInstance.singleton;
 import static net.randombit.botan.BotanUtil.checkKeySize;
 import static net.randombit.botan.BotanUtil.checkSecretKey;
 

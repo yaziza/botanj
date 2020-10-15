@@ -83,7 +83,7 @@ public class BotanBlockCipherTest {
 
     @Test
     @DisplayName("Test unsupprted padding algorithm")
-    public void testUnsupportedPadingAlgorithm() throws GeneralSecurityException {
+    public void testUnsupportedPadingAlgorithm() {
         final String padding = "some padding";
 
         final Exception exception = assertThrows(NoSuchPaddingException.class, () ->
@@ -116,7 +116,8 @@ public class BotanBlockCipherTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/seckey/block/cbc_no_padding.csv", numLinesToSkip = 1)
+    @CsvFileSource(resources = {"/seckey/block/cbc_no_padding.csv", "/seckey/block/cfb_no_padding.csv"},
+            numLinesToSkip = 1)
     @DisplayName("Test calling cipher doFinal without input (No Padding)")
     public void testCipherDoFinalWithoutInputNoPadding(String algorithm, int blockSize, int keySize)
             throws GeneralSecurityException {
@@ -131,7 +132,8 @@ public class BotanBlockCipherTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/seckey/block/cbc_no_padding.csv", numLinesToSkip = 1)
+    @CsvFileSource(resources = {"/seckey/block/cbc_no_padding.csv", "/seckey/block/cfb_no_padding.csv"},
+            numLinesToSkip = 1)
     @DisplayName("Test calling cipher doFinal with output offset")
     public void testCipherDoFinalWithOutputOffset(String algorithm, int blockSize, int keySize)
             throws GeneralSecurityException {
@@ -176,8 +178,8 @@ public class BotanBlockCipherTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = {"/seckey/block/cbc_padding.csv", "/seckey/block/cfb_no_padding.csv"},
-            numLinesToSkip = 1)
+    @CsvFileSource(resources = {"/seckey/block/cbc_padding.csv", "/seckey/block/cfb_no_padding.csv",
+            "/seckey/block/cfb_no_padding.csv"}, numLinesToSkip = 1)
     @DisplayName("Test encrypting then decrypting cipher")
     public void testEncryptThenDecrypt(String algorithm, int blockSize, int keySize) throws GeneralSecurityException {
         final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
@@ -263,7 +265,8 @@ public class BotanBlockCipherTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = "/seckey/block/cbc_test_vectors.csv", numLinesToSkip = 1)
+    @CsvFileSource(resources = {"/seckey/block/cbc_test_vectors.csv", "/seckey/block/cfb_test_vectors.csv"},
+            numLinesToSkip = 1)
     @DisplayName("Test block cipher encryption with test vectors")
     public void testCipherWithTestVectors(String algorithm, String key, String iv, String in, String out)
             throws GeneralSecurityException {

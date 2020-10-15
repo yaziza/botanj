@@ -9,7 +9,7 @@
 
 package net.randombit.botan;
 
-import static net.randombit.botan.BotanInstance.checkNativeCall;
+import static net.randombit.botan.jnr.BotanInstance.checkNativeCall;
 
 import javax.crypto.SecretKey;
 import java.security.InvalidKeyException;

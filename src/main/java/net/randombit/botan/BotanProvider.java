@@ -11,6 +11,9 @@ package net.randombit.botan;
 
 import java.security.Provider;
 
+import net.randombit.botan.jnr.BotanInstance;
+import net.randombit.botan.jnr.BotanLibrary;
+
 public final class BotanProvider extends Provider {
 
     public static final String NAME = "Botan";
@@ -22,7 +25,7 @@ public final class BotanProvider extends Provider {
     private static final String BLOCK_CIPHER_PREFIX = ".seckey.block.";
     private static final String STREAM_CIPHER_PREFIX = ".seckey.stream.";
 
-    private static final BotanNativeInterface NATIVE = BotanInstance.singleton();
+    private static final BotanLibrary NATIVE = BotanInstance.singleton();
 
     public BotanProvider() {
         super(NAME, "", INFO);

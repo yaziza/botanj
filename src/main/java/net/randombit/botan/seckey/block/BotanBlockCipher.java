@@ -9,12 +9,12 @@
 
 package net.randombit.botan.seckey.block;
 
-import static net.randombit.botan.BotanInstance.checkNativeCall;
-import static net.randombit.botan.BotanInstance.singleton;
 import static net.randombit.botan.BotanUtil.isNullOrEmpty;
 import static net.randombit.botan.Constants.BOTAN_DO_FINAL_FLAG;
 import static net.randombit.botan.Constants.BOTAN_UPDATE_FLAG;
 import static net.randombit.botan.Constants.EMPTY_BYTE_ARRAY;
+import static net.randombit.botan.jnr.BotanInstance.checkNativeCall;
+import static net.randombit.botan.jnr.BotanInstance.singleton;
 
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
@@ -115,7 +115,7 @@ public abstract class BotanBlockCipher extends BotanBaseAsymmetricCipher {
 
     @Override
     protected byte[] engineUpdate(byte[] input, int inputOffset, int inputLen) {
-        if (isNullOrEmpty(input)) {
+        if (isNullOrEmpty(input) || inputLen == 0) {
             return EMPTY_BYTE_ARRAY;
         }
 

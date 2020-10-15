@@ -9,8 +9,8 @@
 
 package net.randombit.botan.codec;
 
-import static net.randombit.botan.BotanInstance.checkNativeCall;
-import static net.randombit.botan.BotanInstance.singleton;
+import static net.randombit.botan.jnr.BotanInstance.checkNativeCall;
+import static net.randombit.botan.jnr.BotanInstance.singleton;
 import static net.randombit.botan.BotanUtil.verifyInput;
 import static net.randombit.botan.Constants.EMPTY_BYTE_ARRAY;
 
