@@ -196,9 +196,9 @@ public final class BotanProvider extends Provider {
 
         put("Cipher.AES/CFB", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$AesCfb");
 
-        put("Cipher.AES/OFB", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$AesOfb");
+        put("Cipher.AES/OFB/NoPadding", PACKAGE_NAME + STREAM_CIPHER_PREFIX + "BotanStreamCipher$AesOfb");
 
-        put("Cipher.AES/CTR", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$AesCtr");
+        put("Cipher.AES/CTR/NoPadding", PACKAGE_NAME + STREAM_CIPHER_PREFIX + "BotanStreamCipher$AesCtr");
 
         put("Cipher.AES/GCM", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$AesGcm");
 
@@ -216,9 +216,9 @@ public final class BotanProvider extends Provider {
 
         put("Cipher.DES/CFB", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesCfb");
 
-        put("Cipher.DES/OFB", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesOfb");
+        put("Cipher.DES/OFB/NoPadding", PACKAGE_NAME + STREAM_CIPHER_PREFIX + "BotanStreamCipher$DesOfb");
 
-        put("Cipher.DES/CTR", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesCtr");
+        put("Cipher.DES/CTR/NoPadding", PACKAGE_NAME + STREAM_CIPHER_PREFIX + "BotanStreamCipher$DesCtr");
     }
 
     private void addTrippleDesAlgorithm() {
@@ -230,13 +230,13 @@ public final class BotanProvider extends Provider {
         put("Alg.Alias.Cipher.3DES/CFB", "DESede/CFB");
         put("Alg.Alias.Cipher.TripleDES/CFB", "DESede/CFB");
 
-        put("Cipher.DESede/OFB", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesEdeOfb");
-        put("Cipher.3DES/OFB", "DESede/OFB");
-        put("Cipher.TripleDES/OFB", "TripleDES/OFB");
+        put("Cipher.DESede/OFB/NoPadding", PACKAGE_NAME + STREAM_CIPHER_PREFIX + "BotanStreamCipher$DesEdeOfb");
+        put("Cipher.3DES/OFB/NoPadding", "DESede/OFB/NoPadding");
+        put("Cipher.TripleDES/OFB/NoPadding", "TripleDES/OFB/NoPadding");
 
-        put("Cipher.DESede/CTR", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesEdeCtr");
-        put("Cipher.3DES/CTR", "DESede/CTR");
-        put("Cipher.TripleDES/CTR", "DESede/CTR");
+        put("Cipher.DESede/CTR/NoPadding", PACKAGE_NAME + STREAM_CIPHER_PREFIX + "BotanStreamCipher$DesEdeCtr");
+        put("Cipher.3DES/CTR/NoPadding", "DESede/CTR/NoPadding");
+        put("Cipher.TripleDES/CTR/NoPadding", "DESede/CTR/NoPadding");
     }
 
     private void addSalsa20Algorithm() {

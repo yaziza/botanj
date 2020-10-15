@@ -63,7 +63,21 @@ public abstract class BotanBaseAsymmetricCipher extends CipherSpi {
         return mode == 1;
     }
 
-    protected abstract boolean isValidNonce(int length);
+    /**
+     * Gets the native botan cipher name (e.g. 'AES-128/CBC/PKCS7').
+     *
+     * @param keyLength the key length
+     * @return {@link String} containing the Botan cipher name.
+     */
+    protected abstract String getBotanCipherName(int keyLength);
+
+    /**
+     * Checks whether the given nonce size is supported.
+     *
+     * @param nonceLength the nonce length
+     * @return {@code True} is the given nonce length is supported, {@code False} otherwise.
+     */
+    protected abstract boolean isValidNonceLength(int nonceLength);
 
     protected void engineReset() {
         int err = singleton().botan_cipher_reset(cipherRef.getValue());
@@ -74,6 +88,11 @@ public abstract class BotanBaseAsymmetricCipher extends CipherSpi {
             err = singleton().botan_cipher_start(cipherRef.getValue(), iv, iv.length);
             checkNativeCall(err, "botan_cipher_start");
         }
+    }
+
+    @Override
+    protected void engineSetMode(String mode) throws NoSuchAlgorithmException {
+        throw new NoSuchAlgorithmException("Cipher mode not supported " + mode);
     }
 
     @Override
@@ -118,7 +137,7 @@ public abstract class BotanBaseAsymmetricCipher extends CipherSpi {
         if (params instanceof IvParameterSpec) {
             iv = ((IvParameterSpec) params).getIV();
 
-            if (!isValidNonce(iv.length * Byte.SIZE)) {
+            if (!isValidNonceLength(iv.length * Byte.SIZE)) {
                 String msg = String.format("Nonce with length %d not allowed for algorithm %s", iv.length, name);
                 throw new InvalidAlgorithmParameterException(msg);
             }
@@ -136,10 +155,12 @@ public abstract class BotanBaseAsymmetricCipher extends CipherSpi {
         final byte[] encodedKey = checkSecretKey(key);
         final int keySize = encodedKey.length;
 
+        final String algName = getBotanCipherName(keySize);
+
         // Translate java cipher mode to botan native mode (0: Encryption, 1: Decryption)
         mode = Math.subtractExact(opmode, 1);
 
-        int err = singleton().botan_cipher_init(cipherRef, name, mode);
+        int err = singleton().botan_cipher_init(cipherRef, algName, mode);
         checkNativeCall(err, "botan_cipher_init");
 
         BotanUtil.FourParameterFunction<Pointer, NativeLongByReference> getKeySpec = (a, b, c, d) -> {

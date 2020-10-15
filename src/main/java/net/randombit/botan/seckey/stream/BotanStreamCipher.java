@@ -17,7 +17,6 @@ import static net.randombit.botan.Constants.BOTAN_UPDATE_FLAG;
 import static net.randombit.botan.Constants.EMPTY_BYTE_ARRAY;
 
 import javax.crypto.NoSuchPaddingException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
 import jnr.ffi.byref.NativeLongByReference;
@@ -30,13 +29,8 @@ public abstract class BotanStreamCipher extends BotanBaseAsymmetricCipher {
     }
 
     @Override
-    protected void engineSetMode(String mode) throws NoSuchAlgorithmException {
-        throw new NoSuchAlgorithmException("Cipher mode not allowed for stream ciphers!");
-    }
-
-    @Override
     protected void engineSetPadding(String padding) throws NoSuchPaddingException {
-        throw new NoSuchPaddingException("No padding algorithms allowed for stream ciphers!");
+        throw new NoSuchPaddingException("Padding algorithm not allowed for stream cipher!");
     }
 
     @Override
@@ -91,9 +85,13 @@ public abstract class BotanStreamCipher extends BotanBaseAsymmetricCipher {
             super("Salsa20");
         }
 
+        protected String getBotanCipherName(int keyLength) {
+            return "Salsa20";
+        }
+
         @Override
-        protected boolean isValidNonce(int length) {
-            return length == 64 || length == 192;
+        protected boolean isValidNonceLength(int nonceLength) {
+            return nonceLength == 64 || nonceLength == 192;
         }
     }
 
@@ -102,9 +100,13 @@ public abstract class BotanStreamCipher extends BotanBaseAsymmetricCipher {
             super("Salsa20");
         }
 
+        protected String getBotanCipherName(int keyLength) {
+            return "Salsa20";
+        }
+
         @Override
-        protected boolean isValidNonce(int length) {
-            return length == 192;
+        protected boolean isValidNonceLength(int nonceLength) {
+            return nonceLength == 192;
         }
     }
 
@@ -114,9 +116,13 @@ public abstract class BotanStreamCipher extends BotanBaseAsymmetricCipher {
             super("ChaCha(20)");
         }
 
+        protected String getBotanCipherName(int keyLength) {
+            return "ChaCha(20)";
+        }
+
         @Override
-        protected boolean isValidNonce(int length) {
-            return length == 64 || length == 96 || length == 192;
+        protected boolean isValidNonceLength(int nonceLength) {
+            return nonceLength == 64 || nonceLength == 96 || nonceLength == 192;
         }
     }
 
@@ -125,9 +131,111 @@ public abstract class BotanStreamCipher extends BotanBaseAsymmetricCipher {
             super("ChaCha(20)");
         }
 
+        protected String getBotanCipherName(int keyLength) {
+            return "ChaCha(20)";
+        }
+
         @Override
-        protected boolean isValidNonce(int length) {
-            return length == 192;
+        protected boolean isValidNonceLength(int nonceLength) {
+            return nonceLength == 192;
+        }
+    }
+
+    // CTR mode
+    public static final class AesCtr extends BotanStreamCipher {
+        public AesCtr() {
+            super("AES");
+        }
+
+        @Override
+        protected String getBotanCipherName(int keyLength) {
+            return String.format("AES-%d/CTR", keyLength * Byte.SIZE);
+        }
+
+        @Override
+        protected boolean isValidNonceLength(int nonceLength) {
+            return nonceLength >= 0 && nonceLength <= 128;
+        }
+    }
+
+    public static final class DesCtr extends BotanStreamCipher {
+        public DesCtr() {
+            super("DES");
+        }
+
+        @Override
+        protected String getBotanCipherName(int keyLength) {
+            return "DES/CTR";
+        }
+
+        @Override
+        protected boolean isValidNonceLength(int nonceLength) {
+            return nonceLength >= 0 && nonceLength <= 64;
+        }
+    }
+
+    public static final class DesEdeCtr extends BotanStreamCipher {
+        public DesEdeCtr() {
+            super("3DES");
+        }
+
+        @Override
+        protected String getBotanCipherName(int keyLength) {
+            return "3DES/CTR";
+        }
+
+        @Override
+        protected boolean isValidNonceLength(int nonceLength) {
+            return nonceLength >= 0 && nonceLength <= 64;
+        }
+    }
+
+    // OFB mode
+    public static final class AesOfb extends BotanStreamCipher {
+        public AesOfb() {
+            super("AES");
+        }
+
+        @Override
+        protected String getBotanCipherName(int keyLength) {
+            return String.format("AES-%d/OFB", keyLength * Byte.SIZE);
+        }
+
+        @Override
+        protected boolean isValidNonceLength(int nonceLength) {
+            return nonceLength >= 0 && nonceLength <= 128;
+        }
+    }
+
+    public static final class DesOfb extends BotanStreamCipher {
+        public DesOfb() {
+            super("DES");
+        }
+
+        @Override
+        protected String getBotanCipherName(int keyLength) {
+            return "DES/OFB";
+        }
+
+        @Override
+        protected boolean isValidNonceLength(int nonceLength) {
+            return nonceLength >= 0 && nonceLength <= 64;
+        }
+    }
+
+    public static final class DesEdeOfb extends BotanStreamCipher {
+        public DesEdeOfb() {
+            super("3DES");
+        }
+
+        @Override
+        protected String getBotanCipherName(int keyLength) {
+            return "3DES/OFB";
+        }
+
+        @Override
+        protected boolean isValidNonceLength(int nonceLength) {
+            return nonceLength >= 0 && nonceLength <= 64;
         }
     }
 

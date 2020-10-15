@@ -54,6 +54,10 @@ public final class BotanUtil {
             throw new InvalidKeyException("Only SecretKey is supported");
         }
 
+        if (!"RAW".equalsIgnoreCase(key.getFormat())) {
+            throw new InvalidKeyException("Only raw format key is supported");
+        }
+
         final byte[] encodedKey = key.getEncoded();
         if (encodedKey == null) {
             throw new InvalidKeyException("key.getEncoded() == null");

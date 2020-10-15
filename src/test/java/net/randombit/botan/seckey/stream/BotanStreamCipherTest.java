@@ -39,7 +39,8 @@ public class BotanStreamCipherTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = {"/seckey/stream/salsa20.csv", "/seckey/stream/chacha20.csv"}, numLinesToSkip = 1)
+    @CsvFileSource(resources = {"/seckey/stream/salsa20.csv", "/seckey/stream/chacha20.csv",
+            "/seckey/stream/ctr.csv", "/seckey/stream/ofb.csv"}, numLinesToSkip = 1)
     @DisplayName("Test calling cipher update before initialization")
     public void testCipherUpdateWithoutInitialization(String algorithm) throws GeneralSecurityException {
         final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
@@ -50,7 +51,8 @@ public class BotanStreamCipherTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = {"/seckey/stream/salsa20.csv", "/seckey/stream/chacha20.csv"}, numLinesToSkip = 1)
+    @CsvFileSource(resources = {"/seckey/stream/salsa20.csv", "/seckey/stream/chacha20.csv",
+            "/seckey/stream/ctr.csv", "/seckey/stream/ofb.csv"}, numLinesToSkip = 1)
     @DisplayName("Test calling cipher doFinal before initialization")
     public void testCipherDoFinalWithoutInitialization(String algorithm) throws GeneralSecurityException {
         final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
@@ -74,7 +76,8 @@ public class BotanStreamCipherTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = {"/seckey/stream/salsa20.csv", "/seckey/stream/chacha20.csv"}, numLinesToSkip = 1)
+    @CsvFileSource(resources = {"/seckey/stream/salsa20.csv", "/seckey/stream/chacha20.csv", "/seckey/stream/ctr.csv",
+            "/seckey/stream/ofb.csv"}, numLinesToSkip = 1)
     @DisplayName("Test calling doFinal with empty input")
     public void testDoFinalEmptyInput(String algorithm, String key, String nonce) throws GeneralSecurityException {
         final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
@@ -93,7 +96,8 @@ public class BotanStreamCipherTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = {"/seckey/stream/salsa20.csv", "/seckey/stream/chacha20.csv"}, numLinesToSkip = 1)
+    @CsvFileSource(resources = {"/seckey/stream/salsa20.csv", "/seckey/stream/chacha20.csv", "/seckey/stream/ctr.csv",
+            "/seckey/stream/ofb.csv"}, numLinesToSkip = 1)
     @DisplayName("Test encrypting then decrypting cipher")
     public void testEncryptThenDecrypt(String algorithm, String key, String nonce) throws GeneralSecurityException {
         final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
@@ -112,7 +116,8 @@ public class BotanStreamCipherTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = {"/seckey/stream/salsa20.csv", "/seckey/stream/chacha20.csv"}, numLinesToSkip = 1)
+    @CsvFileSource(resources = {"/seckey/stream/salsa20.csv", "/seckey/stream/chacha20.csv", "/seckey/stream/ctr.csv",
+            "/seckey/stream/ofb.csv"}, numLinesToSkip = 1)
     @DisplayName("Test stream cipher encryption with test vectors")
     public void testCipherWithTestVectors(String algorithm, String key, String iv, String in, String out)
             throws GeneralSecurityException {
@@ -129,7 +134,8 @@ public class BotanStreamCipherTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = {"/seckey/stream/salsa20.csv", "/seckey/stream/chacha20.csv"}, numLinesToSkip = 1)
+    @CsvFileSource(resources = {"/seckey/stream/salsa20.csv", "/seckey/stream/chacha20.csv", "/seckey/stream/ctr.csv",
+            "/seckey/stream/ofb.csv"}, numLinesToSkip = 1)
     @DisplayName("Test update working with cipher offset")
     public void testUpdateWithOffset(String algorithm, String key, String nonce)
             throws GeneralSecurityException {
@@ -152,7 +158,8 @@ public class BotanStreamCipherTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = {"/seckey/stream/salsa20.csv", "/seckey/stream/chacha20.csv"}, numLinesToSkip = 1)
+    @CsvFileSource(resources = {"/seckey/stream/salsa20.csv", "/seckey/stream/chacha20.csv", "/seckey/stream/ctr.csv",
+            "/seckey/stream/ofb.csv"}, numLinesToSkip = 1)
     @DisplayName("Test doFinal working with cipher offset")
     public void testDoFinalWithOffset(String algorithm, String key, String nonce)
             throws GeneralSecurityException {
