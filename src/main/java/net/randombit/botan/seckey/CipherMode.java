@@ -9,9 +9,29 @@
 
 package net.randombit.botan.seckey;
 
-import net.randombit.botan.seckey.block.PaddingAlgorithm;
+import net.randombit.botan.util.PaddingAlgorithm;
 
 public enum CipherMode {
+
+    /**
+     * Cipher block chaining mode.
+     */
+    CBC(PaddingAlgorithm.values()),
+
+    /**
+     * Cipher feedback mode.
+     */
+    CFB(PaddingAlgorithm.NO_PADDING),
+
+    /**
+     * Counter mode.
+     */
+    CTR(PaddingAlgorithm.NO_PADDING),
+
+    /**
+     * Output feedback mode.
+     */
+    OFB(PaddingAlgorithm.NO_PADDING),
 
     /**
      * Galois counter mode.
@@ -36,27 +56,7 @@ public enum CipherMode {
     /**
      * Offset Codebook Mode.
      */
-    OCB(PaddingAlgorithm.NO_PADDING),
-
-    /**
-     * Counter mode.
-     */
-    CTR(PaddingAlgorithm.NO_PADDING),
-
-    /**
-     * Cipher block chaining mode.
-     */
-    CBC(PaddingAlgorithm.values()),
-
-    /**
-     * Cipher feedback mode.
-     */
-    CFB(PaddingAlgorithm.NO_PADDING),
-
-    /**
-     * Output feedback mode.
-     */
-    OFB(PaddingAlgorithm.NO_PADDING);
+    OCB(PaddingAlgorithm.NO_PADDING);
 
     private final PaddingAlgorithm[] supportedPadding;
 

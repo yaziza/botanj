@@ -9,10 +9,12 @@
 
 package net.randombit.botan.seckey;
 
+import static net.randombit.botan.Constants.BOTAN_DO_FINAL_FLAG;
+import static net.randombit.botan.Constants.EMPTY_BYTE_ARRAY;
 import static net.randombit.botan.jnr.BotanInstance.checkNativeCall;
 import static net.randombit.botan.jnr.BotanInstance.singleton;
-import static net.randombit.botan.BotanUtil.checkKeySize;
-import static net.randombit.botan.BotanUtil.checkSecretKey;
+import static net.randombit.botan.util.BotanUtil.checkKeySize;
+import static net.randombit.botan.util.BotanUtil.checkSecretKey;
 
 import javax.crypto.CipherSpi;
 import javax.crypto.IllegalBlockSizeException;
@@ -25,12 +27,13 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.AlgorithmParameterSpec;
 import java.security.spec.InvalidParameterSpecException;
+import java.util.Arrays;
 import java.util.Objects;
 
 import jnr.ffi.Pointer;
 import jnr.ffi.byref.NativeLongByReference;
 import jnr.ffi.byref.PointerByReference;
-import net.randombit.botan.BotanUtil;
+import net.randombit.botan.util.BotanUtil;
 
 public abstract class BotanBaseAsymmetricCipher extends CipherSpi {
 
@@ -47,7 +50,7 @@ public abstract class BotanBaseAsymmetricCipher extends CipherSpi {
     /**
      * Holds the Initial Vector (IV).
      */
-    protected byte[] iv;
+    protected byte[] iv = EMPTY_BYTE_ARRAY;
 
     /**
      * Holds the cipher operation mode in native botan terms (0: Encryption, 1: Decryption)
@@ -78,17 +81,6 @@ public abstract class BotanBaseAsymmetricCipher extends CipherSpi {
      * @return {@code True} is the given nonce length is supported, {@code False} otherwise.
      */
     protected abstract boolean isValidNonceLength(int nonceLength);
-
-    protected void engineReset() {
-        int err = singleton().botan_cipher_reset(cipherRef.getValue());
-        checkNativeCall(err, "botan_cipher_reset");
-
-        if (iv != null) {
-            //FIXME: nonce reuse - disable starting cipher with same IV
-            err = singleton().botan_cipher_start(cipherRef.getValue(), iv, iv.length);
-            checkNativeCall(err, "botan_cipher_start");
-        }
-    }
 
     @Override
     protected void engineSetMode(String mode) throws NoSuchAlgorithmException {
@@ -137,7 +129,7 @@ public abstract class BotanBaseAsymmetricCipher extends CipherSpi {
         if (params instanceof IvParameterSpec) {
             iv = ((IvParameterSpec) params).getIV();
 
-            if (!isValidNonceLength(iv.length * Byte.SIZE)) {
+            if (!isValidNonceLength(iv.length)) {
                 String msg = String.format("Nonce with length %d not allowed for algorithm %s", iv.length, name);
                 throw new InvalidAlgorithmParameterException(msg);
             }
@@ -193,5 +185,37 @@ public abstract class BotanBaseAsymmetricCipher extends CipherSpi {
     @Override
     protected abstract byte[] engineDoFinal(byte[] input, int inputOffset, int inputLen)
             throws IllegalBlockSizeException;
+
+    protected byte[] doCipher(byte[] input, int inputLength, int botanFlag) {
+        final NativeLongByReference outputWritten = new NativeLongByReference();
+        final NativeLongByReference inputConsumed = new NativeLongByReference();
+
+        final byte[] output = new byte[engineGetOutputSize(inputLength)];
+
+        final int err = singleton().botan_cipher_update(cipherRef.getValue(), botanFlag,
+                output, output.length, outputWritten,
+                input, input.length, inputConsumed);
+
+        checkNativeCall(err, "botan_cipher_update");
+
+        final byte[] result = Arrays.copyOfRange(output, 0, outputWritten.intValue());
+
+        if (BOTAN_DO_FINAL_FLAG == botanFlag) {
+            engineReset();
+        }
+
+        return result;
+    }
+
+    protected void engineReset() {
+        int err = singleton().botan_cipher_reset(cipherRef.getValue());
+        checkNativeCall(err, "botan_cipher_reset");
+
+        if (iv != null) {
+            //FIXME: nonce reuse - disable starting cipher with same IV
+            err = singleton().botan_cipher_start(cipherRef.getValue(), iv, iv.length);
+            checkNativeCall(err, "botan_cipher_start");
+        }
+    }
 
 }

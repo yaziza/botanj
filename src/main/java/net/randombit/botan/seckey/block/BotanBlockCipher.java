@@ -9,12 +9,12 @@
 
 package net.randombit.botan.seckey.block;
 
-import static net.randombit.botan.BotanUtil.isNullOrEmpty;
 import static net.randombit.botan.Constants.BOTAN_DO_FINAL_FLAG;
 import static net.randombit.botan.Constants.BOTAN_UPDATE_FLAG;
 import static net.randombit.botan.Constants.EMPTY_BYTE_ARRAY;
 import static net.randombit.botan.jnr.BotanInstance.checkNativeCall;
 import static net.randombit.botan.jnr.BotanInstance.singleton;
+import static net.randombit.botan.util.BotanUtil.isNullOrEmpty;
 
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
@@ -28,13 +28,14 @@ import java.util.Objects;
 import jnr.ffi.byref.NativeLongByReference;
 import net.randombit.botan.seckey.BotanBaseAsymmetricCipher;
 import net.randombit.botan.seckey.CipherMode;
+import net.randombit.botan.util.PaddingAlgorithm;
 
 public abstract class BotanBlockCipher extends BotanBaseAsymmetricCipher {
 
     /**
      * Holds the {@link CipherMode}.
      */
-    private final CipherMode cipherMode;
+    protected final CipherMode cipherMode;
 
     /**
      * Holds the block size of the cipher in bytes.
@@ -50,16 +51,16 @@ public abstract class BotanBlockCipher extends BotanBaseAsymmetricCipher {
      * Botan update granularity for this cipher. botan_cipher_update() must be
      * called with blocks of this size, except for doFinal().
      */
-    private int updateGranularity;
+    protected int updateGranularity;
 
     /**
      * Native botan_cipher_update() will be called only with blocks of
      * size {@link BotanBlockCipher#updateGranularity}. The rest will be held
      * until the next update or doFinal call.
      */
-    private byte[] buffer;
+    protected byte[] buffer;
 
-    private BotanBlockCipher(String name, CipherMode cipherMode, int blockSize) {
+    protected BotanBlockCipher(String name, CipherMode cipherMode, int blockSize) {
         super(name);
 
         this.cipherMode = Objects.requireNonNull(cipherMode);
@@ -71,7 +72,7 @@ public abstract class BotanBlockCipher extends BotanBaseAsymmetricCipher {
      *
      * @return {@code true} if data must be block size aligned, {@code false} otherwise.
      */
-    abstract boolean requiresDataBlockAligned();
+    protected abstract boolean requiresDataBlockAligned();
 
     @Override
     protected void engineSetPadding(String padding) throws NoSuchPaddingException {
@@ -91,10 +92,6 @@ public abstract class BotanBlockCipher extends BotanBaseAsymmetricCipher {
         if (isWithoutPadding() || isDecrypting(mode)) {
             return inputLen;
         }
-
-        final NativeLongByReference outputSize = new NativeLongByReference();
-        final int err = singleton().botan_cipher_output_length(cipherRef.getValue(), inputLen, outputSize);
-        checkNativeCall(err, "botan_cipher_output_length");
 
         final int result = Math.addExact(inputLen, blockSize);
         return Math.subtractExact(result, (inputLen % blockSize));
@@ -144,6 +141,12 @@ public abstract class BotanBlockCipher extends BotanBaseAsymmetricCipher {
         return doCipher(input, inputOffset, inputLen, BOTAN_DO_FINAL_FLAG);
     }
 
+    @Override
+    protected void engineReset() {
+        super.engineReset();
+        buffer = EMPTY_BYTE_ARRAY;
+    }
+
     private byte[] doCipher(byte[] input, int inputOffset, int inputLen, int botanFlag) {
         boolean isEmptyInput = (inputLen == 0) && (buffer.length == 0);
 
@@ -157,29 +160,12 @@ public abstract class BotanBlockCipher extends BotanBaseAsymmetricCipher {
             inputLen = blockSize;
         }
 
-        final NativeLongByReference outputWritten = new NativeLongByReference();
-        final NativeLongByReference inputConsumed = new NativeLongByReference();
+        final byte[] inputFromOffset = addBufferedInput(input, inputOffset, inputLen);
 
-        final byte[] finalInput = getDoFinalInput(input, inputOffset, inputLen);
-        final byte[] output = new byte[engineGetOutputSize(Math.addExact(inputLen, buffer.length))];
-
-        final int err = singleton().botan_cipher_update(cipherRef.getValue(), botanFlag,
-                output, output.length, outputWritten,
-                finalInput, finalInput.length, inputConsumed);
-
-        checkNativeCall(err, "botan_cipher_update");
-
-        final byte[] result = Arrays.copyOfRange(output, 0, outputWritten.intValue());
-
-        if (BOTAN_DO_FINAL_FLAG == botanFlag) {
-            engineReset();
-            buffer = EMPTY_BYTE_ARRAY;
-        }
-
-        return result;
+        return super.doCipher(inputFromOffset, inputFromOffset.length, botanFlag);
     }
 
-    private byte[] getDoFinalInput(byte[] input, int inputOffset, int inputLen) {
+    private byte[] addBufferedInput(byte[] input, int inputOffset, int inputLen) {
         // resize buffer
         final int index = Math.addExact(inputLen, buffer.length);
         final byte[] result = Arrays.copyOf(buffer, index);
@@ -215,7 +201,7 @@ public abstract class BotanBlockCipher extends BotanBaseAsymmetricCipher {
         }
 
         @Override
-        boolean requiresDataBlockAligned() {
+        protected boolean requiresDataBlockAligned() {
             return true;
         }
 
@@ -233,7 +219,7 @@ public abstract class BotanBlockCipher extends BotanBaseAsymmetricCipher {
         }
 
         @Override
-        boolean requiresDataBlockAligned() {
+        protected boolean requiresDataBlockAligned() {
             return false;
         }
     }
@@ -250,7 +236,7 @@ public abstract class BotanBlockCipher extends BotanBaseAsymmetricCipher {
         }
 
         @Override
-        boolean requiresDataBlockAligned() {
+        protected boolean requiresDataBlockAligned() {
             return true;
         }
     }
@@ -266,7 +252,7 @@ public abstract class BotanBlockCipher extends BotanBaseAsymmetricCipher {
         }
 
         @Override
-        boolean requiresDataBlockAligned() {
+        protected boolean requiresDataBlockAligned() {
             return false;
         }
     }
@@ -283,7 +269,7 @@ public abstract class BotanBlockCipher extends BotanBaseAsymmetricCipher {
         }
 
         @Override
-        boolean requiresDataBlockAligned() {
+        protected boolean requiresDataBlockAligned() {
             return true;
         }
     }
@@ -299,7 +285,7 @@ public abstract class BotanBlockCipher extends BotanBaseAsymmetricCipher {
         }
 
         @Override
-        boolean requiresDataBlockAligned() {
+        protected boolean requiresDataBlockAligned() {
             return false;
         }
     }

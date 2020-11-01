@@ -11,8 +11,8 @@ package net.randombit.botan.mac;
 
 import static net.randombit.botan.jnr.BotanInstance.checkNativeCall;
 import static net.randombit.botan.jnr.BotanInstance.singleton;
-import static net.randombit.botan.BotanUtil.checkKeySize;
-import static net.randombit.botan.BotanUtil.checkSecretKey;
+import static net.randombit.botan.util.BotanUtil.checkKeySize;
+import static net.randombit.botan.util.BotanUtil.checkSecretKey;
 
 import javax.crypto.MacSpi;
 import java.security.InvalidKeyException;
@@ -23,7 +23,7 @@ import java.util.Arrays;
 import jnr.ffi.Pointer;
 import jnr.ffi.byref.NativeLongByReference;
 import jnr.ffi.byref.PointerByReference;
-import net.randombit.botan.BotanUtil;
+import net.randombit.botan.util.BotanUtil;
 
 public abstract class BotanMac extends MacSpi {
 

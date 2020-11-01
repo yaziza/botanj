@@ -24,6 +24,7 @@ public final class BotanProvider extends Provider {
     private static final String MAC_PREFIX = ".mac.";
     private static final String BLOCK_CIPHER_PREFIX = ".seckey.block.";
     private static final String STREAM_CIPHER_PREFIX = ".seckey.stream.";
+    private static final String AEAD_CIPHER_PREFIX = ".seckey.aead.";
 
     private static final BotanLibrary NATIVE = BotanInstance.singleton();
 
@@ -203,15 +204,15 @@ public final class BotanProvider extends Provider {
 
         put("Cipher.AES/CTR/NoPadding", PACKAGE_NAME + STREAM_CIPHER_PREFIX + "BotanStreamCipher$AesCtr");
 
-        put("Cipher.AES/GCM", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$AesGcm");
+        put("Cipher.AES/GCM", PACKAGE_NAME + AEAD_CIPHER_PREFIX + "BotanAeadCipher$AesGcm");
 
-        put("Cipher.AES/CCM", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$AesCcm");
+        put("Cipher.AES/CCM", PACKAGE_NAME + AEAD_CIPHER_PREFIX + "BotanAeadCipher$AesCcm");
 
-        put("Cipher.AES/SIV", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$AesSiv");
+        put("Cipher.AES/SIV", PACKAGE_NAME + AEAD_CIPHER_PREFIX + "BotanAeadCipher$AesSiv");
 
-        put("Cipher.AES/EAX", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$AesEax");
+        put("Cipher.AES/EAX", PACKAGE_NAME + AEAD_CIPHER_PREFIX + "BotanAeadCipher$AesEax");
 
-        put("Cipher.AES/OCB", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$AesOcb");
+        put("Cipher.AES/OCB", PACKAGE_NAME + AEAD_CIPHER_PREFIX + "BotanAeadCipher$AesOcb");
     }
 
     private void addDesAlgorithm() {

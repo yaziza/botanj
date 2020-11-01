@@ -82,8 +82,8 @@ public class BotanBlockCipherTest {
     }
 
     @Test
-    @DisplayName("Test unsupprted padding algorithm")
-    public void testUnsupportedPadingAlgorithm() {
+    @DisplayName("Test unsupported padding algorithm")
+    public void testUnsupportedPaddingAlgorithm() {
         final String padding = "some padding";
 
         final Exception exception = assertThrows(NoSuchPaddingException.class, () ->

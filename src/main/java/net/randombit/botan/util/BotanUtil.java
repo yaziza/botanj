@@ -7,7 +7,7 @@
  *    Yasser Aziza  initial implementation
  */
 
-package net.randombit.botan;
+package net.randombit.botan.util;
 
 import static net.randombit.botan.jnr.BotanInstance.checkNativeCall;
 

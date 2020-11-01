@@ -4,6 +4,8 @@ Botanj's Capabilities
 ## Cryptography
 ### Cipher Suites
 
+AES-CBC with 128, 192, or 256-bit keys:
+
 * `AES/CBC/NoPadding`
 * `AES/CBC/PKCS7`
 * `AES/CBC/PKCS5`
@@ -11,7 +13,7 @@ Botanj's Capabilities
 * `AES/CBC/X9.23`
 * `AES/CBC/ESP`
 
-AES-CBC with 128, 192, or 256-bit keys
+AES-CTR with 128, 192, or 256-bit keys:
 
 * `AES/CTR/NoPadding`
 * `AES/CTR/PKCS7`
@@ -20,7 +22,7 @@ AES-CBC with 128, 192, or 256-bit keys
 * `AES/CTR/X9.23`
 * `AES/CTR/ESP`
 
-AES-CTR with 128, 192, or 256-bit keys
+AES-CFB with 128, 192, or 256-bit keys:
 
 * `AES/CFB/NoPadding`
 * `AES/CFB/PKCS7`
@@ -29,7 +31,7 @@ AES-CTR with 128, 192, or 256-bit keys
 * `AES/CFB/X9.23`
 * `AES/CFB/ESP`
 
-AES-CFB with 128, 192, or 256-bit keys
+AES-OFB with 128, 192, or 256-bit keys:
 
 * `AES/OFB/NoPadding`
 * `AES/OFB/PKCS7`
@@ -38,7 +40,7 @@ AES-CFB with 128, 192, or 256-bit keys
 * `AES/OFB/X9.23`
 * `AES/OFB/ESP`
 
-AES-OFB with 128, 192, or 256-bit keys
+AES authenticated encryption modes with 128, 192 or 256-bit keys:
 
 * `AES/GCM/NoPadding`
 * `AES/EAX/NoPadding`
@@ -46,7 +48,7 @@ AES-OFB with 128, 192, or 256-bit keys
 * `AES/SIV/NoPadding`
 * `AES/CCM/NoPadding`
 
-AES authenticated encryption modes with 128, 192 or 256-bit keys
+DES-CBC with 64-bit keys:
 
 * `DES/CBC/NoPadding`
 * `DES/CBC/PKCS7`
@@ -55,7 +57,7 @@ AES authenticated encryption modes with 128, 192 or 256-bit keys
 * `DES/CBC/X9.23`
 * `DES/CBC/ESP`
 
-DES-CBC with 64-bit keys
+DES-CTR with 64-bit keys:
 
 * `DES/CTR/NoPadding`
 * `DES/CTR/PKCS7`
@@ -64,7 +66,7 @@ DES-CBC with 64-bit keys
 * `DES/CTR/X9.23`
 * `DES/CTR/ESP`
 
-DES-CTR with 64-bit keys
+DES-CFB with 64-bit keys:
 
 * `DES/CFB/NoPadding`
 * `DES/CFB/PKCS7`
@@ -73,7 +75,7 @@ DES-CTR with 64-bit keys
 * `DES/CFB/X9.23`
 * `DES/CFB/ESP`
 
-DES-CFB with 64-bit keys
+DES-OFB with 64-bit keys:
 
 * `DES/OFB/NoPadding`
 * `DES/OFB/PKCS7`
@@ -82,7 +84,7 @@ DES-CFB with 64-bit keys
 * `DES/OFB/X9.23`
 * `DES/OFB/ESP`
 
-DES-OFB with 64-bit keys
+Triple DES-CBC with either two or three intermediate keys:
 
 * `DESede/CBC/NoPadding`
 * `DESede/CBC/PKCS7`
@@ -91,7 +93,7 @@ DES-OFB with 64-bit keys
 * `DESede/CBC/X9.23`
 * `DESede/CBC/ESP`
 
-Triple DES-CBC with either two or three intermediate keys.
+Triple DES-CTR with either two or three intermediate keys:
 
 * `DESede/CTR/NoPadding`
 * `DESede/CTR/PKCS7`
@@ -100,7 +102,7 @@ Triple DES-CBC with either two or three intermediate keys.
 * `DESede/CTR/X9.23`
 * `DESede/CTR/ESP`
 
-Triple DES-CTR with either two or three intermediate keys.
+Triple DES-CFB with either two or three intermediate keys:
 
 * `DESede/CFB/NoPadding`
 * `DESede/CFB/PKCS7`
@@ -109,7 +111,7 @@ Triple DES-CTR with either two or three intermediate keys.
 * `DESede/CFB/X9.23`
 * `DESede/CFB/ESP`
 
-Triple DES-CFB with either two or three intermediate keys.
+Triple DES-OFB with either two or three intermediate keys:
 
 * `DESede/OFB/NoPadding`
 * `DESede/OFB/PKCS7`
@@ -118,17 +120,15 @@ Triple DES-CFB with either two or three intermediate keys.
 * `DESede/OFB/X9.23`
 * `DESede/OFB/ESP`
 
-Triple DES-OFB with either two or three intermediate keys.
+Salsa with 20 rounds:
 
 * `Salsa20/None/NoPadding`
 * `XSalsa20/None/NoPadding`
 
-Salsa with 20 rounds
+ChaCha with 20 rounds:
 
 * `ChaCha20/None/NoPadding`
-* `XChaCha20/None/NoPadding`
-
-ChaCha with 20 rounds
+* `XChaCha20/None/NoPadding`s
 
 ### Mac
 * `AESCMAC`

@@ -9,17 +9,14 @@
 
 package net.randombit.botan.seckey.stream;
 
-import static net.randombit.botan.BotanUtil.isNullOrEmpty;
 import static net.randombit.botan.Constants.BOTAN_DO_FINAL_FLAG;
 import static net.randombit.botan.Constants.BOTAN_UPDATE_FLAG;
 import static net.randombit.botan.Constants.EMPTY_BYTE_ARRAY;
-import static net.randombit.botan.jnr.BotanInstance.checkNativeCall;
-import static net.randombit.botan.jnr.BotanInstance.singleton;
+import static net.randombit.botan.util.BotanUtil.isNullOrEmpty;
 
 import javax.crypto.NoSuchPaddingException;
 import java.util.Arrays;
 
-import jnr.ffi.byref.NativeLongByReference;
 import net.randombit.botan.seckey.BotanBaseAsymmetricCipher;
 
 public abstract class BotanStreamCipher extends BotanBaseAsymmetricCipher {
@@ -58,25 +55,9 @@ public abstract class BotanStreamCipher extends BotanBaseAsymmetricCipher {
             return EMPTY_BYTE_ARRAY;
         }
 
-        final NativeLongByReference outputWritten = new NativeLongByReference();
-        final NativeLongByReference inputConsumed = new NativeLongByReference();
-
-        final byte[] output = new byte[inputLen];
         final byte[] inputFromOffset = Arrays.copyOfRange(input, inputOffset, Math.addExact(inputOffset, inputLen));
 
-        final int err = singleton().botan_cipher_update(cipherRef.getValue(), botanFlag,
-                output, output.length, outputWritten,
-                inputFromOffset, inputLen, inputConsumed);
-
-        checkNativeCall(err, "botan_cipher_update");
-
-        final byte[] result = Arrays.copyOfRange(output, 0, outputWritten.intValue());
-
-        if (BOTAN_DO_FINAL_FLAG == botanFlag) {
-            engineReset();
-        }
-
-        return result;
+        return super.doCipher(inputFromOffset, inputLen, botanFlag);
     }
 
     // Salsa20
@@ -91,7 +72,7 @@ public abstract class BotanStreamCipher extends BotanBaseAsymmetricCipher {
 
         @Override
         protected boolean isValidNonceLength(int nonceLength) {
-            return nonceLength == 64 || nonceLength == 192;
+            return nonceLength == 8 || nonceLength == 24;
         }
     }
 
@@ -106,7 +87,7 @@ public abstract class BotanStreamCipher extends BotanBaseAsymmetricCipher {
 
         @Override
         protected boolean isValidNonceLength(int nonceLength) {
-            return nonceLength == 192;
+            return nonceLength == 24;
         }
     }
 
@@ -122,7 +103,7 @@ public abstract class BotanStreamCipher extends BotanBaseAsymmetricCipher {
 
         @Override
         protected boolean isValidNonceLength(int nonceLength) {
-            return nonceLength == 64 || nonceLength == 96 || nonceLength == 192;
+            return nonceLength == 8 || nonceLength == 12 || nonceLength == 24;
         }
     }
 
@@ -137,7 +118,7 @@ public abstract class BotanStreamCipher extends BotanBaseAsymmetricCipher {
 
         @Override
         protected boolean isValidNonceLength(int nonceLength) {
-            return nonceLength == 192;
+            return nonceLength == 24;
         }
     }
 
@@ -154,7 +135,7 @@ public abstract class BotanStreamCipher extends BotanBaseAsymmetricCipher {
 
         @Override
         protected boolean isValidNonceLength(int nonceLength) {
-            return nonceLength >= 0 && nonceLength <= 128;
+            return nonceLength >= 0 && nonceLength <= 16;
         }
     }
 
@@ -170,7 +151,7 @@ public abstract class BotanStreamCipher extends BotanBaseAsymmetricCipher {
 
         @Override
         protected boolean isValidNonceLength(int nonceLength) {
-            return nonceLength >= 0 && nonceLength <= 64;
+            return nonceLength >= 0 && nonceLength <= 8;
         }
     }
 
@@ -186,7 +167,7 @@ public abstract class BotanStreamCipher extends BotanBaseAsymmetricCipher {
 
         @Override
         protected boolean isValidNonceLength(int nonceLength) {
-            return nonceLength >= 0 && nonceLength <= 64;
+            return nonceLength >= 0 && nonceLength <= 8;
         }
     }
 
@@ -203,7 +184,7 @@ public abstract class BotanStreamCipher extends BotanBaseAsymmetricCipher {
 
         @Override
         protected boolean isValidNonceLength(int nonceLength) {
-            return nonceLength >= 0 && nonceLength <= 128;
+            return nonceLength >= 0 && nonceLength <= 16;
         }
     }
 
@@ -219,7 +200,7 @@ public abstract class BotanStreamCipher extends BotanBaseAsymmetricCipher {
 
         @Override
         protected boolean isValidNonceLength(int nonceLength) {
-            return nonceLength >= 0 && nonceLength <= 64;
+            return nonceLength >= 0 && nonceLength <= 8;
         }
     }
 
@@ -235,7 +216,7 @@ public abstract class BotanStreamCipher extends BotanBaseAsymmetricCipher {
 
         @Override
         protected boolean isValidNonceLength(int nonceLength) {
-            return nonceLength >= 0 && nonceLength <= 64;
+            return nonceLength >= 0 && nonceLength <= 8;
         }
     }
 
