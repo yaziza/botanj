@@ -1,5 +1,0 @@
-algorithm, blocksize, keysize
-
-AES/EAX/NoPadding, 16, 16
-AES/EAX/NoPadding, 16, 24
-AES/EAX/NoPadding, 16, 32

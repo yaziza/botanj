@@ -1,5 +1,0 @@
-algorithm, blocksize, keysize
-
-AES/GCM/NoPadding, 16, 16
-AES/GCM/NoPadding, 16, 24
-AES/GCM/NoPadding, 16, 32

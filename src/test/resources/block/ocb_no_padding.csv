@@ -1,5 +1,0 @@
-algorithm, blocksize, keysize
-
-AES/OCB/NoPadding, 16, 16
-AES/OCB/NoPadding, 16, 24
-AES/OCB/NoPadding, 16, 32

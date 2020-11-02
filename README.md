@@ -18,7 +18,7 @@ implementation is compatible with other JSPs (e.g. Bouncy Castle), thus enabling
 Botanj uses [JNR-FFI](https://github.com/jnr/jnr-ffi) for loading Botan native code.
 
 ## Building The Library
-* Install native [Botan](https://botan.randombit.net/handbook/building.html) Library (tested with botan 2.14.0)
+* Install native [Botan](https://botan.randombit.net/handbook/building.html) Library (tested with botan 2.{14/16}.0)
 * Install Apache [Maven](https://maven.apache.org/)
 * Install Java 11+ (tested with [openjdk 11](https://openjdk.java.net/))
 * Run tests:
@@ -37,11 +37,11 @@ Botanj uses [JNR-FFI](https://github.com/jnr/jnr-ffi) for loading Botan native c
 ### Public Key Cryptography
 * Not yet supported
 
-### Transport Layer Security (TLS) Protocol (JSSE)
-* Not yet supported
-
 ### Public Key Infrastructure
 * Not yes supported
+
+### Transport Layer Security (TLS) Protocol (JSSE)
+* Not yet supported
 
 ## Using Botanj
 * An example describing the procedure to compute a MessageDigest object:
@@ -80,6 +80,7 @@ final byte[] output = cipher.doFinal("hello world".getBytes());
 * An example describing the procedure to encrypt using ChaCha20:
 ```java
 final Cipher cipher = Cipher.getInstance("ChaCha20/None/NoPadding", BotanProvider.NAME);
+// Never reuse the IV with the same key
 cipher.init(Cipher.ENCRYPT_MODE, key, iv);
 final byte[] output = cipher.doFinal("hello world".getBytes());
 ```

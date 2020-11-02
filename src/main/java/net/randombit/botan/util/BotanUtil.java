@@ -7,9 +7,9 @@
  *    Yasser Aziza  initial implementation
  */
 
-package net.randombit.botan;
+package net.randombit.botan.util;
 
-import static net.randombit.botan.BotanInstance.checkNativeCall;
+import static net.randombit.botan.jnr.BotanInstance.checkNativeCall;
 
 import javax.crypto.SecretKey;
 import java.security.InvalidKeyException;
@@ -54,17 +54,16 @@ public final class BotanUtil {
             throw new InvalidKeyException("Only SecretKey is supported");
         }
 
+        if (!"RAW".equalsIgnoreCase(key.getFormat())) {
+            throw new InvalidKeyException("Only raw format key is supported");
+        }
+
         final byte[] encodedKey = key.getEncoded();
         if (encodedKey == null) {
             throw new InvalidKeyException("key.getEncoded() == null");
         }
 
         return encodedKey;
-    }
-
-    @FunctionalInterface
-    public interface FourParameterFunction<T, U> {
-        int apply(T t, U u, U v, U w);
     }
 
     /**
@@ -96,6 +95,15 @@ public final class BotanUtil {
             throw new InvalidKeyException("key.getEncoded() not multiple of key length modulo: "
                     + lengthModulo.intValue());
         }
+    }
+
+    public static boolean isNullOrEmpty(byte[] value) {
+        return value == null || value.length == 0;
+    }
+
+    @FunctionalInterface
+    public interface FourParameterFunction<T, U> {
+        int apply(T t, U u, U v, U w);
     }
 
 }

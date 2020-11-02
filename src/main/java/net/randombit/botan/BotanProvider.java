@@ -11,6 +11,9 @@ package net.randombit.botan;
 
 import java.security.Provider;
 
+import net.randombit.botan.jnr.BotanInstance;
+import net.randombit.botan.jnr.BotanLibrary;
+
 public final class BotanProvider extends Provider {
 
     public static final String NAME = "Botan";
@@ -19,10 +22,11 @@ public final class BotanProvider extends Provider {
     private static final String PACKAGE_NAME = BotanProvider.class.getPackage().getName();
     private static final String DIGEST_PREFIX = ".digest.";
     private static final String MAC_PREFIX = ".mac.";
-    private static final String BLOCK_CIPHER_PREFIX = ".block.";
-    private static final String STREAM_CIPHER_PREFIX = ".stream.";
+    private static final String BLOCK_CIPHER_PREFIX = ".seckey.block.";
+    private static final String STREAM_CIPHER_PREFIX = ".seckey.stream.";
+    private static final String AEAD_CIPHER_PREFIX = ".seckey.aead.";
 
-    private static final BotanNativeInterface NATIVE = BotanInstance.singleton();
+    private static final BotanLibrary NATIVE = BotanInstance.singleton();
 
     public BotanProvider() {
         super(NAME, "", INFO);
@@ -196,19 +200,19 @@ public final class BotanProvider extends Provider {
 
         put("Cipher.AES/CFB", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$AesCfb");
 
-        put("Cipher.AES/OFB", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$AesOfb");
+        put("Cipher.AES/OFB/NoPadding", PACKAGE_NAME + STREAM_CIPHER_PREFIX + "BotanStreamCipher$AesOfb");
 
-        put("Cipher.AES/CTR", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$AesCtr");
+        put("Cipher.AES/CTR/NoPadding", PACKAGE_NAME + STREAM_CIPHER_PREFIX + "BotanStreamCipher$AesCtr");
 
-        put("Cipher.AES/GCM", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$AesGcm");
+        put("Cipher.AES/GCM", PACKAGE_NAME + AEAD_CIPHER_PREFIX + "BotanAeadCipher$AesGcm");
 
-        put("Cipher.AES/CCM", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$AesCcm");
+        put("Cipher.AES/CCM", PACKAGE_NAME + AEAD_CIPHER_PREFIX + "BotanAeadCipher$AesCcm");
 
-        put("Cipher.AES/SIV", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$AesSiv");
+        put("Cipher.AES/SIV", PACKAGE_NAME + AEAD_CIPHER_PREFIX + "BotanAeadCipher$AesSiv");
 
-        put("Cipher.AES/EAX", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$AesEax");
+        put("Cipher.AES/EAX", PACKAGE_NAME + AEAD_CIPHER_PREFIX + "BotanAeadCipher$AesEax");
 
-        put("Cipher.AES/OCB", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$AesOcb");
+        put("Cipher.AES/OCB", PACKAGE_NAME + AEAD_CIPHER_PREFIX + "BotanAeadCipher$AesOcb");
     }
 
     private void addDesAlgorithm() {
@@ -216,9 +220,9 @@ public final class BotanProvider extends Provider {
 
         put("Cipher.DES/CFB", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesCfb");
 
-        put("Cipher.DES/OFB", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesOfb");
+        put("Cipher.DES/OFB/NoPadding", PACKAGE_NAME + STREAM_CIPHER_PREFIX + "BotanStreamCipher$DesOfb");
 
-        put("Cipher.DES/CTR", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesCtr");
+        put("Cipher.DES/CTR/NoPadding", PACKAGE_NAME + STREAM_CIPHER_PREFIX + "BotanStreamCipher$DesCtr");
     }
 
     private void addTrippleDesAlgorithm() {
@@ -230,13 +234,13 @@ public final class BotanProvider extends Provider {
         put("Alg.Alias.Cipher.3DES/CFB", "DESede/CFB");
         put("Alg.Alias.Cipher.TripleDES/CFB", "DESede/CFB");
 
-        put("Cipher.DESede/OFB", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesEdeOfb");
-        put("Cipher.3DES/OFB", "DESede/OFB");
-        put("Cipher.TripleDES/OFB", "TripleDES/OFB");
+        put("Cipher.DESede/OFB/NoPadding", PACKAGE_NAME + STREAM_CIPHER_PREFIX + "BotanStreamCipher$DesEdeOfb");
+        put("Cipher.3DES/OFB/NoPadding", "DESede/OFB/NoPadding");
+        put("Cipher.TripleDES/OFB/NoPadding", "TripleDES/OFB/NoPadding");
 
-        put("Cipher.DESede/CTR", PACKAGE_NAME + BLOCK_CIPHER_PREFIX + "BotanBlockCipher$DesEdeCtr");
-        put("Cipher.3DES/CTR", "DESede/CTR");
-        put("Cipher.TripleDES/CTR", "DESede/CTR");
+        put("Cipher.DESede/CTR/NoPadding", PACKAGE_NAME + STREAM_CIPHER_PREFIX + "BotanStreamCipher$DesEdeCtr");
+        put("Cipher.3DES/CTR/NoPadding", "DESede/CTR/NoPadding");
+        put("Cipher.TripleDES/CTR/NoPadding", "DESede/CTR/NoPadding");
     }
 
     private void addSalsa20Algorithm() {

@@ -1,5 +1,0 @@
-algorithm, blocksize, keysize
-
-AES/SIV/NoPadding, 16, 32
-AES/SIV/NoPadding, 16, 48
-AES/SIV/NoPadding, 16, 64
