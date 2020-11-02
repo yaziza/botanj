@@ -14,7 +14,6 @@ import static net.randombit.botan.Constants.BOTAN_UPDATE_FLAG;
 import static net.randombit.botan.Constants.EMPTY_BYTE_ARRAY;
 import static net.randombit.botan.jnr.BotanInstance.checkNativeCall;
 import static net.randombit.botan.jnr.BotanInstance.singleton;
-import static net.randombit.botan.util.BotanUtil.isNullOrEmpty;
 
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
@@ -80,7 +79,7 @@ public abstract class BotanAeadCipher extends BotanBlockCipher {
 
     @Override
     protected void engineUpdateAAD(byte[] src, int offset, int len) {
-        final byte[] inputFromOffset = Arrays.copyOfRange(src, offset, src.length);
+        final byte[] inputFromOffset = Arrays.copyOfRange(src, offset, len);
 
         int err = singleton().botan_cipher_set_associated_data(cipherRef.getValue(), inputFromOffset, len);
         checkNativeCall(err, "botan_cipher_set_associated_data");
@@ -102,10 +101,18 @@ public abstract class BotanAeadCipher extends BotanBlockCipher {
         return super.doCipher(input, outputLength, botanFlag);
     }
 
+    @Override
+    protected void engineReset() {
+        super.engineReset();
+        isInitialized = false;
+    }
+
     private byte[] doCipher(byte[] input, int inputOffset, int inputLen, int botanFlag) {
-        if (isNullOrEmpty(input) || inputLen == 0) {
+        if ((inputLen == 0) && (BOTAN_UPDATE_FLAG == botanFlag)) {
             return EMPTY_BYTE_ARRAY;
         }
+
+        input = (input == null) ? EMPTY_BYTE_ARRAY : input;
 
         final byte[] inputFromOffset = Arrays.copyOfRange(input, inputOffset, Math.addExact(inputOffset, inputLen));
 
@@ -155,7 +162,7 @@ public abstract class BotanAeadCipher extends BotanBlockCipher {
 
         @Override
         protected String getBotanCipherName(int keySize) {
-            return String.format("AES-%d/CCM(16)", keySize * Byte.SIZE);
+            return String.format("AES-%d/CCM(16,4)", keySize * Byte.SIZE);
         }
 
         @Override

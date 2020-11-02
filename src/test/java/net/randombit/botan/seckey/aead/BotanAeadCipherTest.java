@@ -9,6 +9,7 @@
 
 package net.randombit.botan.seckey.aead;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -27,6 +28,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
 
 import net.randombit.botan.BotanProvider;
+import net.randombit.botan.codec.HexUtils;
 import net.randombit.botan.util.PaddingAlgorithm;
 
 @DisplayName("Botan AEAD ciphers modes tests")
@@ -38,16 +40,16 @@ public class BotanAeadCipherTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = {"/seckey/aead/gcm_no_padding.csv"},
-            numLinesToSkip = 1)
+    @CsvFileSource(resources = {"/seckey/aead/ccm_no_padding.csv", "/seckey/aead/eax_no_padding.csv",
+            "/seckey/aead/gcm_no_padding.csv", "/seckey/aead/ocb_no_padding.csv"}, numLinesToSkip = 1)
     @DisplayName("Test cipher block size")
-    public void testCipherBlockSize(String algorithm, int blockSize, int keySize) throws GeneralSecurityException {
+    public void testCipherBlockSize(String algorithm, String key) throws GeneralSecurityException {
         final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
-        final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
+        final SecretKeySpec keyInBytes = new SecretKeySpec(HexUtils.decode(key), algorithm);
 
-        cipher.init(Cipher.ENCRYPT_MODE, key);
+        cipher.init(Cipher.ENCRYPT_MODE, keyInBytes);
 
-        assertEquals(blockSize, cipher.getBlockSize(),
+        assertEquals(16, cipher.getBlockSize(),
                 "Cipher block size mismatch for algorithm: " + algorithm);
     }
 
@@ -84,35 +86,61 @@ public class BotanAeadCipherTest {
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = {"/seckey/aead/gcm_no_padding.csv"},
-            numLinesToSkip = 1)
+    @CsvFileSource(resources = {"/seckey/aead/ccm_no_padding.csv", "/seckey/aead/eax_no_padding.csv",
+            "/seckey/aead/gcm_no_padding.csv", "/seckey/aead/ocb_no_padding.csv"}, numLinesToSkip = 1)
     @DisplayName("Test calling cipher doFinal without input (No Padding)")
-    public void testCipherDoFinalWithoutInputNoPadding(String algorithm, int blockSize, int keySize)
+    public void testCipherDoFinalWithoutInputNoPadding(String algorithm, String key, String nonce)
             throws GeneralSecurityException {
         final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
-        final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
-        final IvParameterSpec iv = new IvParameterSpec(new byte[blockSize]);
+        final SecretKeySpec keyBytes = new SecretKeySpec(HexUtils.decode(key), algorithm);
+        final IvParameterSpec nonceBytes = new IvParameterSpec(HexUtils.decode(nonce));
 
-        cipher.init(Cipher.ENCRYPT_MODE, key, iv);
+        cipher.init(Cipher.ENCRYPT_MODE, keyBytes, nonceBytes);
         cipher.updateAAD("adfn".getBytes());
         final byte[] output = cipher.doFinal();
 
-        assertEquals(0, output.length, "doFinal without input should produce no output");
+        assertEquals(16, output.length, "doFinal without input should produce TAG");
     }
 
     @ParameterizedTest
-    @CsvFileSource(resources = {"/seckey/aead/gcm_no_padding.csv"},
-            numLinesToSkip = 1)
-    @DisplayName("Test calling cipher doFinal with output offset")
-    public void testCipherDoFinal(String algorithm, int blockSize, int keySize) throws GeneralSecurityException {
+    @CsvFileSource(resources = {"/seckey/aead/ccm_no_padding.csv", "/seckey/aead/eax_no_padding.csv",
+            "/seckey/aead/gcm_no_padding.csv", "/seckey/aead/ocb_no_padding.csv"}, numLinesToSkip = 1)
+    @DisplayName("Test encrypt then decrypt")
+    public void testEncryptThenDecrypt(String algorithm, String key, String nonce, String ad) throws GeneralSecurityException {
         final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
-        final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
-        final GCMParameterSpec iv = new GCMParameterSpec(128, new byte[blockSize]);
+        final SecretKeySpec keyBytes = new SecretKeySpec(HexUtils.decode(key), algorithm);
+        final GCMParameterSpec nonceBytes = new GCMParameterSpec(128, HexUtils.decode(nonce));
 
-        cipher.init(Cipher.ENCRYPT_MODE, key, iv);
-        int outputLength = cipher.doFinal(new byte[32]).length;
+        final byte[] expected = "some plain text to be encrypted.".getBytes();
 
-        assertEquals(outputLength, 32 + 128 / 8, "Cipher doFinal output length mismatch");
+        cipher.init(Cipher.ENCRYPT_MODE, keyBytes, nonceBytes);
+        cipher.updateAAD(HexUtils.decode(ad));
+        final byte[] cipherText = cipher.doFinal(expected);
+
+        cipher.init(Cipher.DECRYPT_MODE, keyBytes, nonceBytes);
+        cipher.updateAAD(HexUtils.decode(ad));
+        final byte[] plainText = cipher.doFinal(cipherText);
+
+        assertArrayEquals(expected, plainText, "Encrypt than decrypt mismatch for algorithm: " + algorithm);
+    }
+
+    @ParameterizedTest
+    @CsvFileSource(resources = {"/seckey/aead/ccm_no_padding.csv", "/seckey/aead/eax_no_padding.csv",
+            "/seckey/aead/gcm_no_padding.csv", "/seckey/aead/ocb_no_padding.csv"}, numLinesToSkip = 1)
+    @DisplayName("Test AEAD cipher encryption with test vectors")
+    public void testCipherWithTestVectors(String algorithm, String key, String nonce, String ad, String in, String out)
+            throws GeneralSecurityException {
+        final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
+
+        final SecretKeySpec keyBytes = new SecretKeySpec(HexUtils.decode(key), algorithm);
+        final GCMParameterSpec ivBytes = new GCMParameterSpec(128, HexUtils.decode(nonce));
+
+        cipher.init(Cipher.ENCRYPT_MODE, keyBytes, ivBytes);
+        cipher.updateAAD(HexUtils.decode(ad));
+
+        byte[] cipherText = cipher.doFinal(HexUtils.decode(in));
+
+        assertArrayEquals(HexUtils.decode(out), cipherText, "Encryption mismatch with test vector");
     }
 
 }

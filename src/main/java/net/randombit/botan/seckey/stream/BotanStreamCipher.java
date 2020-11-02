@@ -51,7 +51,7 @@ public abstract class BotanStreamCipher extends BotanBaseAsymmetricCipher {
     }
 
     private byte[] doCipher(byte[] input, int inputOffset, int inputLen, int botanFlag) {
-        if (isNullOrEmpty(input) || inputLen == 0) {
+        if (inputLen == 0) {
             return EMPTY_BYTE_ARRAY;
         }
 

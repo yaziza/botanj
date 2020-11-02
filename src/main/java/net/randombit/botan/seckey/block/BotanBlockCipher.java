@@ -14,7 +14,6 @@ import static net.randombit.botan.Constants.BOTAN_UPDATE_FLAG;
 import static net.randombit.botan.Constants.EMPTY_BYTE_ARRAY;
 import static net.randombit.botan.jnr.BotanInstance.checkNativeCall;
 import static net.randombit.botan.jnr.BotanInstance.singleton;
-import static net.randombit.botan.util.BotanUtil.isNullOrEmpty;
 
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
@@ -112,23 +111,23 @@ public abstract class BotanBlockCipher extends BotanBaseAsymmetricCipher {
 
     @Override
     protected byte[] engineUpdate(byte[] input, int inputOffset, int inputLen) {
-        if (isNullOrEmpty(input) || inputLen == 0) {
+        if (inputLen == 0) {
             return EMPTY_BYTE_ARRAY;
         }
 
         // resize buffer and append the new input
-        byte[] currentInput = Arrays.copyOf(buffer, Math.addExact(inputLen, buffer.length));
+        final byte[] currentInput = Arrays.copyOf(buffer, Math.addExact(inputLen, buffer.length));
         System.arraycopy(input, inputOffset, currentInput, buffer.length, inputLen);
 
         // compute the new buffer offset
-        int bufferOffset = currentInput.length % updateGranularity;
+        final int bufferOffset = currentInput.length % updateGranularity;
 
         final int index = Math.subtractExact(currentInput.length, bufferOffset);
-        input = Arrays.copyOfRange(currentInput, 0, index);
+        final byte[] doCipherInput = Arrays.copyOfRange(currentInput, 0, index);
         buffer = Arrays.copyOfRange(currentInput, index, currentInput.length);
 
-        return (input.length == 0) ? EMPTY_BYTE_ARRAY
-                : doCipher(input, 0, input.length, BOTAN_UPDATE_FLAG);
+        return (doCipherInput.length == 0) ? EMPTY_BYTE_ARRAY
+                : doCipher(doCipherInput, 0, doCipherInput.length, BOTAN_UPDATE_FLAG);
     }
 
     @Override
