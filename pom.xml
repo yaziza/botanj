@@ -10,16 +10,25 @@
     <description>Botan Java Security Provider implementation</description>
 
     <properties>
-        <jnr-ffi-version>2.1.12</jnr-ffi-version>
-        <junit-version>5.6.2</junit-version>
-        <bouncy-castle-version>1.67</bouncy-castle-version>
-        <log4j-version>2.13.2</log4j-version>
+
+        <!-- use UTF-8 encoding -->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <!-- global project properties -->
+        <java.version>11</java.version>
+
+        <maven.compiler.source>${java.version}</maven.compiler.source>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
         <maven-surefire-version>2.22.2</maven-surefire-version>
         <maven-checkstyle-version>3.1.1</maven-checkstyle-version>
 
-        <java.version>11</java.version>
-        <maven.compiler.source>${java.version}</maven.compiler.source>
-        <maven.compiler.target>${java.version}</maven.compiler.target>
+        <!-- lib dependencies version -->
+        <jnr-ffi-version>2.1.12</jnr-ffi-version>
+
+        <!-- test dependencies versions -->
+        <junit-version>5.6.2</junit-version>
+        <bouncy-castle-version>1.67</bouncy-castle-version>
+        <log4j-version>2.13.2</log4j-version>
     </properties>
 
     <dependencies>
@@ -86,9 +95,13 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.1</version>
                 <configuration>
                     <source>11</source>
                     <target>11</target>
+                    <compilerArgs>
+                        <arg>-Xlint:unchecked,-options,-path</arg>
+                    </compilerArgs>
                 </configuration>
             </plugin>
 
