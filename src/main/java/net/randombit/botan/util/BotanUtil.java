@@ -74,7 +74,8 @@ public final class BotanUtil {
      * @param getKeySpec the botan reference key spec method
      * @throws InvalidKeyException
      */
-    public static void checkKeySize(Pointer ptr, int keySize, FourParameterFunction getKeySpec)
+    public static void checkKeySize(Pointer ptr, int keySize,
+                                    FourParameterFunction<Pointer, NativeLongByReference> getKeySpec)
             throws InvalidKeyException {
         final NativeLongByReference minimumLength = new NativeLongByReference();
         final NativeLongByReference maximumLength = new NativeLongByReference();
