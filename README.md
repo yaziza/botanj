@@ -7,6 +7,9 @@ Botanj - Java Security Provider (JSP)
 
 [![codeql-analysis Actions Status](https://github.com/yaziza/botanj/workflows/codeql-analysis/badge.svg)](https://github.com/yaziza/botanj/actions)
 
+[![coverage](.github/badges/jacoco.svg)](https://github.com/yaziza/botanj/actions/workflows/code-coverage.yml)
+
+[![branch coverage](.github/badges/branches.svg)](https://github.com/yaziza/botanj/actions/workflows/code-coverage.yml)
 
 ## Index
 

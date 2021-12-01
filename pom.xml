@@ -21,6 +21,7 @@
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <maven-surefire-version>2.22.2</maven-surefire-version>
         <maven-checkstyle-version>3.1.1</maven-checkstyle-version>
+        <jacoco.plugin.version>0.8.5</jacoco.plugin.version>
 
         <!-- lib dependencies version -->
         <jnr-ffi-version>2.1.12</jnr-ffi-version>
@@ -128,6 +129,27 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco.plugin.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
         </plugins>
     </build>
 
