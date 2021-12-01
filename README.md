@@ -1,7 +1,7 @@
 Botanj - Java Security Provider (JSP)
 ====================================
 
-[![Build Status](https://travis-ci.com/yaziza/botanj.svg?token=MyNJQboScT4FWA4jhyVU&branch=master)](https://travis-ci.com/yaziza/botanj)
+[![Actions Status](https://github.com/yaziza/botanj/workflows/build_action/badge.svg)](https://github.com/yaziza/botanj/actions)
 
 ## Index
 
