@@ -1,4 +1,4 @@
-name: build_action
+name: ubuntu-build
 
 on: 
   push:
