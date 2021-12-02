@@ -1,0 +1,60 @@
+name: code-coverage
+
+on:
+  push:
+    branches:
+    - master # build after merging code to master
+
+  pull_request:
+    branches:
+    - master # build after opening a new PR
+
+  schedule:
+    - cron: '0 2 * * *' # run at 2 AM UTC
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout repository code
+        uses: actions/checkout@v2
+
+      - name: Set up JDK
+        uses: actions/setup-java@v2
+        with:
+          java-version: 16
+          distribution: 'adopt'
+
+      - name: Install botan
+        run: sudo apt-get install -y botan
+
+      - name: Build with Maven
+        run: mvn --batch-mode --update-snapshots verify -Pcoverage
+
+      - name: Generate JaCoCo Badge
+        id: jacoco
+        uses: cicirello/jacoco-badge-generator@v2
+        with:
+          generate-branches-badge: true
+          generate-summary: true
+          fail-on-coverage-decrease: true
+          fail-on-branches-decrease: true
+
+      - name: Log coverage percentages to workflow output
+        run: |
+          echo "coverage = ${{ steps.jacoco.outputs.coverage }}"
+          echo "branches = ${{ steps.jacoco.outputs.branches }}"
+
+      - name: Add new badge
+        uses: EndBug/add-and-commit@v7
+        with:
+          default_author: github_actions
+          message: '[ci/cd] upload code coverage badge'
+          add: '*.svg'
+
+      - name: Upload JaCoCo coverage report as a workflow artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: jacoco-report
+          path: target/site/jacoco/
