@@ -36,6 +36,9 @@ jobs:
 
       - name: Install botan
         run: brew install botan
+        id: install_botan
 
       - name: Build with Maven
         run: mvn --batch-mode --update-snapshots verify
+        env: 
+          DYLD_FALLBACK_LIBRARY_PATH:${{ steps.tests.outputs.stdout }}/lib
