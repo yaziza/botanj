@@ -41,6 +41,9 @@ jobs:
         run: botan config prefix
         id: botan_prefix
 
+      - name: output python version
+        run: echo ${{ steps.botan_prefix.outputs.stdout }}
+        
       - name: Build with Maven
         run: mvn --batch-mode --update-snapshots verify
         env: 
