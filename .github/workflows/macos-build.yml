@@ -18,7 +18,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [macos-latest]
-        jdk: [11, 14, 16]
+        jdk: [11, 16, 17]
 
     runs-on: ${{ matrix.os }}
     env:
@@ -32,10 +32,19 @@ jobs:
         uses: actions/setup-java@v2
         with:
           java-version: ${{ matrix.jdk }}
-          distribution: 'adopt'
+          distribution: 'temurin'
 
       - name: Install botan
         run: brew install botan
 
+      - name: botan intall prefix
+        run: echo "::set-output name=path::$(botan config prefix)"
+        id: botan_prefix
+
+      - name: print botan lib path
+        run: echo ${{ steps.botan_prefix.outputs.path }}
+
       - name: Build with Maven
         run: mvn --batch-mode --update-snapshots verify
+        env:
+          DYLD_LIBRARY_PATH: ${{ steps.botan_prefix.outputs.path }}/lib
