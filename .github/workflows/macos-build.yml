@@ -18,7 +18,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [macos-latest]
-        jdk: [11, 14, 16]
+        jdk: [11] #[11, 14, 16]
 
     runs-on: ${{ matrix.os }}
     env:
@@ -41,9 +41,14 @@ jobs:
         run: echo "::set-output name=path::$(botan config prefix)"
         id: botan_prefix
 
-      - name: output python version
+      - name: print botan path
         run: echo ${{ steps.botan_prefix.outputs.path }}
-        
+
+      - name: print botan version
+        run: |
+          cd ${{ steps.botan_prefix.outputs.path }}/lib
+          ls
+
       - name: Build with Maven
         run: mvn --batch-mode --update-snapshots verify
         env:
