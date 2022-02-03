@@ -47,10 +47,9 @@ jobs:
       - name: print botan version
         run: |
           cd ${{ steps.botan_prefix.outputs.path }}/lib
-          ls |
-          otool -L ${{ steps.botan_prefix.outputs.path }}/lib/libbotan-2.dylib
+          ls 
 
       - name: Build with Maven
         run: mvn --batch-mode --update-snapshots verify
         env:
-          DYLD_LIBRARY_PATH: ${{ steps.botan_prefix.outputs.path }}/lib:/usr/local/opt/sqlite/lib
+          DYLD_LIBRARY_PATH: ${{ steps.botan_prefix.outputs.path }}/lib
