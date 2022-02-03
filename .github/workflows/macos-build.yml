@@ -47,7 +47,8 @@ jobs:
       - name: print botan version
         run: |
           cd ${{ steps.botan_prefix.outputs.path }}/lib
-          ls
+          ls |
+          otool -L ${{ steps.botan_prefix.outputs.path }}/lib/libbotan-2.dylib
 
       - name: Build with Maven
         run: mvn --batch-mode --update-snapshots verify
