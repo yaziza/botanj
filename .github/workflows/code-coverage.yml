@@ -24,7 +24,7 @@ jobs:
         uses: actions/setup-java@v2
         with:
           java-version: 16
-          distribution: 'adopt'
+          distribution: 'temurin'
 
       - name: Install botan
         run: sudo apt-get install -y botan
