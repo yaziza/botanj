@@ -36,15 +36,15 @@ jobs:
 
       - name: Install botan
         run: brew install botan
-        
+
       - name: botan intall prefix
-        run: botan config prefix
+        run: echo "::set-output name=path::$(botan config prefix)\n"
         id: botan_prefix
 
       - name: output python version
-        run: echo ${{ steps.botan_prefix.outputs.stdout }}
+        run: echo ${{ steps.botan_prefix.outputs.path }}
         
       - name: Build with Maven
         run: mvn --batch-mode --update-snapshots verify
-        env: 
-          DYLD_FALLBACK_LIBRARY_PATH:${{ steps.botan_prefix.outputs.stdout }}/lib
+#        env:
+#          DYLD_FALLBACK_LIBRARY_PATH:lib
