@@ -50,6 +50,6 @@ jobs:
           ls
 
       - name: Build with Maven
-        run: mvn --batch-mode --update-snapshots verify
+        run: mvn --update-snapshots verify
         env:
           DYLD_LIBRARY_PATH: ${{ steps.botan_prefix.outputs.path }}/lib
