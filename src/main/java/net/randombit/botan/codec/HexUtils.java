@@ -15,7 +15,6 @@ import static net.randombit.botan.util.BotanUtil.verifyInput;
 import static net.randombit.botan.Constants.EMPTY_BYTE_ARRAY;
 
 import java.util.Arrays;
-import java.util.List;
 
 import jnr.ffi.byref.NativeLongByReference;
 
@@ -27,8 +26,6 @@ public final class HexUtils {
             '0', '1', '2', '3', '4', '5',
             '6', '7', '8', '9', ' '
     };
-
-    private static final List<Character> ALLOWED_CHARS_LIST = Arrays.asList(ALLOWED_CHARS);
 
     private HexUtils() {
         // Not meant to be instantiated

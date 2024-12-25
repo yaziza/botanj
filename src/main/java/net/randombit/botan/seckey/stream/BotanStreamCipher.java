@@ -12,7 +12,6 @@ package net.randombit.botan.seckey.stream;
 import static net.randombit.botan.Constants.BOTAN_DO_FINAL_FLAG;
 import static net.randombit.botan.Constants.BOTAN_UPDATE_FLAG;
 import static net.randombit.botan.Constants.EMPTY_BYTE_ARRAY;
-import static net.randombit.botan.util.BotanUtil.isNullOrEmpty;
 
 import javax.crypto.NoSuchPaddingException;
 import java.util.Arrays;
