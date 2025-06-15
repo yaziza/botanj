@@ -30,15 +30,14 @@ jobs:
         run: sudo apt-get install -y botan
 
       - name: Build with Maven
-        run: mvn --batch-mode --update-snapshots verify -Pcoverage
+        run: mvn clean verify jacoco:report
 
       - name: Generate JaCoCo Badge
         id: jacoco
-        uses: cicirello/jacoco-badge-generator@v2
+        uses: cicirello/jacoco-badge-generator@v2.12.0
         with:
           generate-branches-badge: true
           generate-summary: true
-          jacoco-csv-file: build/reports/jacoco/test/jacocoTestReport.csv
           fail-on-coverage-decrease: true
           fail-on-branches-decrease: true
 
