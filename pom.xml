@@ -28,7 +28,7 @@
 
         <!-- test dependencies versions -->
         <junit-version>5.8.2</junit-version>
-        <bouncy-castle-version>1.70</bouncy-castle-version>
+        <bouncy-castle-version>1.81</bouncy-castle-version>
         <log4j-version>2.17.2</log4j-version>
     </properties>
 
@@ -85,7 +85,7 @@
         <!-- https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk15on -->
         <dependency>
             <groupId>org.bouncycastle</groupId>
-            <artifactId>bcprov-jdk15on</artifactId>
+            <artifactId>bcprov-jdk18on</artifactId>
             <version>${bouncy-castle-version}</version>
             <scope>test</scope>
         </dependency>
