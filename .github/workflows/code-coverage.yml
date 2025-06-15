@@ -18,10 +18,10 @@ jobs:
 
     steps:
       - name: checkout repository code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Set up JDK
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@v4
         with:
           java-version: 16
           distribution: 'adopt'
@@ -38,6 +38,7 @@ jobs:
         with:
           generate-branches-badge: true
           generate-summary: true
+          jacoco-csv-file: build/reports/jacoco/test/jacocoTestReport.csv
           fail-on-coverage-decrease: true
           fail-on-branches-decrease: true
 
@@ -54,7 +55,7 @@ jobs:
           add: '*.svg'
 
       - name: Upload JaCoCo coverage report as a workflow artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: jacoco-report
           path: target/site/jacoco/

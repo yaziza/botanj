@@ -19,17 +19,17 @@
 
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
-        <maven-surefire-version>2.22.2</maven-surefire-version>
-        <maven-checkstyle-version>3.1.1</maven-checkstyle-version>
-        <jacoco.plugin.version>0.8.7</jacoco.plugin.version>
+        <maven-surefire-version>3.5.3</maven-surefire-version>
+        <maven-checkstyle-version>3.6.0</maven-checkstyle-version>
+        <jacoco.plugin.version>0.8.13</jacoco.plugin.version>
 
         <!-- lib dependencies version -->
-        <jnr-ffi-version>2.1.12</jnr-ffi-version>
+        <jnr-ffi-version>2.2.17</jnr-ffi-version>
 
         <!-- test dependencies versions -->
-        <junit-version>5.6.2</junit-version>
-        <bouncy-castle-version>1.67</bouncy-castle-version>
-        <log4j-version>2.17.1</log4j-version>
+        <junit-version>5.8.2</junit-version>
+        <bouncy-castle-version>1.70</bouncy-castle-version>
+        <log4j-version>2.17.2</log4j-version>
     </properties>
 
     <dependencies>
@@ -108,6 +108,9 @@
 
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <argLine>-Djava.library.path=/opt/homebrew/Cellar/botan@2/2.19.5/lib</argLine>
+                </configuration>
                 <version>${maven-surefire-version}</version>
             </plugin>
 
@@ -158,8 +161,8 @@
                         </goals>
                     </execution>
                     <execution>
-                        <id>report</id>
-                        <phase>prepare-package</phase>
+                        <id>generate-code-coverage-report</id>
+                        <phase>test</phase>
                         <goals>
                             <goal>report</goal>
                         </goals>

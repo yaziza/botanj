@@ -17,8 +17,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest]
-        jdk: [11, 14, 16]
+        os: [macos-14]
+        jdk: [11, 16, 21, 24]
 
     runs-on: ${{ matrix.os }}
     env:
@@ -26,16 +26,19 @@ jobs:
 
     steps:
       - name: checkout repository code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Set up JDK
         uses: actions/setup-java@v2
         with:
           java-version: ${{ matrix.jdk }}
-          distribution: 'adopt'
+          distribution: 'temurin'
 
       - name: Install botan
-        run: brew install botan
+        run: brew install botan@2
 
       - name: Build with Maven
-        run: mvn --batch-mode --update-snapshots verify
+        run: |
+          echo 'export PATH="/opt/homebrew/opt/botan@2/bin:$PATH"' >> /Users/runner/.bash_profile
+          source /Users/runner/.bash_profile
+          mvn --batch-mode --update-snapshots verify
