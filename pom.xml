@@ -16,7 +16,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!-- global project properties -->
-        <java.version>11</java.version>
+        <java.version>17</java.version>
+        <maven-compiler-plugin>3.14.0</maven-compiler-plugin>
         <maven-surefire-version>3.5.3</maven-surefire-version>
         <maven-checkstyle-version>3.6.0</maven-checkstyle-version>
         <jacoco.plugin.version>0.8.13</jacoco.plugin.version>
@@ -94,7 +95,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.14.0</version>
+                <version>${maven-compiler-plugin}</version>
                 <configuration>
                     <source>${java.version}</source>
                     <target>${java.version}</target>
@@ -108,7 +109,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${maven-surefire-version}</version>
                 <configuration>
-                    <argLine>-Djava.library.path=/opt/homebrew/Cellar/botan@2/2.19.5/lib ${argLine}</argLine>
+                    <argLine>${argLine} -Djava.library.path=/opt/homebrew/Cellar/botan@2/2.19.5/lib</argLine>
                 </configuration>
             </plugin>
 
