@@ -26,9 +26,9 @@ implementation is compatible with other JSPs (e.g. Bouncy Castle), thus enabling
 Botanj uses [JNR-FFI](https://github.com/jnr/jnr-ffi) for loading Botan native code.
 
 ## Building The Library
-* Install native [Botan](https://botan.randombit.net/handbook/building.html) Library (tested with botan 2.{14/16}.0)
-* Install Apache [Maven](https://maven.apache.org/)
-* Install Java 11+ (tested with [openjdk 11](https://openjdk.java.net/))
+* Install native [Botan-3](https://botan.randombit.net/handbook/building.html) Library (tested with botan 3.8.1)
+* Install Apache [Maven-3](https://maven.apache.org/)
+* Install Java 17+ (tested with [openjdk 17/21/24](https://openjdk.java.net/))
 * Run tests:
 `mvn test`
 

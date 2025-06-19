@@ -34,11 +34,11 @@ jobs:
           java-version: ${{ matrix.jdk }}
           distribution: 'temurin'
 
-      - name: Install botan
-        run: brew install botan@2
+      - name: Install botan-3
+        run: brew install botan
 
       - name: Build with Maven
         run: |
-          echo 'export PATH="/opt/homebrew/opt/botan@2/bin:$PATH"' >> /Users/runner/.bash_profile
+          echo 'export PATH="/opt/homebrew/opt/botan/bin:$PATH"' >> /Users/runner/.bash_profile
           source /Users/runner/.bash_profile
           mvn --batch-mode --update-snapshots verify
