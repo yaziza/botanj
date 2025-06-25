@@ -26,8 +26,12 @@ jobs:
           java-version: 21
           distribution: 'adopt'
 
-      - name: Install botan
-        run: sudo apt-get install -y botan
+      - name: Install botan-3
+        run: |
+          git clone https://github.com/randombit/botan.git && cd botan/
+          python3 configure.py --prefix=/usr/local
+          make -j$(nproc) && make install
+          export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 
       - name: Build with Maven
         run: mvn --batch-mode --update-snapshots verify jacoco:report
