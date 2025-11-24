@@ -33,7 +33,7 @@ Botanj uses [JNR-FFI](https://github.com/jnr/jnr-ffi) for loading Botan native c
 * Install native [Botan](https://botan.randombit.net/handbook/building.html) Library
 * Install Apache [Maven-3](https://maven.apache.org/)
 * Install Java 17+ (tested with [openjdk 17/21/24](https://openjdk.java.net/))
-* Run tests:
+* Run tests: (Botan library path macOS example)
 `mvn test -Dnative.lib.path=/opt/homebrew/opt/botan/lib`
 
 ## Supported Primitives
