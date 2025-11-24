@@ -35,7 +35,11 @@ jobs:
           distribution: 'adopt'
 
       - name: Install botan
-        run: sudo apt-get install -y botan
+        run: |
+          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          brew install botan
 
       - name: Build with Maven
-        run: mvn --batch-mode --update-snapshots verify
+        run: |
+          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          mvn --batch-mode --update-snapshots verify -Dnative.lib.path=/home/linuxbrew/.linuxbrew/opt/botan/lib
