@@ -12,6 +12,9 @@
 
     <properties>
 
+        <!-- Botan Native lib path -->
+        <native.lib.path>${project.basedir}/native</native.lib.path>
+
         <!-- use UTF-8 encoding -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
@@ -109,7 +112,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${maven-surefire-version}</version>
                 <configuration>
-                    <argLine>${argLine} -Djava.library.path=/opt/homebrew/Cellar/botan@2/2.19.5/lib</argLine>
+                    <argLine>@{argLine} -Djava.library.path=${native.lib.path}</argLine>
                 </configuration>
             </plugin>
 

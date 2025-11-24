@@ -35,10 +35,10 @@ jobs:
           distribution: 'temurin'
 
       - name: Install botan
-        run: brew install botan@2
+        run: brew install botan
 
       - name: Build with Maven
         run: |
-          echo 'export PATH="/opt/homebrew/opt/botan@2/bin:$PATH"' >> /Users/runner/.bash_profile
+          echo 'export PATH="/opt/homebrew/opt/botan/bin:$PATH"' >> /Users/runner/.bash_profile
           source /Users/runner/.bash_profile
-          mvn --batch-mode --update-snapshots verify
+          mvn --batch-mode --update-snapshots verify -Dnative.lib.path=/opt/homebrew/opt/botan/lib

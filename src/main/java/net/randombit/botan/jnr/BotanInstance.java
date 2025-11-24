@@ -14,7 +14,7 @@ import jnr.ffi.LibraryLoader;
 
 public final class BotanInstance {
 
-    private static final String LIB_NAME = "botan-2";
+    private static final String LIB_NAME = "botan-3";
 
     private static volatile BotanLibrary NATIVE;
     private static UnsatisfiedLinkError loadError;
