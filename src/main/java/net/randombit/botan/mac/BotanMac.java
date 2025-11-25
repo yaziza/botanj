@@ -34,22 +34,17 @@ public abstract class BotanMac extends MacSpi {
     private static final Cleaner CLEANER = Cleaner.create();
 
     /**
-     * Cleanup action for native MAC resources.
-     */
-    private static class MacCleanupAction implements Runnable {
-        private final Pointer macPointer;
-
-        MacCleanupAction(Pointer macPointer) {
-            this.macPointer = macPointer;
-        }
+         * Cleanup action for native MAC resources.
+         */
+        private record BotanMacCleanupAction(jnr.ffi.Pointer macPointer) implements Runnable {
 
         @Override
-        public void run() {
-            if (macPointer != null) {
-                singleton().botan_mac_destroy(macPointer);
+            public void run() {
+                if (macPointer != null) {
+                    singleton().botan_mac_destroy(macPointer);
+                }
             }
         }
-    }
 
     /**
      * Holds the name of the MAC algorithm.
@@ -79,7 +74,7 @@ public abstract class BotanMac extends MacSpi {
     /**
      * Tracks whether botan_mac_final has been called since the last update.
      */
-    private boolean finalized = false;
+    private boolean macFinalized = false;
 
     /**
      * Stores the key for re-initialization after reset.
@@ -95,7 +90,6 @@ public abstract class BotanMac extends MacSpi {
     /**
      * Gets the native botan cipher name (e.g. 'CMAC(AES-128)').
      *
-     * @param keySize the key size
      * @param keySize the key size
      * @return {@link String} containing the Botan MAC name.
      */
@@ -122,7 +116,7 @@ public abstract class BotanMac extends MacSpi {
         checkNativeCall(err, "botan_mac_init");
 
         // Register cleaner for the newly created MAC object
-        cleanable = CLEANER.register(this, new MacCleanupAction(macRef.getValue()));
+        cleanable = CLEANER.register(this, new BotanMacCleanupAction(macRef.getValue()));
 
         BotanUtil.FourParameterFunction<Pointer, NativeLongByReference> getKeySpec = (a, b, c, d) -> {
             return singleton().botan_mac_get_keyspec(a, b, c, d);
@@ -134,7 +128,7 @@ public abstract class BotanMac extends MacSpi {
         checkNativeCall(err, "botan_mac_set_key");
 
         currentKey = key.getEncoded();
-        finalized = false;
+        macFinalized = false;
     }
 
     @Override
@@ -151,7 +145,7 @@ public abstract class BotanMac extends MacSpi {
         final int err = singleton().botan_mac_update(macRef.getValue(), bytes, len);
         checkNativeCall(err, "botan_mac_update");
 
-        finalized = false;
+        macFinalized = false;
     }
 
     @Override
@@ -160,7 +154,7 @@ public abstract class BotanMac extends MacSpi {
         final int err = singleton().botan_mac_final(macRef.getValue(), result);
         checkNativeCall(err, "botan_mac_final");
 
-        finalized = true;
+        macFinalized = true;
 
         return result;
     }
@@ -168,7 +162,7 @@ public abstract class BotanMac extends MacSpi {
     @Override
     protected void engineReset() {
         // If botan_mac_final has already been called, the MAC is already reset
-        if (!finalized) {
+        if (!macFinalized) {
             // Otherwise, call botan_mac_clear to reset the state and re-set the key
             int err = singleton().botan_mac_clear(macRef.getValue());
             checkNativeCall(err, "botan_mac_clear");
@@ -176,7 +170,7 @@ public abstract class BotanMac extends MacSpi {
             err = singleton().botan_mac_set_key(macRef.getValue(), currentKey, currentKey.length);
             checkNativeCall(err, "botan_mac_set_key");
         }
-        finalized = false;
+        macFinalized = false;
     }
 
     // CMAC

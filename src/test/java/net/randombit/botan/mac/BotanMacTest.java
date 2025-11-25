@@ -113,8 +113,30 @@ public class BotanMacTest {
 
     @ParameterizedTest
     @CsvFileSource(resources = "/mac/mac.csv", numLinesToSkip = 1)
-    @DisplayName("Test MAC reset")
+    @DisplayName("Test MAC reset (Only for Botan)")
     public void testRestDigest(String algorithm, int keySize) throws GeneralSecurityException {
+        final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
+
+        final Mac bc = Mac.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
+        final Mac botan = Mac.getInstance(algorithm, BotanProvider.NAME);
+
+        bc.init(key);
+        botan.init(key);
+
+        botan.update("hello world".getBytes());
+        botan.reset();
+
+        final byte[] expected = bc.doFinal("some input".getBytes());
+        final byte[] actual = botan.doFinal("some input".getBytes());
+
+        assertArrayEquals(expected, actual, "MAC mismatch with Bouncy Castle provider for algorithm: "
+                + algorithm);
+    }
+
+    @ParameterizedTest
+    @CsvFileSource(resources = "/mac/mac.csv", numLinesToSkip = 1)
+    @DisplayName("Test MAC reset (BC also reset)")
+    public void testBothRestDigest(String algorithm, int keySize) throws GeneralSecurityException {
         final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
 
         final Mac bc = Mac.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
@@ -234,9 +256,10 @@ public class BotanMacTest {
             LOG.info("Step 1: Creating MAC instance");
             Mac mac = Mac.getInstance("HMAC-SHA256", BotanProvider.NAME);
 
-            LOG.info("Step 2: First initialization with key1");
-            SecretKeySpec key1 = new SecretKeySpec(new byte[32], "HMAC-SHA256");
-            mac.init(key1);
+            LOG.info("Step 2: First initialization with first Key");
+            SecretKeySpec firstKey = new SecretKeySpec(new byte[32], "HMAC-SHA256");
+
+            mac.init(firstKey);
             mac.update("test data".getBytes());
             mac.doFinal();
 
@@ -244,15 +267,15 @@ public class BotanMacTest {
             // (only created, not destroyed)
             LOG.info("   - MAC created, not yet destroyed");
 
-            LOG.info("Step 3: Re-initialization with key2 (should trigger destroy)");
-            byte[] key2Bytes = new byte[32];
-            key2Bytes[0] = 1;
-            SecretKeySpec key2 = new SecretKeySpec(key2Bytes, "HMAC-SHA256");
+            LOG.info("Step 3: Re-initialization with second Key (should trigger destroy)");
+            byte[] secondKeyBytes = new byte[32];
+            secondKeyBytes[0] = 1;
+            SecretKeySpec secondKey = new SecretKeySpec(secondKeyBytes, "HMAC-SHA256");
 
             // Reset invocation count to focus on the re-init
             clearInvocations(spyLibrary);
 
-            mac.init(key2);
+            mac.init(secondKey);
             mac.update("more test data".getBytes());
             mac.doFinal();
 
@@ -285,8 +308,8 @@ public class BotanMacTest {
             Mac mac = Mac.getInstance("HMAC-SHA256", BotanProvider.NAME);
 
             // First init - no destroy expected yet
-            SecretKeySpec key0 = new SecretKeySpec(new byte[32], "HMAC-SHA256");
-            mac.init(key0);
+            SecretKeySpec firstKey = new SecretKeySpec(new byte[32], "HMAC-SHA256");
+            mac.init(firstKey);
             mac.doFinal("test".getBytes());
 
             // Clear initial calls
@@ -294,11 +317,11 @@ public class BotanMacTest {
 
             // Re-init 5 times - should call destroy 5 times
             for (int i = 1; i <= 5; i++) {
-                byte[] keyBytes = new byte[32];
-                keyBytes[0] = (byte) i;
-                SecretKeySpec key = new SecretKeySpec(keyBytes, "HMAC-SHA256");
+                byte[] roundKeyBytes = new byte[32];
+                roundKeyBytes[0] = (byte) i;
+                SecretKeySpec roundKey = new SecretKeySpec(roundKeyBytes, "HMAC-SHA256");
 
-                mac.init(key);
+                mac.init(roundKey);
                 mac.doFinal("test".getBytes());
                 LOG.info("   Re-init #{} completed", i);
             }
@@ -381,9 +404,9 @@ public class BotanMacTest {
             LOG.info("   - botan_mac_init() called");
 
             LOG.info("Re-init (should destroy first, then init):");
-            byte[] key2 = new byte[32];
-            key2[0] = 1;
-            mac.init(new SecretKeySpec(key2, "HMAC-SHA256"));
+            byte[] secondKey = new byte[32];
+            secondKey[0] = 1;
+            mac.init(new SecretKeySpec(secondKey, "HMAC-SHA256"));
 
             // Create an InOrder verifier
             var inOrder = inOrder(spyLibrary);
