@@ -15,6 +15,7 @@ import static net.randombit.botan.util.BotanUtil.checkKeySize;
 import static net.randombit.botan.util.BotanUtil.checkSecretKey;
 
 import javax.crypto.MacSpi;
+import java.lang.ref.Cleaner;
 import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.spec.AlgorithmParameterSpec;
@@ -26,6 +27,29 @@ import jnr.ffi.byref.PointerByReference;
 import net.randombit.botan.util.BotanUtil;
 
 public abstract class BotanMac extends MacSpi {
+
+    /**
+     * Shared Cleaner instance for all BotanMac instances.
+     */
+    private static final Cleaner CLEANER = Cleaner.create();
+
+    /**
+     * Cleanup action for native MAC resources.
+     */
+    private static class MacCleanupAction implements Runnable {
+        private final Pointer macPointer;
+
+        MacCleanupAction(Pointer macPointer) {
+            this.macPointer = macPointer;
+        }
+
+        @Override
+        public void run() {
+            if (macPointer != null) {
+                singleton().botan_mac_destroy(macPointer);
+            }
+        }
+    }
 
     /**
      * Holds the name of the MAC algorithm.
@@ -43,9 +67,24 @@ public abstract class BotanMac extends MacSpi {
     private final PointerByReference macRef;
 
     /**
+     * Cleaner registration for automatic cleanup.
+     */
+    private Cleaner.Cleanable cleanable;
+
+    /**
      * Holds a dummy buffer for writing single bytes to the MAC.
      */
     private final byte[] singleByte = new byte[1];
+
+    /**
+     * Tracks whether botan_mac_final has been called since the last update.
+     */
+    private boolean finalized = false;
+
+    /**
+     * Stores the key for re-initialization after reset.
+     */
+    private byte[] currentKey;
 
     private BotanMac(String name, int size) {
         this.name = name;
@@ -74,8 +113,16 @@ public abstract class BotanMac extends MacSpi {
         final byte[] encodedKey = checkSecretKey(key);
         final int length = encodedKey.length;
 
+        // Clean up existing MAC object if re-initializing
+        if (cleanable != null) {
+            cleanable.clean();
+        }
+
         int err = singleton().botan_mac_init(macRef, getBotanMacName(length), 0);
         checkNativeCall(err, "botan_mac_init");
+
+        // Register cleaner for the newly created MAC object
+        cleanable = CLEANER.register(this, new MacCleanupAction(macRef.getValue()));
 
         BotanUtil.FourParameterFunction<Pointer, NativeLongByReference> getKeySpec = (a, b, c, d) -> {
             return singleton().botan_mac_get_keyspec(a, b, c, d);
@@ -85,6 +132,9 @@ public abstract class BotanMac extends MacSpi {
 
         err = singleton().botan_mac_set_key(macRef.getValue(), key.getEncoded(), length);
         checkNativeCall(err, "botan_mac_set_key");
+
+        currentKey = key.getEncoded();
+        finalized = false;
     }
 
     @Override
@@ -100,6 +150,8 @@ public abstract class BotanMac extends MacSpi {
 
         final int err = singleton().botan_mac_update(macRef.getValue(), bytes, len);
         checkNativeCall(err, "botan_mac_update");
+
+        finalized = false;
     }
 
     @Override
@@ -108,13 +160,23 @@ public abstract class BotanMac extends MacSpi {
         final int err = singleton().botan_mac_final(macRef.getValue(), result);
         checkNativeCall(err, "botan_mac_final");
 
+        finalized = true;
+
         return result;
     }
 
     @Override
     protected void engineReset() {
-        final int err = singleton().botan_mac_clear(macRef.getValue());
-        checkNativeCall(err, "botan_mac_clear");
+        // If botan_mac_final has already been called, the MAC is already reset
+        if (!finalized) {
+            // Otherwise, call botan_mac_clear to reset the state and re-set the key
+            int err = singleton().botan_mac_clear(macRef.getValue());
+            checkNativeCall(err, "botan_mac_clear");
+
+            err = singleton().botan_mac_set_key(macRef.getValue(), currentKey, currentKey.length);
+            checkNativeCall(err, "botan_mac_set_key");
+        }
+        finalized = false;
     }
 
     // CMAC

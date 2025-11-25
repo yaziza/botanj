@@ -108,11 +108,11 @@ public class BotanMacTest {
         bc.init(key);
         botan.init(key);
 
+        bc.update("hello world".getBytes());
         botan.update("hello world".getBytes());
-        botan.reset();
 
-        //TODO: check bc rest and remove this
-        botan.init(key);
+        bc.reset();
+        botan.reset();
 
         final byte[] expected = bc.doFinal("some input".getBytes());
         final byte[] actual = botan.doFinal("some input".getBytes());
