@@ -12,6 +12,162 @@ package net.randombit.botan.jnr;
 import com.sun.jdi.NativeMethodException;
 import jnr.ffi.LibraryLoader;
 
+/**
+ * Singleton manager for the Botan native library instance with lazy initialization and error handling.
+ *
+ * <p>This class is responsible for loading the Botan native library through JNR-FFI and providing
+ * centralized access to the native function bindings. It implements thread-safe singleton pattern with
+ * lazy initialization and comprehensive error handling for library loading failures.</p>
+ *
+ * <h2>Purpose and Responsibilities</h2>
+ *
+ * <ul>
+ *   <li><b>Library Loading:</b> Uses JNR-FFI LibraryLoader to load the native Botan library ("botan-3")</li>
+ *   <li><b>Singleton Management:</b> Ensures only one instance of BotanLibrary exists per JVM</li>
+ *   <li><b>Lazy Initialization:</b> Library is loaded on first access, not at class loading time</li>
+ *   <li><b>Error Tracking:</b> Captures and preserves library loading errors for later diagnosis</li>
+ *   <li><b>Centralized Error Checking:</b> Provides utility methods for validating native call results</li>
+ * </ul>
+ *
+ * <h2>Thread Safety</h2>
+ *
+ * <p>The singleton initialization uses double-checked locking with volatile field for thread-safe
+ * lazy initialization:
+ * <ul>
+ *   <li>First check without synchronization (fast path for common case)</li>
+ *   <li>Synchronized block for initialization (ensures only one thread initializes)</li>
+ *   <li>Second check inside synchronized block (prevents race conditions)</li>
+ *   <li>Volatile NATIVE field ensures visibility across threads</li>
+ * </ul>
+ *
+ * <h2>Usage Patterns</h2>
+ *
+ * <h3>Getting the Native Library Instance</h3>
+ * <pre>{@code
+ * // Get singleton instance
+ * BotanLibrary lib = BotanInstance.singleton();
+ *
+ * // Call native functions
+ * String version = lib.botan_version_string();
+ * int err = lib.botan_hash_init(hashRef, "SHA-256", 0);
+ * }</pre>
+ *
+ * <h3>Checking Library Availability</h3>
+ * <pre>{@code
+ * try {
+ *     BotanInstance.checkAvailability();
+ *     System.out.println("Botan library loaded successfully");
+ * } catch (UnsatisfiedLinkError e) {
+ *     System.err.println("Failed to load Botan: " + e.getMessage());
+ *     // Handle missing library (e.g., fall back to another provider)
+ * }
+ * }</pre>
+ *
+ * <h3>Error Checking for Native Calls</h3>
+ * <pre>{@code
+ * PointerByReference hashRef = new PointerByReference();
+ * int err = lib.botan_hash_init(hashRef, "SHA-256", 0);
+ *
+ * // Check for errors - throws NativeMethodException if err != 0
+ * BotanInstance.checkNativeCall(err, "botan_hash_init");
+ *
+ * // Or get error description manually
+ * if (err != 0) {
+ *     String description = lib.botan_error_description(err);
+ *     throw new RuntimeException("Hash init failed: " + description);
+ * }
+ * }</pre>
+ *
+ * <h2>Library Loading Process</h2>
+ *
+ * <p>The native library loading follows this sequence:</p>
+ * <ol>
+ *   <li>First call to {@link #singleton()} triggers initialization</li>
+ *   <li>JNR-FFI LibraryLoader searches for "botan-3" library:
+ *     <ul>
+ *       <li>System library paths (e.g., /usr/lib, /usr/local/lib)</li>
+ *       <li>Paths specified in java.library.path system property</li>
+ *       <li>Platform-specific library names (libbotan-3.so, libbotan-3.dylib, botan-3.dll)</li>
+ *     </ul>
+ *   </li>
+ *   <li>If found, library is loaded and BotanLibrary proxy is created</li>
+ *   <li>If not found, UnsatisfiedLinkError is caught and stored in {@code loadError}</li>
+ *   <li>Subsequent calls to {@link #singleton()} return the cached instance (or null if loading failed)</li>
+ * </ol>
+ *
+ * <h2>Error Handling Strategy</h2>
+ *
+ * <p>This class implements a deferred error handling approach:
+ * <ul>
+ *   <li><b>Loading Errors:</b> Library loading failures are captured but not thrown immediately</li>
+ *   <li><b>Silent Failure:</b> {@link #singleton()} returns null if loading failed</li>
+ *   <li><b>Explicit Check:</b> {@link #checkAvailability()} throws the original error when called</li>
+ *   <li><b>Rationale:</b> Allows code to check availability without forcing exceptions at static init time</li>
+ * </ul>
+ *
+ * <h2>Native Call Error Codes</h2>
+ *
+ * <p>Botan native functions return integer error codes. Common codes include:</p>
+ * <ul>
+ *   <li><b>0:</b> Success</li>
+ *   <li><b>-1:</b> Invalid argument</li>
+ *   <li><b>-2:</b> Bad flag</li>
+ *   <li><b>-10:</b> Not implemented</li>
+ *   <li><b>-20:</b> Bad MAC (authentication failure)</li>
+ *   <li><b>-30:</b> Insufficient buffer space</li>
+ *   <li><b>-100:</b> Unknown error</li>
+ * </ul>
+ *
+ * <p>Use {@link BotanLibrary#botan_error_description(int)} or {@link #checkNativeCall(int, String)}
+ * to convert error codes to human-readable messages.</p>
+ *
+ * <h2>Integration with Provider</h2>
+ *
+ * <p>The BotanProvider calls {@link #checkAvailability()} during construction to ensure the native
+ * library is available before registering algorithms:</p>
+ *
+ * <pre>{@code
+ * public BotanProvider() {
+ *     super(NAME, "", INFO);
+ *
+ *     // Will throw UnsatisfiedLinkError if library not available
+ *     BotanInstance.checkAvailability();
+ *
+ *     // Register algorithms...
+ *     addMdAlgorithm();
+ *     addMacAlgorithm();
+ *     // ...
+ * }
+ * }</pre>
+ *
+ * <h2>Troubleshooting Library Loading</h2>
+ *
+ * <p>If the library fails to load:</p>
+ * <ul>
+ *   <li><b>Check Installation:</b> Ensure Botan 3.x is installed (e.g., {@code brew install botan} on macOS)</li>
+ *   <li><b>Check Version:</b> Verify Botan version is 3.0.0 or higher</li>
+ *   <li><b>Check Library Path:</b> Set java.library.path to include Botan library directory:
+ *       <pre>java -Djava.library.path=/opt/homebrew/lib ...</pre>
+ *   </li>
+ *   <li><b>Check Platform:</b> Ensure platform-specific library exists (libbotan-3.so, libbotan-3.dylib, etc.)</li>
+ *   <li><b>Check Dependencies:</b> Verify all native dependencies of Botan are available</li>
+ * </ul>
+ *
+ * <h2>Implementation Notes</h2>
+ *
+ * <ul>
+ *   <li><b>Final Class:</b> Cannot be subclassed (singleton pattern enforcement)</li>
+ *   <li><b>Private Constructor:</b> Cannot be instantiated (utility class)</li>
+ *   <li><b>Static Methods Only:</b> All functionality provided through static methods</li>
+ *   <li><b>Volatile Field:</b> NATIVE field is volatile for safe publication across threads</li>
+ *   <li><b>Error Preservation:</b> Original UnsatisfiedLinkError is preserved for accurate diagnosis</li>
+ * </ul>
+ *
+ * @see BotanLibrary
+ * @see jnr.ffi.LibraryLoader
+ * @author Yasser Aziza
+ * @since 0.1.0
+ */
 public final class BotanInstance {
 
     private static final String LIB_NAME = "botan-3";
@@ -51,7 +207,7 @@ public final class BotanInstance {
     /**
      * Checks whether or not the native library was successfully loaded.
      *
-     * @throws {@link UnsatisfiedLinkError} that was encountered while attempting to load the library.
+     * @throws UnsatisfiedLinkError if the library failed to load
      */
     public static void checkAvailability() {
         if (loadError != null) {
@@ -63,7 +219,8 @@ public final class BotanInstance {
      * Checks whether a native lib call was successful.
      *
      * @param result int result from calling botan native
-     * @throws {@link NativeMethodException} in case of error
+     * @param method the native method name for error reporting
+     * @throws NativeMethodException in case of error
      */
     public static void checkNativeCall(int result, String method) throws NativeMethodException {
         if (result != 0) {
