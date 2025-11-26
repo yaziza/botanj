@@ -77,7 +77,7 @@ public abstract class BotanAeadCipher extends BotanBlockCipher {
         }
 
         checkNonceValid(iv.length);
-        //TODO: check tag length valid
+        checkTagValid(tLen);
     }
 
     @Override
@@ -138,6 +138,21 @@ public abstract class BotanAeadCipher extends BotanBlockCipher {
         }
     }
 
+    private void checkTagValid(int tagLength) {
+        if (!isValidTagLength(tagLength)) {
+            String msg = String.format("Tag length %d bits not allowed for algorithm %s", tagLength, name);
+            throw new IllegalArgumentException(msg);
+        }
+    }
+
+    /**
+     * Checks whether the given tag length is supported.
+     *
+     * @param tagLength the tag length in bits
+     * @return {@code true} if the given tag length is supported, {@code false} otherwise.
+     */
+    protected abstract boolean isValidTagLength(int tagLength);
+
     /**
      * AES-GCM (Galois/Counter Mode) cipher implementation.
      */
@@ -158,6 +173,14 @@ public abstract class BotanAeadCipher extends BotanBlockCipher {
         @Override
         protected boolean isValidNonceLength(int nonceLength) {
             return nonceLength > 0;
+        }
+
+        @Override
+        protected boolean isValidTagLength(int tagLength) {
+            // GCM supports tag lengths: 96, 104, 112, 120, 128 bits
+            // 128 is most common, 96 is minimum recommended
+            return tagLength == 96 || tagLength == 104 || tagLength == 112
+                || tagLength == 120 || tagLength == 128;
         }
     }
 
@@ -181,6 +204,13 @@ public abstract class BotanAeadCipher extends BotanBlockCipher {
         @Override
         protected boolean isValidNonceLength(int nonceLength) {
             return nonceLength >= 0 && nonceLength <= 16;
+        }
+
+        @Override
+        protected boolean isValidTagLength(int tagLength) {
+            // CCM supports tag lengths: 32, 48, 64, 80, 96, 112, 128 bits
+            // Must be even number of bytes (4-16 bytes)
+            return tagLength >= 32 && tagLength <= 128 && tagLength % 16 == 0;
         }
     }
 
@@ -206,6 +236,12 @@ public abstract class BotanAeadCipher extends BotanBlockCipher {
             // SIV supports arbitrary nonce lengths
             return true;
         }
+
+        @Override
+        protected boolean isValidTagLength(int tagLength) {
+            // SIV always uses 128-bit tag (fixed)
+            return tagLength == 128;
+        }
     }
 
     /**
@@ -230,6 +266,13 @@ public abstract class BotanAeadCipher extends BotanBlockCipher {
             // EAX supports arbitrary nonce lengths
             return true;
         }
+
+        @Override
+        protected boolean isValidTagLength(int tagLength) {
+            // EAX supports any tag length that's a multiple of 8 bits
+            // Typically 128 bits, but can be any size
+            return tagLength > 0 && tagLength % 8 == 0 && tagLength <= 128;
+        }
     }
 
     /**
@@ -252,6 +295,13 @@ public abstract class BotanAeadCipher extends BotanBlockCipher {
         @Override
         protected boolean isValidNonceLength(int nonceLength) {
             return nonceLength != 0 && nonceLength < 16;
+        }
+
+        @Override
+        protected boolean isValidTagLength(int tagLength) {
+            // OCB supports tag lengths: 64, 96, 128 bits
+            // 128 is most common
+            return tagLength == 64 || tagLength == 96 || tagLength == 128;
         }
     }
 
