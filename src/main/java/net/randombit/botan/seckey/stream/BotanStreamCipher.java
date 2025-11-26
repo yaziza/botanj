@@ -16,9 +16,7 @@ import static net.randombit.botan.Constants.EMPTY_BYTE_ARRAY;
 import javax.crypto.NoSuchPaddingException;
 import java.util.Arrays;
 
-import net.randombit.botan.seckey.BotanBaseAsymmetricCipher;
-
-public abstract class BotanStreamCipher extends BotanBaseAsymmetricCipher {
+public abstract class BotanStreamCipher extends net.randombit.botan.seckey.BotanBaseSymmetricCipher {
 
     private BotanStreamCipher(String name) {
         super(name);

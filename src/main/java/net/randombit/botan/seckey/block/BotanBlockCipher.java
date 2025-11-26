@@ -25,11 +25,10 @@ import java.util.Arrays;
 import java.util.Objects;
 
 import jnr.ffi.byref.NativeLongByReference;
-import net.randombit.botan.seckey.BotanBaseAsymmetricCipher;
 import net.randombit.botan.seckey.CipherMode;
 import net.randombit.botan.util.PaddingAlgorithm;
 
-public abstract class BotanBlockCipher extends BotanBaseAsymmetricCipher {
+public abstract class BotanBlockCipher extends net.randombit.botan.seckey.BotanBaseSymmetricCipher {
 
     /**
      * Holds the {@link CipherMode}.

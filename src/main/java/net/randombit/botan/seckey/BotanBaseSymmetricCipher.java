@@ -44,10 +44,6 @@ import net.randombit.botan.util.BotanUtil;
  * Botan library functions via JNR-FFI. It implements automatic native resource management using the Java
  * {@link Cleaner} API to ensure native cipher objects are properly destroyed when no longer needed.</p>
  *
- * <p>The class name "BaseAsymmetricCipher" is a misnomer - it actually implements <b>symmetric</b> ciphers
- * (block ciphers, stream ciphers, and AEAD modes). The name predates the current architecture and is retained
- * for compatibility.</p>
- *
  * <h2>Cipher Categories</h2>
  *
  * <p>This base class supports three main categories of symmetric ciphers:
@@ -212,8 +208,6 @@ import net.randombit.botan.util.BotanUtil;
  *   <li><b>Cloning Not Supported</b> - Calling {@link #clone()} throws {@link CloneNotSupportedException}
  *       because native cipher state cannot be safely cloned</li>
  *   <li><b>Key Size Validation</b> - Key sizes are validated against Botan's key specification during initialization</li>
- *   <li><b>Nonce Reuse Warning</b> - The implementation includes a FIXME comment about preventing nonce reuse,
- *       which is a critical security concern for most cipher modes</li>
  *   <li><b>Memory Safety</b> - Native resources are guaranteed to be freed even if explicit cleanup is not called,
  *       thanks to the Cleaner API</li>
  *   <li><b>Mode Setting</b> - The JCE API method {@code setMode()} is not supported because the mode is
@@ -234,10 +228,10 @@ import net.randombit.botan.util.BotanUtil;
  * @author Yasser Aziza
  * @since 0.1.0
  */
-public abstract class BotanBaseAsymmetricCipher extends CipherSpi {
+public abstract class BotanBaseSymmetricCipher extends CipherSpi {
 
     /**
-     * Shared Cleaner instance for all BotanBaseAsymmetricCipher instances.
+     * Shared Cleaner instance for all BotanBaseSymmetricCipher instances.
      */
     private static final Cleaner CLEANER = Cleaner.create();
     /**
@@ -261,7 +255,7 @@ public abstract class BotanBaseAsymmetricCipher extends CipherSpi {
      */
     private Cleaner.Cleanable cleanable;
 
-    protected BotanBaseAsymmetricCipher(String name) {
+    protected BotanBaseSymmetricCipher(String name) {
         this.name = Objects.requireNonNull(name);
         this.cipherRef = new PointerByReference();
     }
@@ -365,7 +359,7 @@ public abstract class BotanBaseAsymmetricCipher extends CipherSpi {
         checkNativeCall(err, "botan_cipher_init");
 
         // Register cleaner for the newly created cipher object
-        cleanable = CLEANER.register(this, new net.randombit.botan.seckey.BotanBaseAsymmetricCipher.BotanCipherCleanupAction(cipherRef.getValue()));
+        cleanable = CLEANER.register(this, new net.randombit.botan.seckey.BotanBaseSymmetricCipher.BotanCipherCleanupAction(cipherRef.getValue()));
 
         BotanUtil.FourParameterFunction<Pointer, NativeLongByReference> getKeySpec = (a, b, c, d) -> {
             return singleton().botan_cipher_get_keyspec(a, b, c, d);
@@ -432,7 +426,7 @@ public abstract class BotanBaseAsymmetricCipher extends CipherSpi {
 
     @Override
     public Object clone() throws CloneNotSupportedException {
-        throw new CloneNotSupportedException("Cloning is not supported for BotanBaseAsymmetricCipher");
+        throw new CloneNotSupportedException("Cloning is not supported for BotanBaseSymmetricCipher");
     }
 
     /**
