@@ -29,7 +29,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringFormattedMessage;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.mockito.MockedStatic;
 
 @DisplayName("Botan message digest tests")
 public class BotanMessageDigestTest {

@@ -387,4 +387,17 @@ public class BotanMacTest {
         }
     }
 
+    @Test
+    @DisplayName("Verify clone throws CloneNotSupportedException")
+    public void testCloneThrowsException() throws Exception {
+        Mac mac = Mac.getInstance("HmacSHA256", BotanProvider.NAME);
+        SecretKeySpec key = new SecretKeySpec(new byte[32], "AES");
+        mac.init(key);
+        mac.update("test".getBytes());
+
+        assertThrows(CloneNotSupportedException.class, () -> {
+            mac.clone();
+        }, "clone() should throw CloneNotSupportedException");
+    }
+
 }

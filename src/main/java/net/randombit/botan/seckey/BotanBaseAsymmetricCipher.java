@@ -30,6 +30,7 @@ import java.security.spec.InvalidParameterSpecException;
 import java.util.Arrays;
 import java.util.Objects;
 
+import java.lang.ref.Cleaner;
 import jnr.ffi.Pointer;
 import jnr.ffi.byref.NativeLongByReference;
 import jnr.ffi.byref.PointerByReference;
@@ -38,9 +39,37 @@ import net.randombit.botan.util.BotanUtil;
 public abstract class BotanBaseAsymmetricCipher extends CipherSpi {
 
     /**
+     * Shared Cleaner instance for all BotanBaseAsymmetricCipher instances.
+     */
+    private static final Cleaner CLEANER = Cleaner.create();
+
+    /**
+     * Cleanup action for native Cipher resources.
+     */
+    private static class CipherCleanupAction implements Runnable {
+        private final Pointer cipherPointer;
+
+        CipherCleanupAction(Pointer cipherPointer) {
+            this.cipherPointer = cipherPointer;
+        }
+
+        @Override
+        public void run() {
+            if (cipherPointer != null) {
+                singleton().botan_cipher_destroy(cipherPointer);
+            }
+        }
+    }
+
+    /**
      * Holds the reference to the cipher object referenced by botan.
      */
     protected final PointerByReference cipherRef;
+
+    /**
+     * Cleaner registration for automatic cleanup.
+     */
+    private Cleaner.Cleanable cleanable;
 
     /**
      * Holds the name of the cipher algorithm.
@@ -152,8 +181,16 @@ public abstract class BotanBaseAsymmetricCipher extends CipherSpi {
         // Translate java cipher mode to botan native mode (0: Encryption, 1: Decryption)
         mode = Math.subtractExact(opmode, 1);
 
+        // Clean up existing cipher object if re-initializing
+        if (cleanable != null) {
+            cleanable.clean();
+        }
+
         int err = singleton().botan_cipher_init(cipherRef, algName, mode);
         checkNativeCall(err, "botan_cipher_init");
+
+        // Register cleaner for the newly created cipher object
+        cleanable = CLEANER.register(this, new CipherCleanupAction(cipherRef.getValue()));
 
         BotanUtil.FourParameterFunction<Pointer, NativeLongByReference> getKeySpec = (a, b, c, d) -> {
             return singleton().botan_cipher_get_keyspec(a, b, c, d);
@@ -216,6 +253,11 @@ public abstract class BotanBaseAsymmetricCipher extends CipherSpi {
             err = singleton().botan_cipher_start(cipherRef.getValue(), iv, iv.length);
             checkNativeCall(err, "botan_cipher_start");
         }
+    }
+
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        throw new CloneNotSupportedException("Cloning is not supported for BotanBaseAsymmetricCipher");
     }
 
 }
