@@ -392,6 +392,7 @@ public interface BotanLibrary {
      * @param minimumKeyLength if non-NULL, will be set to minimum keylength of MAC
      * @param maximumKeyLength if non-NULL, will be set to maximum keylength of MAC
      * @param keyLengthModulo  if non-NULL will be set to byte multiple of valid keys
+     * @return 0 on success, a negative value on failure
      */
     int botan_mac_get_keyspec(@In Pointer mac, @Out NativeLongByReference minimumKeyLength,
                               @Out NativeLongByReference maximumKeyLength,
@@ -402,7 +403,7 @@ public interface BotanLibrary {
      *
      * @param cipher cipher object
      * @param name   name of the cipher including operating mode and padding
-     * @param flags
+     * @param flags  initialization flags (typically 0)
      * @return 0 on success, a negative value on failure
      */
     int botan_cipher_init(@Out PointerByReference cipher, @In String name, @In long flags);
@@ -513,7 +514,7 @@ public interface BotanLibrary {
      * Encrypts some data.
      *
      * @param cipher        cipher object
-     * @param flags
+     * @param flags         operation flags (0 for update, 1 for final)
      * @param output        cipher output bytes
      * @param outputSize    cipher output size
      * @param outputWritten written output size

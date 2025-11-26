@@ -255,11 +255,22 @@ public abstract class BotanBaseSymmetricCipher extends CipherSpi {
      */
     private Cleaner.Cleanable cleanable;
 
+    /**
+     * Constructs a base symmetric cipher with the specified algorithm name.
+     *
+     * @param name the algorithm name
+     */
     protected BotanBaseSymmetricCipher(String name) {
         this.name = Objects.requireNonNull(name);
         this.cipherRef = new PointerByReference();
     }
 
+    /**
+     * Checks if the cipher is in decryption mode.
+     *
+     * @param mode the cipher mode
+     * @return true if decrypting, false otherwise
+     */
     protected static boolean isDecrypting(int mode) {
         return mode == 1;
     }
@@ -392,6 +403,14 @@ public abstract class BotanBaseSymmetricCipher extends CipherSpi {
     protected abstract byte[] engineDoFinal(byte[] input, int inputOffset, int inputLen)
             throws IllegalBlockSizeException;
 
+    /**
+     * Performs cipher operation using Botan native library.
+     *
+     * @param input input data
+     * @param inputLength length of input
+     * @param botanFlag Botan operation flag
+     * @return encrypted or decrypted output
+     */
     protected byte[] doCipher(byte[] input, int inputLength, int botanFlag) {
         final NativeLongByReference outputWritten = new NativeLongByReference();
         final NativeLongByReference inputConsumed = new NativeLongByReference();
@@ -413,6 +432,9 @@ public abstract class BotanBaseSymmetricCipher extends CipherSpi {
         return result;
     }
 
+    /**
+     * Resets the cipher to its initial state.
+     */
     protected void engineReset() {
         int err = singleton().botan_cipher_reset(cipherRef.getValue());
         checkNativeCall(err, "botan_cipher_reset");

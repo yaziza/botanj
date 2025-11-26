@@ -11,6 +11,9 @@ package net.randombit.botan.seckey;
 
 import net.randombit.botan.util.PaddingAlgorithm;
 
+/**
+ * Enumeration of supported cipher modes and their compatible padding algorithms.
+ */
 public enum CipherMode {
 
     /**
@@ -64,6 +67,12 @@ public enum CipherMode {
         this.supportedPadding = algorithms;
     }
 
+    /**
+     * Checks if the given padding algorithm is supported by this cipher mode.
+     *
+     * @param algorithm the padding algorithm to check
+     * @return true if supported, false otherwise
+     */
     public boolean isPaddingSupported(PaddingAlgorithm algorithm) {
         for (PaddingAlgorithm padding : supportedPadding) {
             if (padding == algorithm) {

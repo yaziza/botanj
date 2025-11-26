@@ -18,6 +18,9 @@ import java.util.Arrays;
 
 import jnr.ffi.byref.NativeLongByReference;
 
+/**
+ * Utility class for hexadecimal encoding and decoding operations.
+ */
 public final class HexUtils {
 
     private static final Character[] ALLOWED_CHARS = {

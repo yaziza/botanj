@@ -27,6 +27,9 @@ import java.util.Arrays;
 import net.randombit.botan.seckey.CipherMode;
 import net.randombit.botan.seckey.block.BotanBlockCipher;
 
+/**
+ * Base class for AEAD (Authenticated Encryption with Associated Data) cipher implementations.
+ */
 public abstract class BotanAeadCipher extends BotanBlockCipher {
 
     /**
@@ -135,9 +138,14 @@ public abstract class BotanAeadCipher extends BotanBlockCipher {
         }
     }
 
-    // AES-GCM
+    /**
+     * AES-GCM (Galois/Counter Mode) cipher implementation.
+     */
     public static final class AesGcm extends BotanAeadCipher {
 
+        /**
+         * Constructs a new AES-GCM cipher.
+         */
         public AesGcm() {
             super("AES", CipherMode.GCM, 16);
         }
@@ -153,9 +161,14 @@ public abstract class BotanAeadCipher extends BotanBlockCipher {
         }
     }
 
-    // AES-CCM
+    /**
+     * AES-CCM (Counter with CBC-MAC) cipher implementation.
+     */
     public static final class AesCcm extends BotanAeadCipher {
 
+        /**
+         * Constructs a new AES-CCM cipher.
+         */
         public AesCcm() {
             super("AES", CipherMode.CCM, 16);
         }
@@ -171,9 +184,14 @@ public abstract class BotanAeadCipher extends BotanBlockCipher {
         }
     }
 
-    // AES-SIV
+    /**
+     * AES-SIV (Synthetic Initialization Vector) cipher implementation.
+     */
     public static final class AesSiv extends BotanAeadCipher {
 
+        /**
+         * Constructs a new AES-SIV cipher.
+         */
         public AesSiv() {
             super("AES", CipherMode.SIV, 16);
         }
@@ -190,9 +208,14 @@ public abstract class BotanAeadCipher extends BotanBlockCipher {
         }
     }
 
-    // AES-EAX
+    /**
+     * AES-EAX cipher implementation.
+     */
     public static final class AesEax extends BotanAeadCipher {
 
+        /**
+         * Constructs a new AES-EAX cipher.
+         */
         public AesEax() {
             super("AES", CipherMode.EAX, 16);
         }
@@ -209,9 +232,14 @@ public abstract class BotanAeadCipher extends BotanBlockCipher {
         }
     }
 
-    // AES-OCB
+    /**
+     * AES-OCB (Offset Codebook Mode) cipher implementation.
+     */
     public static final class AesOcb extends BotanAeadCipher {
 
+        /**
+         * Constructs a new AES-OCB cipher.
+         */
         public AesOcb() {
             super("AES", CipherMode.OCB, 16);
         }

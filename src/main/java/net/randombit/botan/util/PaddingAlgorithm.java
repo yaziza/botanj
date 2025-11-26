@@ -14,6 +14,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * Enumeration of supported padding algorithms for block ciphers.
+ */
 public enum PaddingAlgorithm {
 
     /**
@@ -52,6 +55,13 @@ public enum PaddingAlgorithm {
         this.name = name;
     }
 
+    /**
+     * Returns the padding algorithm matching the given name.
+     *
+     * @param name the padding algorithm name
+     * @return the corresponding PaddingAlgorithm
+     * @throws NoSuchPaddingException if the algorithm is not supported
+     */
     public static PaddingAlgorithm fromName(String name) throws NoSuchPaddingException {
         List<PaddingAlgorithm> algorithm = Stream.of(PaddingAlgorithm.values())
                 .filter(p -> p.name.equalsIgnoreCase(name))
@@ -77,6 +87,11 @@ public enum PaddingAlgorithm {
         return (padding == PKCS5_PADDING) ? PKCS7_PADDING : padding;
     }
 
+    /**
+     * Gets the name of this padding algorithm as used by Botan.
+     *
+     * @return the padding algorithm name
+     */
     public String getName() {
         return name;
     }
