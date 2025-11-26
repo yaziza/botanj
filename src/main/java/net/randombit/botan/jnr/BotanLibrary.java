@@ -164,7 +164,6 @@ public interface BotanLibrary {
      * @param hash hash object
      * @return 0 if success, error if invalid object handle
      */
-    //TODO: do we really need this ?
     int botan_hash_destroy(@In Pointer hash);
 
     /**
@@ -233,7 +232,6 @@ public interface BotanLibrary {
      * @param mac MAC object
      * @return 0 if success, error if invalid object handle
      */
-    //TODO: do we really need this ?
     int botan_mac_destroy(@In Pointer mac);
 
     /**
@@ -393,7 +391,6 @@ public interface BotanLibrary {
      * @param cipher cipher object
      * @return 0 if success, error if invalid object handle
      */
-    //TODO: do we really need this ?
     int botan_cipher_destroy(@In Pointer cipher);
 
 }
