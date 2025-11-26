@@ -12,13 +12,33 @@ package net.randombit.botan.digest;
 import static net.randombit.botan.jnr.BotanInstance.checkNativeCall;
 import static net.randombit.botan.jnr.BotanInstance.singleton;
 
+import java.lang.ref.Cleaner;
 import java.security.MessageDigestSpi;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
+import jnr.ffi.Pointer;
 import jnr.ffi.byref.PointerByReference;
 
 public class BotanMessageDigest extends MessageDigestSpi implements Cloneable {
+
+    /**
+     * Shared Cleaner instance for all BotanMessageDigest instances.
+     */
+    private static final Cleaner CLEANER = Cleaner.create();
+
+    /**
+     * Cleanup action for native hash resources.
+     */
+    private record BotanHashCleanupAction(jnr.ffi.Pointer hashPointer) implements Runnable {
+
+        @Override
+        public void run() {
+            if (hashPointer != null) {
+                singleton().botan_hash_destroy(hashPointer);
+            }
+        }
+    }
 
     /**
      * Holds the name of the hashing algorithm.
@@ -36,6 +56,11 @@ public class BotanMessageDigest extends MessageDigestSpi implements Cloneable {
     private final PointerByReference hashRef;
 
     /**
+     * Cleaner registration for automatic cleanup.
+     */
+    private final Cleaner.Cleanable cleanable;
+
+    /**
      * Holds a dummy buffer for writing single bytes to the hash.
      */
     private final byte[] singleByte = new byte[1];
@@ -47,12 +72,18 @@ public class BotanMessageDigest extends MessageDigestSpi implements Cloneable {
 
         final int err = singleton().botan_hash_init(hashRef, name, 0);
         checkNativeCall(err, "botan_hash_init");
+
+        // Register cleaner for automatic cleanup on GC
+        this.cleanable = CLEANER.register(this, new BotanHashCleanupAction(hashRef.getValue()));
     }
 
     private BotanMessageDigest(String name, int size, PointerByReference hashRef) {
         this.name = name;
         this.size = size;
         this.hashRef = hashRef;
+
+        // Register cleaner for cloned instances as well
+        this.cleanable = CLEANER.register(this, new BotanHashCleanupAction(hashRef.getValue()));
     }
 
     @Override

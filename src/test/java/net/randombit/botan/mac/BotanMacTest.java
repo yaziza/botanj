@@ -16,7 +16,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.clearInvocations;
-import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
@@ -272,6 +271,8 @@ public class BotanMacTest {
             secondKeyBytes[0] = 1;
             SecretKeySpec secondKey = new SecretKeySpec(secondKeyBytes, "HMAC-SHA256");
 
+            verify(spyLibrary, never()).botan_mac_destroy(any(Pointer.class));
+
             // Reset invocation count to focus on the re-init
             clearInvocations(spyLibrary);
 
@@ -311,6 +312,8 @@ public class BotanMacTest {
             SecretKeySpec firstKey = new SecretKeySpec(new byte[32], "HMAC-SHA256");
             mac.init(firstKey);
             mac.doFinal("test".getBytes());
+
+            verify(spyLibrary, never()).botan_mac_destroy(any(Pointer.class));
 
             // Clear initial calls
             clearInvocations(spyLibrary);
@@ -381,47 +384,6 @@ public class BotanMacTest {
             LOG.info("   - botan_mac_destroy() NOT called during normal operations");
             LOG.info("   - Destroy only happens on re-init or GC");
             LOG.info("   - Behavior is correct and safe");
-        }
-    }
-
-    @Test
-    @DisplayName("Verify botan_mac_init and botan_mac_destroy are called in correct order")
-    public void testInitDestroyOrdering() throws Exception {
-        LOG.info("=== Mock Test: Verify init/destroy ordering ===");
-
-        BotanLibrary realLibrary = BotanInstance.singleton();
-        BotanLibrary spyLibrary = spy(realLibrary);
-
-        try (MockedStatic<BotanInstance> mockedStatic = mockStatic(BotanInstance.class)) {
-            mockedStatic.when(BotanInstance::singleton).thenReturn(spyLibrary);
-
-            Mac mac = Mac.getInstance("HMAC-SHA256", BotanProvider.NAME);
-
-            LOG.info("First init:");
-            mac.init(new SecretKeySpec(new byte[32], "HMAC-SHA256"));
-            mac.doFinal("test".getBytes());
-
-            LOG.info("   - botan_mac_init() called");
-
-            LOG.info("Re-init (should destroy first, then init):");
-            byte[] secondKey = new byte[32];
-            secondKey[0] = 1;
-            mac.init(new SecretKeySpec(secondKey, "HMAC-SHA256"));
-
-            // Create an InOrder verifier
-            var inOrder = inOrder(spyLibrary);
-
-            // Verify that on re-init, destroy is called BEFORE the new init
-            // (Actually, destroy happens via cleanable.clean() which is synchronous)
-            LOG.info("Verifying call order...");
-
-            // We expect: init, init (with destroy in between, called via cleanable.clean())
-            // The destroy happens in cleanable.clean() which calls the MacCleanupAction
-
-            LOG.info("VERIFICATION SUCCESS!");
-            LOG.info("   - Init and destroy calls happen in correct sequence");
-            LOG.info("   - Old object destroyed before new one created");
-            LOG.info("   - No timing issues or race conditions");
         }
     }
 
