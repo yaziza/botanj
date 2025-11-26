@@ -14,6 +14,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.clearInvocations;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
@@ -25,6 +33,9 @@ import java.security.Security;
 import java.security.spec.AlgorithmParameterSpec;
 import java.util.Arrays;
 
+import jnr.ffi.Pointer;
+import net.randombit.botan.jnr.BotanInstance;
+import net.randombit.botan.jnr.BotanLibrary;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -37,6 +48,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringFormattedMessage;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.mockito.MockedStatic;
 
 @DisplayName("Botan block ciphers tests")
 public class BotanBlockCipherTest {
@@ -317,6 +329,102 @@ public class BotanBlockCipherTest {
 
         assertArrayEquals(expected, actual, "Cipher mismatch with Bouncy Castle provider for algorithm "
                 + algorithm);
+    }
+
+    @Test
+    @DisplayName("Verify botan_cipher_destroy is called correct number of times on multiple re-inits")
+    public void testDestroyCalledMultipleTimes() throws Exception {
+        LOG.info("=== Mock Test: Verify destroy count on multiple cipher re-inits ===");
+
+        BotanLibrary realLibrary = BotanInstance.singleton();
+        BotanLibrary spyLibrary = spy(realLibrary);
+
+        try (MockedStatic<BotanInstance> mockedStatic = mockStatic(BotanInstance.class)) {
+            mockedStatic.when(BotanInstance::singleton).thenReturn(spyLibrary);
+
+            LOG.info("Creating Cipher and re-initializing 5 times...");
+            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS7", BotanProvider.NAME);
+
+            SecretKeySpec key = new SecretKeySpec(new byte[16], "AES");
+            IvParameterSpec iv = new IvParameterSpec(new byte[16]);
+
+            // First init - no destroy expected yet
+            cipher.init(Cipher.ENCRYPT_MODE, key, iv);
+            cipher.doFinal("test".getBytes());
+
+            // Clear initial calls
+            clearInvocations(spyLibrary);
+
+            // Re-init 5 times - should call destroy 5 times
+            for (int i = 1; i <= 5; i++) {
+                byte[] keyBytes = new byte[16];
+                keyBytes[0] = (byte) i;
+                SecretKeySpec newKey = new SecretKeySpec(keyBytes, "AES");
+
+                byte[] ivBytes = new byte[16];
+                ivBytes[0] = (byte) i;
+                IvParameterSpec newIv = new IvParameterSpec(ivBytes);
+
+                cipher.init(Cipher.ENCRYPT_MODE, newKey, newIv);
+                cipher.doFinal("test".getBytes());
+                LOG.info("   Re-init #{} completed", i);
+            }
+
+            // Verify destroy was called exactly 5 times (once per re-init)
+            LOG.info("Verifying destroy count...");
+            verify(spyLibrary, times(5)).botan_cipher_destroy(any(Pointer.class));
+
+            LOG.info("VERIFICATION SUCCESS!");
+            LOG.info("   - botan_cipher_destroy() called exactly 5 times");
+            LOG.info("   - One destroy per re-initialization");
+            LOG.info("   - Cleanup mechanism is precise and correct");
+        }
+    }
+
+    @Test
+    @DisplayName("Verify botan_cipher_destroy is NOT called during normal update/doFinal operations")
+    public void testDestroyNotCalledDuringNormalOps() throws Exception {
+        LOG.info("=== Mock Test: Verify destroy NOT called during normal cipher ops ===");
+
+        BotanLibrary realLibrary = BotanInstance.singleton();
+        BotanLibrary spyLibrary = spy(realLibrary);
+
+        try (MockedStatic<BotanInstance> mockedStatic = mockStatic(BotanInstance.class)) {
+            mockedStatic.when(BotanInstance::singleton).thenReturn(spyLibrary);
+
+            LOG.info("Creating and using Cipher without re-initialization...");
+            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS7", BotanProvider.NAME);
+
+            SecretKeySpec key = new SecretKeySpec(new byte[16], "AES");
+            IvParameterSpec iv = new IvParameterSpec(new byte[16]);
+
+            cipher.init(Cipher.ENCRYPT_MODE, key, iv);
+
+            // Clear invocations after init
+            clearInvocations(spyLibrary);
+
+            // Perform normal operations
+            LOG.info("   - update() operation");
+            cipher.update("data 1".getBytes());
+
+            LOG.info("   - doFinal() operation");
+            cipher.doFinal();
+
+            LOG.info("   - update() again");
+            cipher.update("data 2".getBytes());
+
+            LOG.info("   - doFinal() again");
+            cipher.doFinal();
+
+            // Verify destroy was NOT called during these operations
+            LOG.info("Verifying destroy was NOT called...");
+            verify(spyLibrary, never()).botan_cipher_destroy(any(Pointer.class));
+
+            LOG.info("VERIFICATION SUCCESS!");
+            LOG.info("   - botan_cipher_destroy() NOT called during normal operations");
+            LOG.info("   - Destroy only happens on re-init or GC");
+            LOG.info("   - Behavior is correct and safe");
+        }
     }
 
 }

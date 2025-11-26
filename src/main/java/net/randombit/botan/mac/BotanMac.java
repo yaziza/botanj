@@ -173,6 +173,11 @@ public abstract class BotanMac extends MacSpi {
         macFinalized = false;
     }
 
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        throw new CloneNotSupportedException("Cloning is not supported for BotanMac");
+    }
+
     // CMAC
     public static final class CMac extends BotanMac {
         public CMac() {
