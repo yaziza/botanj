@@ -15,6 +15,157 @@ import jnr.ffi.annotations.Out;
 import jnr.ffi.byref.NativeLongByReference;
 import jnr.ffi.byref.PointerByReference;
 
+/**
+ * JNR-FFI interface defining native function bindings to the Botan cryptography library.
+ *
+ * <p>This interface provides direct access to Botan's C FFI (Foreign Function Interface) through JNR-FFI.
+ * It defines Java method signatures that map to native Botan functions, handling type conversions and
+ * memory management for cross-language calls.</p>
+ *
+ * <h2>Purpose and Architecture</h2>
+ *
+ * <p>BotanLibrary serves as the low-level binding layer between Java and native Botan code:
+ * <ul>
+ *   <li><b>Interface, not Implementation:</b> This is a JNR-FFI interface - JNR automatically generates
+ *       the implementation by binding to the native library at runtime</li>
+ *   <li><b>Direct Native Access:</b> All methods directly correspond to Botan C FFI functions</li>
+ *   <li><b>Memory Safety:</b> Uses JNR-FFI annotations (@In, @Out) to manage native memory safely</li>
+ *   <li><b>Singleton Access:</b> Instances are created and managed by {@link BotanInstance}</li>
+ * </ul>
+ *
+ * <h2>Function Categories</h2>
+ *
+ * <p>The library provides bindings for the following Botan operations:</p>
+ *
+ * <h3>Utility Functions</h3>
+ * <ul>
+ *   <li>{@link #botan_version_string()} - Get Botan library version</li>
+ *   <li>{@link #botan_ffi_supports_api(long)} - Check FFI API version support</li>
+ *   <li>{@link #botan_error_description(int)} - Convert error codes to descriptions</li>
+ * </ul>
+ *
+ * <h3>Encoding Functions</h3>
+ * <ul>
+ *   <li>{@link #botan_hex_encode(byte[], long, byte[], long)} - Binary to hexadecimal</li>
+ *   <li>{@link #botan_hex_decode(byte[], long, byte[], NativeLongByReference)} - Hexadecimal to binary</li>
+ *   <li>{@link #botan_base64_encode(byte[], long, byte[], NativeLongByReference)} - Binary to Base64</li>
+ *   <li>{@link #botan_base64_decode(String, long, byte[], NativeLongByReference)} - Base64 to binary</li>
+ * </ul>
+ *
+ * <h3>Hash Functions (Message Digests)</h3>
+ * <ul>
+ *   <li>{@link #botan_hash_init(PointerByReference, String, long)} - Initialize hash object</li>
+ *   <li>{@link #botan_hash_update(Pointer, byte[], long)} - Add data to hash</li>
+ *   <li>{@link #botan_hash_final(Pointer, byte[])} - Finalize and get digest</li>
+ *   <li>{@link #botan_hash_copy_state(PointerByReference, Pointer)} - Clone hash state</li>
+ *   <li>{@link #botan_hash_clear(Pointer)} - Reset hash state</li>
+ *   <li>{@link #botan_hash_destroy(Pointer)} - Free hash object</li>
+ * </ul>
+ *
+ * <h3>Message Authentication Codes (MACs)</h3>
+ * <ul>
+ *   <li>{@link #botan_mac_init(PointerByReference, String, long)} - Initialize MAC object</li>
+ *   <li>{@link #botan_mac_set_key(Pointer, byte[], long)} - Set MAC key</li>
+ *   <li>{@link #botan_mac_update(Pointer, byte[], long)} - Add data to MAC</li>
+ *   <li>{@link #botan_mac_final(Pointer, byte[])} - Finalize and get MAC tag</li>
+ *   <li>{@link #botan_mac_clear(Pointer)} - Reset MAC state</li>
+ *   <li>{@link #botan_mac_destroy(Pointer)} - Free MAC object</li>
+ * </ul>
+ *
+ * <h3>Symmetric Ciphers</h3>
+ * <ul>
+ *   <li>{@link #botan_cipher_init(PointerByReference, String, long)} - Initialize cipher object</li>
+ *   <li>{@link #botan_cipher_set_key(Pointer, byte[], long)} - Set cipher key</li>
+ *   <li>{@link #botan_cipher_start(Pointer, byte[], long)} - Start cipher with IV/nonce</li>
+ *   <li>{@link #botan_cipher_update(Pointer, long, byte[], long, NativeLongByReference, byte[], long, NativeLongByReference)}
+ *       - Process data (encrypt/decrypt)</li>
+ *   <li>{@link #botan_cipher_reset(Pointer)} - Reset cipher state</li>
+ *   <li>{@link #botan_cipher_destroy(Pointer)} - Free cipher object</li>
+ * </ul>
+ *
+ * <h2>Error Handling</h2>
+ *
+ * <p>All native functions return an integer error code:
+ * <ul>
+ *   <li><b>0</b> indicates success</li>
+ *   <li><b>Negative values</b> indicate errors (e.g., -1 for invalid input, -20 for bad MAC)</li>
+ *   <li>Use {@link #botan_error_description(int)} to convert error codes to human-readable messages</li>
+ *   <li>{@link BotanInstance#checkNativeCall(int, String)} provides centralized error checking</li>
+ * </ul>
+ *
+ * <h2>Memory Management</h2>
+ *
+ * <p>Proper resource cleanup is critical when working with native objects:
+ * <ul>
+ *   <li><b>Initialization functions</b> (e.g., botan_hash_init) allocate native memory</li>
+ *   <li><b>Destroy functions</b> (e.g., botan_hash_destroy) must be called to free memory</li>
+ *   <li><b>Java wrappers</b> use Cleaner API to ensure automatic cleanup on garbage collection</li>
+ *   <li><b>PointerByReference</b> is used for output parameters that receive native object handles</li>
+ * </ul>
+ *
+ * <h2>Usage Pattern</h2>
+ *
+ * <p>Direct usage of this interface is not recommended. Instead, use the high-level JCA wrapper classes:</p>
+ *
+ * <pre>{@code
+ * // DON'T use BotanLibrary directly:
+ * BotanLibrary lib = BotanInstance.singleton();
+ * PointerByReference hashRef = new PointerByReference();
+ * lib.botan_hash_init(hashRef, "SHA-256", 0);
+ * // ... manual memory management required ...
+ * lib.botan_hash_destroy(hashRef.getValue());
+ *
+ * // DO use JCA wrappers instead:
+ * MessageDigest sha256 = MessageDigest.getInstance("SHA-256", "Botan");
+ * byte[] hash = sha256.digest(data);
+ * // Automatic resource management via Cleaner
+ * }</pre>
+ *
+ * <h2>JNR-FFI Annotations</h2>
+ *
+ * <p>This interface uses JNR-FFI annotations to control parameter marshalling:
+ * <ul>
+ *   <li><b>@In</b> - Input parameter (Java to native)</li>
+ *   <li><b>@Out</b> - Output parameter (native to Java)</li>
+ *   <li><b>PointerByReference</b> - Reference to a native pointer (for object handles)</li>
+ *   <li><b>NativeLongByReference</b> - Reference to a native long (for output sizes)</li>
+ *   <li><b>Pointer</b> - Opaque native pointer (for object handles)</li>
+ * </ul>
+ *
+ * <h2>Thread Safety</h2>
+ *
+ * <p>The native Botan library functions are NOT thread-safe for individual objects:
+ * <ul>
+ *   <li>Each native object (hash, MAC, cipher) must be accessed by only one thread</li>
+ *   <li>Different threads can use different native objects concurrently</li>
+ *   <li>Java wrapper classes inherit this thread-safety model</li>
+ * </ul>
+ *
+ * <h2>Native Library Requirements</h2>
+ *
+ * <p>This interface requires the Botan 3.x native library:
+ * <ul>
+ *   <li><b>Library name:</b> "botan-3"</li>
+ *   <li><b>Minimum version:</b> Botan 3.0.0</li>
+ *   <li><b>FFI API:</b> Uses Botan's C FFI (stable ABI)</li>
+ *   <li><b>Platform support:</b> Linux, macOS, Windows</li>
+ * </ul>
+ *
+ * <h2>Implementation Notes</h2>
+ *
+ * <ul>
+ *   <li><b>Auto-generated Implementation:</b> JNR-FFI generates the implementation at runtime by analyzing
+ *       this interface and creating native bindings</li>
+ *   <li><b>No Manual JNI:</b> No need for hand-written JNI code - JNR handles everything</li>
+ *   <li><b>Type Mapping:</b> JNR automatically maps Java types to C types (int→int, byte[]→uint8_t*, etc.)</li>
+ *   <li><b>Performance:</b> Near-native performance due to efficient JNR code generation</li>
+ * </ul>
+ *
+ * @see BotanInstance
+ * @see jnr.ffi.LibraryLoader
+ * @author Yasser Aziza
+ * @since 0.1.0
+ */
 public interface BotanLibrary {
 
     /**

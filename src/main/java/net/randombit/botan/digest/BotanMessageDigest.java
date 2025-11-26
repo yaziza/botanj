@@ -17,49 +17,185 @@ import java.security.MessageDigestSpi;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
-import jnr.ffi.Pointer;
 import jnr.ffi.byref.PointerByReference;
 
+/**
+ * Message digest (cryptographic hash) implementation using the Botan cryptography library.
+ *
+ * <p>This class provides a JCE-compliant MessageDigest implementation that delegates hash computations to native
+ * Botan library functions via JNR-FFI. It implements automatic native resource management using the Java
+ * {@link Cleaner} API to ensure native hash objects are properly destroyed when no longer needed.</p>
+ *
+ * <h2>Lifecycle and Resource Management</h2>
+ *
+ * <p>Native Botan hash objects are created during construction and destroyed automatically by the Cleaner when the
+ * Java object becomes unreachable (garbage collection). Unlike MAC and Cipher implementations, MessageDigest objects
+ * are not re-initializable - once created, they maintain the same hash algorithm for their entire lifetime.</p>
+ *
+ * <h2>Thread Safety</h2>
+ *
+ * <p>This implementation is NOT thread-safe. Each thread should use its own MessageDigest instance. The JCE API
+ * does not require MessageDigest implementations to be thread-safe.</p>
+ *
+ * <h2>Cloning Support</h2>
+ *
+ * <p>This implementation supports cloning via {@link #clone()}. When a MessageDigest is cloned, the native hash
+ * state is copied using Botan's {@code botan_hash_copy_state} function, allowing independent computation of
+ * digests from the same intermediate state. Each cloned instance maintains its own native resource that is
+ * independently managed by the Cleaner.</p>
+ *
+ * <h2>Usage Examples</h2>
+ *
+ * <h3>Basic SHA-256 Hash</h3>
+ * <pre>{@code
+ * // Get MessageDigest instance from the Botan provider
+ * MessageDigest digest = MessageDigest.getInstance("SHA-256", "Botan");
+ *
+ * // Update with data
+ * digest.update("Hello, World!".getBytes());
+ *
+ * // Compute the hash
+ * byte[] hash = digest.digest();
+ * }</pre>
+ *
+ * <h3>Incremental Hashing with Multiple Updates</h3>
+ * <pre>{@code
+ * MessageDigest digest = MessageDigest.getInstance("SHA-256", "Botan");
+ *
+ * // Process data incrementally
+ * digest.update("Part 1 ".getBytes());
+ * digest.update("Part 2 ".getBytes());
+ * digest.update("Part 3".getBytes());
+ *
+ * // Finalize and get result
+ * byte[] hash = digest.digest();
+ * }</pre>
+ *
+ * <h3>Digest and Reset for Multiple Messages</h3>
+ * <pre>{@code
+ * MessageDigest digest = MessageDigest.getInstance("SHA-512", "Botan");
+ *
+ * // Hash first message
+ * digest.update(message1);
+ * byte[] hash1 = digest.digest();  // Auto-resets after digest
+ *
+ * // Hash second message
+ * digest.update(message2);
+ * byte[] hash2 = digest.digest();
+ *
+ * // Explicit reset if needed without digest
+ * digest.update(message3);
+ * digest.reset();  // Discard partial computation
+ * digest.update(message4);
+ * byte[] hash4 = digest.digest();
+ * }</pre>
+ *
+ * <h3>Cloning for Branch Computation</h3>
+ * <pre>{@code
+ * MessageDigest digest = MessageDigest.getInstance("SHA-256", "Botan");
+ *
+ * // Common prefix
+ * digest.update("Common prefix: ".getBytes());
+ *
+ * // Clone to create independent branches
+ * MessageDigest branch1 = (MessageDigest) digest.clone();
+ * MessageDigest branch2 = (MessageDigest) digest.clone();
+ *
+ * // Compute different hashes from same prefix
+ * branch1.update("branch 1 data".getBytes());
+ * byte[] hash1 = branch1.digest();
+ *
+ * branch2.update("branch 2 data".getBytes());
+ * byte[] hash2 = branch2.digest();
+ *
+ * // Original digest is unchanged
+ * digest.update("original continuation".getBytes());
+ * byte[] hash3 = digest.digest();
+ * }</pre>
+ *
+ * <h3>Single-Byte Processing</h3>
+ * <pre>{@code
+ * MessageDigest digest = MessageDigest.getInstance("BLAKE2b-256", "Botan");
+ *
+ * // Process byte by byte (uses internal single-byte buffer)
+ * for (byte b : data) {
+ *     digest.update(b);
+ * }
+ * byte[] result = digest.digest();
+ * }</pre>
+ *
+ * <h3>One-Shot Hashing</h3>
+ * <pre>{@code
+ * MessageDigest digest = MessageDigest.getInstance("SHA-256", "Botan");
+ *
+ * // Compute hash in single call (combines update + digest)
+ * byte[] hash = digest.digest(data);
+ * }</pre>
+ *
+ * <h2>Supported Algorithms</h2>
+ *
+ * <p>The following hash algorithms are available through concrete subclasses:
+ * <ul>
+ *   <li><b>SHA-1</b> - {@link SHA1} - SHA-1 (20-byte output) - <i>Not recommended for security-critical applications</i></li>
+ *   <li><b>SHA-224</b> - {@link SHA224} - SHA-2 family (28-byte output)</li>
+ *   <li><b>SHA-256</b> - {@link SHA256} - SHA-2 family (32-byte output)</li>
+ *   <li><b>SHA-384</b> - {@link SHA384} - SHA-2 family (48-byte output)</li>
+ *   <li><b>SHA-512</b> - {@link SHA512} - SHA-2 family (64-byte output)</li>
+ *   <li><b>SHA-3(224)</b> - {@link SHA3_224} - SHA-3 family (28-byte output)</li>
+ *   <li><b>SHA-3(256)</b> - {@link SHA3_256} - SHA-3 family (32-byte output)</li>
+ *   <li><b>SHA-3(384)</b> - {@link SHA3_384} - SHA-3 family (48-byte output)</li>
+ *   <li><b>SHA-3(512)</b> - {@link SHA3_512} - SHA-3 family (64-byte output)</li>
+ *   <li><b>Keccak-1600(224)</b> - {@link Keccak224} - Keccak (28-byte output)</li>
+ *   <li><b>Keccak-1600(256)</b> - {@link Keccak256} - Keccak (32-byte output)</li>
+ *   <li><b>Keccak-1600(384)</b> - {@link Keccak384} - Keccak (48-byte output)</li>
+ *   <li><b>Keccak-1600(512)</b> - {@link Keccak512} - Keccak (64-byte output)</li>
+ *   <li><b>Blake2b(160)</b> - {@link Blake2b160} - BLAKE2b (20-byte output)</li>
+ *   <li><b>Blake2b(256)</b> - {@link Blake2b256} - BLAKE2b (32-byte output)</li>
+ *   <li><b>Blake2b(384)</b> - {@link Blake2b384} - BLAKE2b (48-byte output)</li>
+ *   <li><b>Blake2b(512)</b> - {@link Blake2b512} - BLAKE2b (64-byte output)</li>
+ *   <li><b>MD4</b> - {@link MD4} - MD4 (16-byte output) - <i>Not recommended for security-critical applications</i></li>
+ *   <li><b>MD5</b> - {@link MD5} - MD5 (16-byte output) - <i>Not recommended for security-critical applications</i></li>
+ *   <li><b>RIPEMD-160</b> - {@link RipeMd160} - RIPEMD-160 (20-byte output)</li>
+ * </ul>
+ *
+ * <h2>Implementation Notes</h2>
+ *
+ * <ul>
+ *   <li><b>Cloning Supported</b> - Unlike MAC and Cipher, MessageDigest supports cloning via native state copy</li>
+ *   <li><b>Immutable Algorithm</b> - The hash algorithm cannot be changed after construction</li>
+ *   <li><b>Auto-Reset After Digest</b> - After {@code digest()}, the state is automatically reset by Botan</li>
+ *   <li><b>Memory Safety</b> - Native resources are guaranteed to be freed even if explicit cleanup is not called,
+ *       thanks to the Cleaner API</li>
+ *   <li><b>Performance</b> - Delegates to native Botan implementation for optimal performance</li>
+ * </ul>
+ *
+ * @see java.security.MessageDigestSpi
+ * @see java.lang.ref.Cleaner
+ * @author Yasser Aziza
+ * @since 0.1.0
+ */
 public class BotanMessageDigest extends MessageDigestSpi implements Cloneable {
 
     /**
      * Shared Cleaner instance for all BotanMessageDigest instances.
      */
     private static final Cleaner CLEANER = Cleaner.create();
-
-    /**
-     * Cleanup action for native hash resources.
-     */
-    private record BotanHashCleanupAction(jnr.ffi.Pointer hashPointer) implements Runnable {
-
-        @Override
-        public void run() {
-            if (hashPointer != null) {
-                singleton().botan_hash_destroy(hashPointer);
-            }
-        }
-    }
-
     /**
      * Holds the name of the hashing algorithm.
      */
     private final String name;
-
     /**
      * Holds the output size of the message digest in bytes.
      */
     private final int size;
-
     /**
      * Holds the reference to the hash object referenced by botan.
      */
     private final PointerByReference hashRef;
-
     /**
      * Cleaner registration for automatic cleanup.
      */
     private final Cleaner.Cleanable cleanable;
-
     /**
      * Holds a dummy buffer for writing single bytes to the hash.
      */
@@ -128,6 +264,19 @@ public class BotanMessageDigest extends MessageDigestSpi implements Cloneable {
         checkNativeCall(err, "botan_hash_copy_state");
 
         return new BotanMessageDigest(name, size, clone);
+    }
+
+    /**
+     * Cleanup action for native hash resources.
+     */
+    private record BotanHashCleanupAction(jnr.ffi.Pointer hashPointer) implements Runnable {
+
+        @Override
+        public void run() {
+            if (hashPointer != null) {
+                singleton().botan_hash_destroy(hashPointer);
+            }
+        }
     }
 
     // SHA-1 algorithm
