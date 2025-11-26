@@ -18,6 +18,14 @@ import java.util.Arrays;
 
 import jnr.ffi.byref.NativeLongByReference;
 
+/**
+ * Utility class for Base64 encoding and decoding operations using Botan's native implementation.
+ *
+ * <p>This class provides static methods for converting binary data to Base64 text representation
+ * and vice versa, delegating to Botan's optimized native Base64 functions.</p>
+ *
+ * @since 0.1.0
+ */
 public final class Base64Utils {
 
     private static final Character[] ALLOWED_CHARS = {

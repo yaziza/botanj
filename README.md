@@ -18,9 +18,10 @@ Botanj - Java Security Provider (JSP)
 ## Index
 
 1. [Introduction](#introduction)
-2. [Building The Library](#building-the-library)
-3. [Supported Primitives](#supported-primitives)
-4. [Using Botan JSP](#using-botanj)
+2. [Documentation](#documentation)
+3. [Building The Library](#building-the-library)
+4. [Supported Primitives](#supported-primitives)
+5. [Using Botan JSP](#using-botanj)
 
 ## Introduction
 Botanj is a Java Security Provider ([JSP](https://docs.oracle.com/en/java/javase/14/security/java-cryptography-architecture-jca-reference-guide.html#GUID-3E0744CE-6AC7-4A6D-A1F6-6C01199E6920))
@@ -28,6 +29,11 @@ Botanj is a Java Security Provider ([JSP](https://docs.oracle.com/en/java/javase
 implementation is compatible with other JSPs (e.g. Bouncy Castle), thus enabling a smooth migration.
 
 Botanj uses [JNR-FFI](https://github.com/jnr/jnr-ffi) for loading Botan native code.
+
+## Documentation
+* [JavaDoc API Reference](https://yaziza.github.io/botanj/javadoc/)
+
+Comprehensive API documentation with detailed usage examples, architecture explanations, and implementation notes for all cryptographic operations.
 
 ## Building The Library
 * Install native [Botan](https://botan.randombit.net/handbook/building.html) Library

@@ -279,131 +279,285 @@ public class BotanMessageDigest extends MessageDigestSpi implements Cloneable {
         }
     }
 
-    // SHA-1 algorithm
+    /**
+     * SHA-1 message digest implementation (160-bit output).
+     */
     public static final class SHA1 extends BotanMessageDigest {
+        /**
+         * Constructs a new SHA-1 message digest.
+         *
+         * @throws NoSuchAlgorithmException if SHA-1 is not available
+         */
         public SHA1() throws NoSuchAlgorithmException {
             super("SHA-1", 20);
         }
     }
 
-    // SHA-2 algorithm
+    /**
+     * SHA-224 message digest implementation (224-bit output).
+     */
     public static final class SHA224 extends BotanMessageDigest {
+        /**
+         * Constructs a new SHA-224 message digest.
+         *
+         * @throws NoSuchAlgorithmException if SHA-224 is not available
+         */
         public SHA224() throws NoSuchAlgorithmException {
             super("SHA-224", 28);
         }
     }
 
+    /**
+     * SHA-256 message digest implementation (256-bit output).
+     */
     public static final class SHA256 extends BotanMessageDigest {
+        /**
+         * Constructs a new SHA-256 message digest.
+         *
+         * @throws NoSuchAlgorithmException if SHA-256 is not available
+         */
         public SHA256() throws NoSuchAlgorithmException {
             super("SHA-256", 32);
         }
     }
 
+    /**
+     * SHA-384 message digest implementation (384-bit output).
+     */
     public static final class SHA384 extends BotanMessageDigest {
+        /**
+         * Constructs a new SHA-384 message digest.
+         *
+         * @throws NoSuchAlgorithmException if SHA-384 is not available
+         */
         public SHA384() throws NoSuchAlgorithmException {
             super("SHA-384", 48);
         }
     }
 
+    /**
+     * SHA-512 message digest implementation (512-bit output).
+     */
     public static final class SHA512 extends BotanMessageDigest {
+        /**
+         * Constructs a new SHA-512 message digest.
+         *
+         * @throws NoSuchAlgorithmException if SHA-512 is not available
+         */
         public SHA512() throws NoSuchAlgorithmException {
             super("SHA-512", 64);
         }
     }
 
-    // SHA-3 algorithm
+    /**
+     * SHA3-224 message digest implementation (224-bit output).
+     */
     @SuppressWarnings("typename")
     public static final class SHA3_224 extends BotanMessageDigest {
+        /**
+         * Constructs a new SHA3-224 message digest.
+         *
+         * @throws NoSuchAlgorithmException if SHA3-224 is not available
+         */
         public SHA3_224() throws NoSuchAlgorithmException {
             super("SHA-3(224)", 28);
         }
     }
 
+    /**
+     * SHA3-256 message digest implementation (256-bit output).
+     */
     @SuppressWarnings("typename")
     public static final class SHA3_256 extends BotanMessageDigest {
+        /**
+         * Constructs a new SHA3-256 message digest.
+         *
+         * @throws NoSuchAlgorithmException if SHA3-256 is not available
+         */
         public SHA3_256() throws NoSuchAlgorithmException {
             super("SHA-3(256)", 32);
         }
     }
 
+    /**
+     * SHA3-384 message digest implementation (384-bit output).
+     */
     @SuppressWarnings("typename")
     public static final class SHA3_384 extends BotanMessageDigest {
+        /**
+         * Constructs a new SHA3-384 message digest.
+         *
+         * @throws NoSuchAlgorithmException if SHA3-384 is not available
+         */
         public SHA3_384() throws NoSuchAlgorithmException {
             super("SHA-3(384)", 48);
         }
     }
 
+    /**
+     * SHA3-512 message digest implementation (512-bit output).
+     */
     @SuppressWarnings("typename")
     public static final class SHA3_512 extends BotanMessageDigest {
+        /**
+         * Constructs a new SHA3-512 message digest.
+         *
+         * @throws NoSuchAlgorithmException if SHA3-512 is not available
+         */
         public SHA3_512() throws NoSuchAlgorithmException {
             super("SHA-3(512)", 64);
         }
     }
 
-    //Keccak algorithm
+    /**
+     * Keccak-224 message digest implementation (224-bit output).
+     */
     public static final class Keccak224 extends BotanMessageDigest {
+        /**
+         * Constructs a new Keccak-224 message digest.
+         *
+         * @throws NoSuchAlgorithmException if Keccak-224 is not available
+         */
         public Keccak224() throws NoSuchAlgorithmException {
             super("Keccak-1600(224)", 28);
         }
     }
 
+    /**
+     * Keccak-256 message digest implementation (256-bit output).
+     */
     public static final class Keccak256 extends BotanMessageDigest {
+        /**
+         * Constructs a new Keccak-256 message digest.
+         *
+         * @throws NoSuchAlgorithmException if Keccak-256 is not available
+         */
         public Keccak256() throws NoSuchAlgorithmException {
             super("Keccak-1600(256)", 32);
         }
     }
 
+    /**
+     * Keccak-384 message digest implementation (384-bit output).
+     */
     public static final class Keccak384 extends BotanMessageDigest {
+        /**
+         * Constructs a new Keccak-384 message digest.
+         *
+         * @throws NoSuchAlgorithmException if Keccak-384 is not available
+         */
         public Keccak384() throws NoSuchAlgorithmException {
             super("Keccak-1600(384)", 48);
         }
     }
 
+    /**
+     * Keccak-512 message digest implementation (512-bit output).
+     */
     public static final class Keccak512 extends BotanMessageDigest {
+        /**
+         * Constructs a new Keccak-512 message digest.
+         *
+         * @throws NoSuchAlgorithmException if Keccak-512 is not available
+         */
         public Keccak512() throws NoSuchAlgorithmException {
             super("Keccak-1600(512)", 64);
         }
     }
 
-    // Blake2b algorithm
+    /**
+     * BLAKE2b-160 message digest implementation (160-bit output).
+     */
     public static final class Blake2b160 extends BotanMessageDigest {
+        /**
+         * Constructs a new BLAKE2b-160 message digest.
+         *
+         * @throws NoSuchAlgorithmException if BLAKE2b-160 is not available
+         */
         public Blake2b160() throws NoSuchAlgorithmException {
             super("Blake2b(160)", 20);
         }
     }
 
+    /**
+     * BLAKE2b-256 message digest implementation (256-bit output).
+     */
     public static final class Blake2b256 extends BotanMessageDigest {
+        /**
+         * Constructs a new BLAKE2b-256 message digest.
+         *
+         * @throws NoSuchAlgorithmException if BLAKE2b-256 is not available
+         */
         public Blake2b256() throws NoSuchAlgorithmException {
             super("Blake2b(256)", 32);
         }
     }
 
+    /**
+     * BLAKE2b-384 message digest implementation (384-bit output).
+     */
     public static final class Blake2b384 extends BotanMessageDigest {
+        /**
+         * Constructs a new BLAKE2b-384 message digest.
+         *
+         * @throws NoSuchAlgorithmException if BLAKE2b-384 is not available
+         */
         public Blake2b384() throws NoSuchAlgorithmException {
             super("Blake2b(384)", 48);
         }
     }
 
+    /**
+     * BLAKE2b-512 message digest implementation (512-bit output).
+     */
     public static final class Blake2b512 extends BotanMessageDigest {
+        /**
+         * Constructs a new BLAKE2b-512 message digest.
+         *
+         * @throws NoSuchAlgorithmException if BLAKE2b-512 is not available
+         */
         public Blake2b512() throws NoSuchAlgorithmException {
             super("Blake2b(512)", 64);
         }
     }
 
-    // MD algorithms
+    /**
+     * MD4 message digest implementation (128-bit output).
+     */
     public static final class MD4 extends BotanMessageDigest {
+        /**
+         * Constructs a new MD4 message digest.
+         *
+         * @throws NoSuchAlgorithmException if MD4 is not available
+         */
         public MD4() throws NoSuchAlgorithmException {
             super("MD4", 16);
         }
     }
 
+    /**
+     * MD5 message digest implementation (128-bit output).
+     */
     public static final class MD5 extends BotanMessageDigest {
+        /**
+         * Constructs a new MD5 message digest.
+         *
+         * @throws NoSuchAlgorithmException if MD5 is not available
+         */
         public MD5() throws NoSuchAlgorithmException {
             super("MD5", 16);
         }
     }
 
+    /**
+     * RIPEMD-160 message digest implementation (160-bit output).
+     */
     public static final class RipeMd160 extends BotanMessageDigest {
+        /**
+         * Constructs a new RIPEMD-160 message digest.
+         *
+         * @throws NoSuchAlgorithmException if RIPEMD-160 is not available
+         */
         public RipeMd160() throws NoSuchAlgorithmException {
             super("RIPEMD-160", 20);
         }

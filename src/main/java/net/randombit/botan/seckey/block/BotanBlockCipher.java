@@ -25,11 +25,13 @@ import java.util.Arrays;
 import java.util.Objects;
 
 import jnr.ffi.byref.NativeLongByReference;
-import net.randombit.botan.seckey.BotanBaseAsymmetricCipher;
 import net.randombit.botan.seckey.CipherMode;
 import net.randombit.botan.util.PaddingAlgorithm;
 
-public abstract class BotanBlockCipher extends BotanBaseAsymmetricCipher {
+/**
+ * Base class for block cipher implementations.
+ */
+public abstract class BotanBlockCipher extends net.randombit.botan.seckey.BotanBaseSymmetricCipher {
 
     /**
      * Holds the {@link CipherMode}.
@@ -59,6 +61,13 @@ public abstract class BotanBlockCipher extends BotanBaseAsymmetricCipher {
      */
     protected byte[] buffer;
 
+    /**
+     * Constructs a block cipher with the specified parameters.
+     *
+     * @param name the algorithm name
+     * @param cipherMode the cipher mode
+     * @param blockSize the block size in bytes
+     */
     protected BotanBlockCipher(String name, CipherMode cipherMode, int blockSize) {
         super(name);
 
@@ -187,9 +196,14 @@ public abstract class BotanBlockCipher extends BotanBaseAsymmetricCipher {
         return true;
     }
 
-    // AES
+    /**
+     * AES-CBC cipher implementation.
+     */
     public static final class AesCbc extends BotanBlockCipher {
 
+        /**
+         * Constructs a new AES-CBC cipher.
+         */
         public AesCbc() {
             super("AES", CipherMode.CBC, 16);
         }
@@ -206,8 +220,14 @@ public abstract class BotanBlockCipher extends BotanBaseAsymmetricCipher {
 
     }
 
+    /**
+     * AES-CFB cipher implementation.
+     */
     public static final class AesCfb extends BotanBlockCipher {
 
+        /**
+         * Constructs a new AES-CFB cipher.
+         */
         public AesCfb() {
             super("AES", CipherMode.CFB, 16);
         }
@@ -223,8 +243,13 @@ public abstract class BotanBlockCipher extends BotanBaseAsymmetricCipher {
         }
     }
 
-    // DES
+    /**
+     * DES-CBC cipher implementation.
+     */
     public static final class DesCbc extends BotanBlockCipher {
+        /**
+         * Constructs a new DES-CBC cipher.
+         */
         public DesCbc() {
             super("DES", CipherMode.CBC, 8);
         }
@@ -240,7 +265,13 @@ public abstract class BotanBlockCipher extends BotanBaseAsymmetricCipher {
         }
     }
 
+    /**
+     * DES-CFB cipher implementation.
+     */
     public static final class DesCfb extends BotanBlockCipher {
+        /**
+         * Constructs a new DES-CFB cipher.
+         */
         public DesCfb() {
             super("DES", CipherMode.CFB, 8);
         }
@@ -256,8 +287,13 @@ public abstract class BotanBlockCipher extends BotanBaseAsymmetricCipher {
         }
     }
 
-    // 3DES
+    /**
+     * Triple DES (3DES) CBC cipher implementation.
+     */
     public static final class DesEdeCbc extends BotanBlockCipher {
+        /**
+         * Constructs a new 3DES-CBC cipher.
+         */
         public DesEdeCbc() {
             super("DESede", CipherMode.CBC, 8);
         }
@@ -273,7 +309,13 @@ public abstract class BotanBlockCipher extends BotanBaseAsymmetricCipher {
         }
     }
 
+    /**
+     * Triple DES (3DES) CFB cipher implementation.
+     */
     public static final class DesEdeCfb extends BotanBlockCipher {
+        /**
+         * Constructs a new 3DES-CFB cipher.
+         */
         public DesEdeCfb() {
             super("DESede", CipherMode.CFB, 8);
         }

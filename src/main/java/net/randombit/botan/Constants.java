@@ -9,6 +9,9 @@
 
 package net.randombit.botan;
 
+/**
+ * Constants used throughout the Botan provider.
+ */
 public final class Constants {
 
     /**

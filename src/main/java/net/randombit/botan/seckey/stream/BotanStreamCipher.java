@@ -16,9 +16,10 @@ import static net.randombit.botan.Constants.EMPTY_BYTE_ARRAY;
 import javax.crypto.NoSuchPaddingException;
 import java.util.Arrays;
 
-import net.randombit.botan.seckey.BotanBaseAsymmetricCipher;
-
-public abstract class BotanStreamCipher extends BotanBaseAsymmetricCipher {
+/**
+ * Base class for stream cipher implementations.
+ */
+public abstract class BotanStreamCipher extends net.randombit.botan.seckey.BotanBaseSymmetricCipher {
 
     private BotanStreamCipher(String name) {
         super(name);
@@ -59,8 +60,13 @@ public abstract class BotanStreamCipher extends BotanBaseAsymmetricCipher {
         return super.doCipher(inputFromOffset, inputLen, botanFlag);
     }
 
-    // Salsa20
+    /**
+     * Salsa20 stream cipher implementation.
+     */
     public static final class Salsa20 extends BotanStreamCipher {
+        /**
+         * Constructs a new Salsa20 cipher.
+         */
         public Salsa20() {
             super("Salsa20");
         }
@@ -75,7 +81,13 @@ public abstract class BotanStreamCipher extends BotanBaseAsymmetricCipher {
         }
     }
 
+    /**
+     * XSalsa20 stream cipher implementation with extended nonce.
+     */
     public static final class XSalsa20 extends BotanStreamCipher {
+        /**
+         * Constructs a new XSalsa20 cipher.
+         */
         public XSalsa20() {
             super("Salsa20");
         }
@@ -90,8 +102,13 @@ public abstract class BotanStreamCipher extends BotanBaseAsymmetricCipher {
         }
     }
 
-    // ChaCha20
+    /**
+     * ChaCha20 stream cipher implementation.
+     */
     public static final class ChaCha20 extends BotanStreamCipher {
+        /**
+         * Constructs a new ChaCha20 cipher.
+         */
         public ChaCha20() {
             super("ChaCha(20)");
         }
@@ -106,7 +123,13 @@ public abstract class BotanStreamCipher extends BotanBaseAsymmetricCipher {
         }
     }
 
+    /**
+     * XChaCha20 stream cipher implementation with extended nonce.
+     */
     public static final class XChaCha20 extends BotanStreamCipher {
+        /**
+         * Constructs a new XChaCha20 cipher.
+         */
         public XChaCha20() {
             super("ChaCha(20)");
         }
@@ -121,8 +144,13 @@ public abstract class BotanStreamCipher extends BotanBaseAsymmetricCipher {
         }
     }
 
-    // CTR mode
+    /**
+     * AES in CTR (Counter) mode - operates as a stream cipher.
+     */
     public static final class AesCtr extends BotanStreamCipher {
+        /**
+         * Constructs a new AES-CTR cipher.
+         */
         public AesCtr() {
             super("AES");
         }
@@ -138,7 +166,13 @@ public abstract class BotanStreamCipher extends BotanBaseAsymmetricCipher {
         }
     }
 
+    /**
+     * DES in CTR mode - operates as a stream cipher.
+     */
     public static final class DesCtr extends BotanStreamCipher {
+        /**
+         * Constructs a new DES-CTR cipher.
+         */
         public DesCtr() {
             super("DES");
         }
@@ -154,7 +188,13 @@ public abstract class BotanStreamCipher extends BotanBaseAsymmetricCipher {
         }
     }
 
+    /**
+     * Triple DES (3DES) in CTR mode - operates as a stream cipher.
+     */
     public static final class DesEdeCtr extends BotanStreamCipher {
+        /**
+         * Constructs a new 3DES-CTR cipher.
+         */
         public DesEdeCtr() {
             super("3DES");
         }
@@ -170,8 +210,13 @@ public abstract class BotanStreamCipher extends BotanBaseAsymmetricCipher {
         }
     }
 
-    // OFB mode
+    /**
+     * AES in OFB (Output Feedback) mode - operates as a stream cipher.
+     */
     public static final class AesOfb extends BotanStreamCipher {
+        /**
+         * Constructs a new AES-OFB cipher.
+         */
         public AesOfb() {
             super("AES");
         }
@@ -187,7 +232,13 @@ public abstract class BotanStreamCipher extends BotanBaseAsymmetricCipher {
         }
     }
 
+    /**
+     * DES in OFB mode - operates as a stream cipher.
+     */
     public static final class DesOfb extends BotanStreamCipher {
+        /**
+         * Constructs a new DES-OFB cipher.
+         */
         public DesOfb() {
             super("DES");
         }
@@ -203,7 +254,13 @@ public abstract class BotanStreamCipher extends BotanBaseAsymmetricCipher {
         }
     }
 
+    /**
+     * Triple DES (3DES) in OFB mode - operates as a stream cipher.
+     */
     public static final class DesEdeOfb extends BotanStreamCipher {
+        /**
+         * Constructs a new 3DES-OFB cipher.
+         */
         public DesEdeOfb() {
             super("3DES");
         }

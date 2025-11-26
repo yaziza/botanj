@@ -200,6 +200,7 @@ public abstract class BotanMac extends MacSpi {
      *
      * @param keySize the key size
      * @return {@link String} containing the Botan MAC name.
+     * @throws InvalidKeyException if the key size is invalid
      */
     protected String getBotanMacName(int keySize) throws InvalidKeyException {
         return name;
@@ -299,8 +300,13 @@ public abstract class BotanMac extends MacSpi {
         }
     }
 
-    // CMAC
+    /**
+     * CMAC (Cipher-based MAC) implementation using AES.
+     */
     public static final class CMac extends BotanMac {
+        /**
+         * Constructs a new CMAC instance.
+         */
         public CMac() {
             super("CMAC", 16);
         }
@@ -311,58 +317,109 @@ public abstract class BotanMac extends MacSpi {
         }
     }
 
-    // HMAC
+    /**
+     * Poly1305 MAC implementation.
+     */
     public static final class Poly1305 extends BotanMac {
+        /**
+         * Constructs a new Poly1305 instance.
+         */
         public Poly1305() {
             super("Poly1305", 16);
         }
     }
 
-    // SipHash
+    /**
+     * SipHash MAC implementation with 2 compression rounds and 4 finalization rounds.
+     */
     public static final class SipHash extends BotanMac {
+        /**
+         * Constructs a new SipHash instance.
+         */
         public SipHash() {
             super("SipHash(2,4)", 8);
         }
     }
 
-    // HMAC
+    /**
+     * HMAC-MD5 implementation.
+     */
     public static final class HMacMd5 extends BotanMac {
+        /**
+         * Constructs a new HMAC-MD5 instance.
+         */
         public HMacMd5() {
             super("HMAC(MD5)", 16);
         }
     }
 
+    /**
+     * HMAC-RIPEMD-160 implementation.
+     */
     public static final class HMacRipeMd160 extends BotanMac {
+        /**
+         * Constructs a new HMAC-RIPEMD-160 instance.
+         */
         public HMacRipeMd160() {
             super("HMAC(RIPEMD-160)", 20);
         }
     }
 
+    /**
+     * HMAC-SHA-1 implementation.
+     */
     public static final class HMacSha1 extends BotanMac {
+        /**
+         * Constructs a new HMAC-SHA-1 instance.
+         */
         public HMacSha1() {
             super("HMAC(SHA-1)", 20);
         }
     }
 
+    /**
+     * HMAC-SHA-224 implementation.
+     */
     public static final class HMacSha224 extends BotanMac {
+        /**
+         * Constructs a new HMAC-SHA-224 instance.
+         */
         public HMacSha224() {
             super("HMAC(SHA-224)", 28);
         }
     }
 
+    /**
+     * HMAC-SHA-256 implementation.
+     */
     public static final class HMacSha256 extends BotanMac {
+        /**
+         * Constructs a new HMAC-SHA-256 instance.
+         */
         public HMacSha256() {
             super("HMAC(SHA-256)", 32);
         }
     }
 
+    /**
+     * HMAC-SHA-384 implementation.
+     */
     public static final class HMacSha384 extends BotanMac {
+        /**
+         * Constructs a new HMAC-SHA-384 instance.
+         */
         public HMacSha384() {
             super("HMAC(SHA-384)", 48);
         }
     }
 
+    /**
+     * HMAC-SHA-512 implementation.
+     */
     public static final class HMacSha512 extends BotanMac {
+        /**
+         * Constructs a new HMAC-SHA-512 instance.
+         */
         public HMacSha512() {
             super("HMAC(SHA-512)", 64);
         }

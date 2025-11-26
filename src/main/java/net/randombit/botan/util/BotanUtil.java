@@ -19,6 +19,9 @@ import java.util.List;
 import jnr.ffi.Pointer;
 import jnr.ffi.byref.NativeLongByReference;
 
+/**
+ * Utility class providing helper methods for Botan JNI operations.
+ */
 public final class BotanUtil {
 
     private BotanUtil() {
@@ -30,7 +33,7 @@ public final class BotanUtil {
      *
      * @param input        encoded input
      * @param allowedChars allowed Character list
-     * @throws IllegalArgumentException
+     * @throws IllegalArgumentException if input contains disallowed characters
      */
     public static void verifyInput(byte[] input, List<Character> allowedChars) {
         final String inputStr = new String(input);
@@ -45,9 +48,9 @@ public final class BotanUtil {
     /**
      * Checks the key type and content not null.
      *
-     * @param key
+     * @param key the key to check
      * @return byte[] encoded key
-     * @throws InvalidKeyException
+     * @throws InvalidKeyException if key is invalid or not in RAW format
      */
     public static byte[] checkSecretKey(Key key) throws InvalidKeyException {
         if (!(key instanceof SecretKey)) {
@@ -72,7 +75,7 @@ public final class BotanUtil {
      * @param ptr        the botan native reference
      * @param keySize    the provided key size
      * @param getKeySpec the botan reference key spec method
-     * @throws InvalidKeyException
+     * @throws InvalidKeyException if key size is out of bounds or invalid
      */
     public static void checkKeySize(Pointer ptr, int keySize,
                                     FourParameterFunction<Pointer, NativeLongByReference> getKeySpec)
@@ -98,12 +101,33 @@ public final class BotanUtil {
         }
     }
 
+    /**
+     * Checks if the given byte array is null or empty.
+     *
+     * @param value the byte array to check
+     * @return true if null or empty, false otherwise
+     */
     public static boolean isNullOrEmpty(byte[] value) {
         return value == null || value.length == 0;
     }
 
+    /**
+     * Functional interface for functions accepting four parameters.
+     *
+     * @param <T> the type of the first parameter
+     * @param <U> the type of the remaining three parameters
+     */
     @FunctionalInterface
     public interface FourParameterFunction<T, U> {
+        /**
+         * Applies this function to the given arguments.
+         *
+         * @param t the first argument
+         * @param u the second argument
+         * @param v the third argument
+         * @param w the fourth argument
+         * @return the function result
+         */
         int apply(T t, U u, U v, U w);
     }
 

@@ -209,6 +209,10 @@ import net.randombit.botan.jnr.BotanLibrary;
  */
 public final class BotanProvider extends Provider {
 
+    /**
+     * The name of this security provider ("Botan").
+     * Used when requesting cryptographic services from this provider.
+     */
     public static final String NAME = "Botan";
     private static final String INFO = "Botan Java Security Provider";
 
@@ -221,6 +225,11 @@ public final class BotanProvider extends Provider {
 
     private static final BotanLibrary NATIVE = BotanInstance.singleton();
 
+    /**
+     * Constructs a new BotanProvider and registers all supported cryptographic algorithms.
+     *
+     * @throws UnsatisfiedLinkError if the Botan native library cannot be loaded
+     */
     public BotanProvider() {
         super(NAME, "", INFO);
 
