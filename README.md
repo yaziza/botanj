@@ -15,6 +15,8 @@ Botanj - Java Security Provider (JSP)
 
 [![branch coverage](.github/badges/branches.svg)](https://github.com/yaziza/botanj/actions/workflows/code-coverage.yml)
 
+[![Known Vulnerabilities](https://snyk.io/test/github/yaziza/botanj/badge.svg)](https://snyk.io/test/github/yaziza/botanj)
+
 ## Index
 
 1. [Introduction](#introduction)
