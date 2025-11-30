@@ -59,61 +59,78 @@ public class BotanMacTest {
     @CsvFileSource(resources = "/mac/mac.csv", numLinesToSkip = 1)
     @DisplayName("Test MAC output size")
     public void testMacOutputSize(String algorithm, int keySize, int outputSize) throws GeneralSecurityException {
+        LOG.info("=== Test: MAC output size for {} ===", algorithm);
         final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
         final Mac mac = Mac.getInstance(algorithm, BotanProvider.NAME);
 
+        LOG.info("Key size: {} bytes", keySize);
+        LOG.info("Expected output size: {} bytes", outputSize);
         mac.init(key);
         final byte[] output = mac.doFinal("some input".getBytes());
+        LOG.info("Actual output size: {} bytes", output.length);
 
         assertEquals(outputSize, mac.getMacLength(), "Output size mismatch for algorithm: " + algorithm);
         assertEquals(outputSize, output.length, "Output size mismatch for algorithm: " + algorithm);
+        LOG.info("SUCCESS: Output size matches for {}", algorithm);
     }
 
     @ParameterizedTest
     @CsvFileSource(resources = "/mac/mac.csv", numLinesToSkip = 1)
     @DisplayName("Test calling MAC update before initialization")
     public void testMacUpdateWithoutInitialization(String algorithm) throws GeneralSecurityException {
+        LOG.info("=== Test: MAC update without initialization for {} ===", algorithm);
         final Mac mac = Mac.getInstance(algorithm, BotanProvider.NAME);
 
+        LOG.info("Attempting update without initialization...");
         final Exception exception = assertThrows(IllegalStateException.class, () -> mac.update(new byte[128]));
 
         assertEquals("MAC not initialized", exception.getMessage());
+        LOG.info("SUCCESS: Properly rejected uninitialized update for {}", algorithm);
     }
 
     @ParameterizedTest
     @CsvFileSource(resources = "/mac/mac.csv", numLinesToSkip = 1)
     @DisplayName("Test calling MAC doFinal before initialization")
     public void testMacDoFinalWithoutInitialization(String algorithm) throws GeneralSecurityException {
+        LOG.info("=== Test: MAC doFinal without initialization for {} ===", algorithm);
         final Mac mac = Mac.getInstance(algorithm, BotanProvider.NAME);
 
+        LOG.info("Attempting doFinal without initialization...");
         final Exception exception = assertThrows(IllegalStateException.class, () -> mac.doFinal());
 
         assertEquals("MAC not initialized", exception.getMessage());
+        LOG.info("SUCCESS: Properly rejected uninitialized doFinal for {}", algorithm);
     }
 
     @ParameterizedTest
     @CsvFileSource(resources = "/mac/mac.csv", numLinesToSkip = 1)
     @DisplayName("Test MAC output against Bouncy Castle")
     public void testAgainstBouncyCastle(String algorithm, int keySize) throws GeneralSecurityException {
+        LOG.info("=== Test: MAC {} against Bouncy Castle ===", algorithm);
         final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
 
         final Mac bc = Mac.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
         final Mac botan = Mac.getInstance(algorithm, BotanProvider.NAME);
 
+        LOG.info("Initializing both MACs with {} byte key", keySize);
         bc.init(key);
         botan.init(key);
 
         final byte[] expected = bc.doFinal("some input".getBytes());
         final byte[] actual = botan.doFinal("some input".getBytes());
 
+        LOG.info("Bouncy Castle output: {} bytes", expected.length);
+        LOG.info("Botan output: {} bytes", actual.length);
         assertArrayEquals(expected, actual, "MAC mismatch with Bouncy Castle provider for algorithm: "
                 + algorithm);
+        LOG.info("SUCCESS: {} matches Bouncy Castle", algorithm);
     }
 
     @ParameterizedTest
     @CsvFileSource(resources = "/mac/mac.csv", numLinesToSkip = 1)
     @DisplayName("Test MAC reset (Only for Botan)")
     public void testRestDigest(String algorithm, int keySize) throws GeneralSecurityException {
+        LOG.info("=== Test: MAC reset for {} ===", algorithm);
         final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
 
         final Mac bc = Mac.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
@@ -122,20 +139,26 @@ public class BotanMacTest {
         bc.init(key);
         botan.init(key);
 
+        LOG.info("Updating Botan with 'hello world', then resetting...");
         botan.update("hello world".getBytes());
         botan.reset();
 
+        LOG.info("Computing MAC for 'some input' on both providers");
         final byte[] expected = bc.doFinal("some input".getBytes());
         final byte[] actual = botan.doFinal("some input".getBytes());
 
+        LOG.info("Expected (BC): {} bytes", expected.length);
+        LOG.info("Actual (Botan after reset): {} bytes", actual.length);
         assertArrayEquals(expected, actual, "MAC mismatch with Bouncy Castle provider for algorithm: "
                 + algorithm);
+        LOG.info("SUCCESS: Reset works correctly for {}", algorithm);
     }
 
     @ParameterizedTest
     @CsvFileSource(resources = "/mac/mac.csv", numLinesToSkip = 1)
     @DisplayName("Test MAC reset (BC also reset)")
     public void testBothRestDigest(String algorithm, int keySize) throws GeneralSecurityException {
+        LOG.info("=== Test: MAC reset (both providers) for {} ===", algorithm);
         final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
 
         final Mac bc = Mac.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
@@ -144,23 +167,30 @@ public class BotanMacTest {
         bc.init(key);
         botan.init(key);
 
+        LOG.info("Updating both with 'hello world'");
         bc.update("hello world".getBytes());
         botan.update("hello world".getBytes());
 
+        LOG.info("Resetting both MACs");
         bc.reset();
         botan.reset();
 
+        LOG.info("Computing MAC for 'some input' on both providers");
         final byte[] expected = bc.doFinal("some input".getBytes());
         final byte[] actual = botan.doFinal("some input".getBytes());
 
+        LOG.info("Expected (BC): {} bytes", expected.length);
+        LOG.info("Actual (Botan): {} bytes", actual.length);
         assertArrayEquals(expected, actual, "MAC mismatch with Bouncy Castle provider for algorithm: "
                 + algorithm);
+        LOG.info("SUCCESS: Both resets work correctly for {}", algorithm);
     }
 
     @ParameterizedTest
     @CsvFileSource(resources = "/mac/mac.csv", numLinesToSkip = 1)
     @DisplayName("Test single Byte update")
     public void testSingleByteUpdate(String algorithm, int keySize) throws GeneralSecurityException {
+        LOG.info("=== Test: Single byte update for {} ===", algorithm);
         final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
 
         final Mac bc = Mac.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
@@ -169,17 +199,22 @@ public class BotanMacTest {
         bc.init(key);
         botan.init(key);
 
+        LOG.info("Updating Botan MAC byte-by-byte: 'H', 'e', 'l', 'l', 'o'");
         botan.update((byte) 'H');
         botan.update((byte) 'e');
         botan.update((byte) 'l');
         botan.update((byte) 'l');
         botan.update((byte) 'o');
 
+        LOG.info("Updating BC MAC with full string: 'Hello'");
         final byte[] expected = bc.doFinal("Hello".getBytes());
         final byte[] actual = botan.doFinal();
 
+        LOG.info("Expected (BC): {} bytes", expected.length);
+        LOG.info("Actual (Botan byte-by-byte): {} bytes", actual.length);
         assertArrayEquals(expected, actual, "MAC mismatch with Bouncy Castle provider for algorithm: "
                 + algorithm);
+        LOG.info("SUCCESS: Single byte updates work correctly for {}", algorithm);
     }
 
     @ParameterizedTest
@@ -187,15 +222,21 @@ public class BotanMacTest {
     @DisplayName("Test MAC with test vectors")
     public void testMacWithTestVectors(String algorithm, String key, String in, String out)
             throws GeneralSecurityException {
+        LOG.info("=== Test: {} with test vector ===", algorithm);
         final SecretKeySpec secretKey = new SecretKeySpec(HexUtils.decode(key), algorithm);
         final Mac mac = Mac.getInstance(algorithm, BotanProvider.NAME);
 
+        LOG.info("Key: {} bytes", HexUtils.decode(key).length);
+        LOG.info("Input: {} bytes", HexUtils.decode(in).length);
         mac.init(secretKey);
 
         final byte[] output = mac.doFinal(HexUtils.decode(in));
         final byte[] expected = HexUtils.decode(out);
 
+        LOG.info("Expected output: {} bytes", expected.length);
+        LOG.info("Actual output: {} bytes", output.length);
         assertArrayEquals(expected, output, "MAC mismatch with test vector");
+        LOG.info("SUCCESS: {} matches test vector", algorithm);
     }
 
     @ParameterizedTest
@@ -390,14 +431,17 @@ public class BotanMacTest {
     @Test
     @DisplayName("Verify clone throws CloneNotSupportedException")
     public void testCloneThrowsException() throws Exception {
+        LOG.info("=== Test: Verify MAC clone throws CloneNotSupportedException ===");
         Mac mac = Mac.getInstance("HmacSHA256", BotanProvider.NAME);
         SecretKeySpec key = new SecretKeySpec(new byte[32], "AES");
         mac.init(key);
         mac.update("test".getBytes());
 
+        LOG.info("Attempting to clone MAC...");
         assertThrows(CloneNotSupportedException.class, () -> {
             mac.clone();
         }, "clone() should throw CloneNotSupportedException");
+        LOG.info("SUCCESS: Clone properly threw CloneNotSupportedException");
     }
 
 }
