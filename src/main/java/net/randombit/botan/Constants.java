@@ -25,6 +25,16 @@ public final class Constants {
     public static final int BOTAN_DO_FINAL_FLAG = 1;
 
     /**
+     * Botan cipher encryption mode.
+     */
+    public static final int BOTAN_ENCRYPT_MODE = 0;
+
+    /**
+     * Botan cipher decryption mode.
+     */
+    public static final int BOTAN_DECRYPT_MODE = 1;
+
+    /**
      * Holds an empty array of bytes
      */
     public static final byte[] EMPTY_BYTE_ARRAY = new byte[0];

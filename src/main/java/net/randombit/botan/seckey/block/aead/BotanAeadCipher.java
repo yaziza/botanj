@@ -7,9 +7,10 @@
  *    Yasser Aziza - initial implementation
  */
 
-package net.randombit.botan.seckey.aead;
+package net.randombit.botan.seckey.block.aead;
 
 import static net.randombit.botan.Constants.BOTAN_DO_FINAL_FLAG;
+import static net.randombit.botan.Constants.BOTAN_ENCRYPT_MODE;
 import static net.randombit.botan.Constants.BOTAN_UPDATE_FLAG;
 import static net.randombit.botan.Constants.EMPTY_BYTE_ARRAY;
 import static net.randombit.botan.jnr.BotanInstance.checkNativeCall;
@@ -38,10 +39,16 @@ public abstract class BotanAeadCipher extends BotanBlockCipher {
     private int tLen = 128;
 
     /**
+     * Native botan_cipher_set_associated_data() will be called only once.
+     * The engineUpdateAAD input will be buffered.
+     */
+    protected byte[] aad_buffer = EMPTY_BYTE_ARRAY;
+
+    /**
      * Whether this cipher has been properly initialized and can start
      * encrypting/decrypting.
      */
-    private boolean isInitialized;
+    protected boolean isInitialized;
 
     private BotanAeadCipher(String name, CipherMode cipherMode, int blockSize) {
         super(name, cipherMode, blockSize);
@@ -63,8 +70,6 @@ public abstract class BotanAeadCipher extends BotanBlockCipher {
     protected void engineInit(int opmode, Key key, AlgorithmParameterSpec params, SecureRandom random)
             throws InvalidKeyException, InvalidAlgorithmParameterException {
 
-        engineInit(opmode, key, random);
-
         if (params instanceof IvParameterSpec) {
             iv = ((IvParameterSpec) params).getIV();
 
@@ -78,16 +83,27 @@ public abstract class BotanAeadCipher extends BotanBlockCipher {
 
         checkNonceValid(iv.length);
         checkTagValid(tLen);
+
+        if (isInitialized) {
+            int err = singleton().botan_cipher_reset(cipherRef.getValue());
+            checkNativeCall(err, "botan_cipher_reset");
+
+            payload_buffer = EMPTY_BYTE_ARRAY;
+            aad_buffer = EMPTY_BYTE_ARRAY;
+            isInitialized = false;
+        }
+
+        engineInit(opmode, key, random);
     }
 
     @Override
     protected void engineUpdateAAD(byte[] src, int offset, int len) {
-        final byte[] inputFromOffset = Arrays.copyOfRange(src, offset, len);
 
-        int err = singleton().botan_cipher_set_associated_data(cipherRef.getValue(), inputFromOffset, len);
-        checkNativeCall(err, "botan_cipher_set_associated_data");
+        // resize buffer and append the new input
+        final byte[] currentInput = Arrays.copyOf(aad_buffer, Math.addExact(len, aad_buffer.length));
+        System.arraycopy(src, offset, currentInput, aad_buffer.length, len);
 
-        startAeadMode();
+        aad_buffer = currentInput;
     }
 
     @Override
@@ -98,6 +114,9 @@ public abstract class BotanAeadCipher extends BotanBlockCipher {
     @Override
     protected byte[] doCipher(byte[] input, int outputLength, int botanFlag) {
         if (!isInitialized) {
+            int err = singleton().botan_cipher_set_associated_data(cipherRef.getValue(), aad_buffer, aad_buffer.length);
+            checkNativeCall(err, "botan_cipher_set_associated_data");
+
             startAeadMode();
         }
 
@@ -106,7 +125,16 @@ public abstract class BotanAeadCipher extends BotanBlockCipher {
 
     @Override
     protected void engineReset() {
-        super.engineReset();
+        int err = singleton().botan_cipher_reset(cipherRef.getValue());
+        checkNativeCall(err, "botan_cipher_reset");
+
+        if (mode == BOTAN_ENCRYPT_MODE) {
+            this.iv = null;
+        }
+
+        payload_buffer = EMPTY_BYTE_ARRAY;
+        aad_buffer = EMPTY_BYTE_ARRAY;
+
         isInitialized = false;
     }
 
@@ -123,8 +151,9 @@ public abstract class BotanAeadCipher extends BotanBlockCipher {
     }
 
     private void startAeadMode() {
-        checkNonceValid(iv.length);
-
+        if (iv == null && mode == BOTAN_ENCRYPT_MODE) {
+            throw new IllegalStateException("Missing or invalid IvParameterSpec provided!");
+        }
         final int err = singleton().botan_cipher_start(cipherRef.getValue(), iv, iv.length);
         checkNativeCall(err, "botan_cipher_start");
 
@@ -241,6 +270,20 @@ public abstract class BotanAeadCipher extends BotanBlockCipher {
         protected boolean isValidTagLength(int tagLength) {
             // SIV always uses 128-bit tag (fixed)
             return tagLength == 128;
+        }
+
+        @Override
+        protected void engineReset() {
+            int err = singleton().botan_cipher_reset(cipherRef.getValue());
+            checkNativeCall(err, "botan_cipher_reset");
+
+            err = singleton().botan_cipher_start(cipherRef.getValue(), iv, iv.length);
+            checkNativeCall(err, "botan_cipher_start");
+
+            aad_buffer = EMPTY_BYTE_ARRAY;
+            payload_buffer = EMPTY_BYTE_ARRAY;
+
+            this.isInitialized = true;
         }
     }
 

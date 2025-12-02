@@ -221,7 +221,7 @@ public final class BotanProvider extends Provider {
     private static final String MAC_PREFIX = ".mac.";
     private static final String BLOCK_CIPHER_PREFIX = ".seckey.block.";
     private static final String STREAM_CIPHER_PREFIX = ".seckey.stream.";
-    private static final String AEAD_CIPHER_PREFIX = ".seckey.aead.";
+    private static final String AEAD_CIPHER_PREFIX = ".seckey.block.aead.";
 
     private static final BotanLibrary NATIVE = BotanInstance.singleton();
 

@@ -10,6 +10,7 @@
 package net.randombit.botan.seckey.block;
 
 import static net.randombit.botan.Constants.BOTAN_DO_FINAL_FLAG;
+import static net.randombit.botan.Constants.BOTAN_ENCRYPT_MODE;
 import static net.randombit.botan.Constants.BOTAN_UPDATE_FLAG;
 import static net.randombit.botan.Constants.EMPTY_BYTE_ARRAY;
 import static net.randombit.botan.jnr.BotanInstance.checkNativeCall;
@@ -59,7 +60,7 @@ public abstract class BotanBlockCipher extends net.randombit.botan.seckey.BotanB
      * size {@link BotanBlockCipher#updateGranularity}. The rest will be held
      * until the next update or doFinal call.
      */
-    protected byte[] buffer;
+    protected byte[] payload_buffer;
 
     /**
      * Constructs a block cipher with the specified parameters.
@@ -115,25 +116,29 @@ public abstract class BotanBlockCipher extends net.randombit.botan.seckey.BotanB
         checkNativeCall(err, "botan_cipher_get_update_granularity");
 
         this.updateGranularity = updateGranularity.intValue();
-        this.buffer = EMPTY_BYTE_ARRAY;
+        this.payload_buffer = EMPTY_BYTE_ARRAY;
     }
 
     @Override
     protected byte[] engineUpdate(byte[] input, int inputOffset, int inputLen) {
+        if (iv == null && mode == BOTAN_ENCRYPT_MODE) {
+            throw new IllegalStateException("Missing or invalid IvParameterSpec provided!");
+        }
+
         if (inputLen == 0) {
             return EMPTY_BYTE_ARRAY;
         }
 
         // resize buffer and append the new input
-        final byte[] currentInput = Arrays.copyOf(buffer, Math.addExact(inputLen, buffer.length));
-        System.arraycopy(input, inputOffset, currentInput, buffer.length, inputLen);
+        final byte[] currentInput = Arrays.copyOf(payload_buffer, Math.addExact(inputLen, payload_buffer.length));
+        System.arraycopy(input, inputOffset, currentInput, payload_buffer.length, inputLen);
 
         // compute the new buffer offset
         final int bufferOffset = currentInput.length % updateGranularity;
 
         final int index = Math.subtractExact(currentInput.length, bufferOffset);
         final byte[] doCipherInput = Arrays.copyOfRange(currentInput, 0, index);
-        buffer = Arrays.copyOfRange(currentInput, index, currentInput.length);
+        payload_buffer = Arrays.copyOfRange(currentInput, index, currentInput.length);
 
         return (doCipherInput.length == 0) ? EMPTY_BYTE_ARRAY
                 : doCipher(doCipherInput, 0, doCipherInput.length, BOTAN_UPDATE_FLAG);
@@ -141,7 +146,7 @@ public abstract class BotanBlockCipher extends net.randombit.botan.seckey.BotanB
 
     @Override
     protected byte[] engineDoFinal(byte[] input, int inputOffset, int inputLen) throws IllegalBlockSizeException {
-        boolean isBlockSizeAligned = Math.addExact(inputLen, buffer.length) % blockSize == 0;
+        boolean isBlockSizeAligned = Math.addExact(inputLen, payload_buffer.length) % blockSize == 0;
         if (isWithoutPadding() && requiresDataBlockAligned() && !isBlockSizeAligned) {
             throw new IllegalBlockSizeException("Data not block size aligned");
         }
@@ -152,11 +157,11 @@ public abstract class BotanBlockCipher extends net.randombit.botan.seckey.BotanB
     @Override
     protected void engineReset() {
         super.engineReset();
-        buffer = EMPTY_BYTE_ARRAY;
+        payload_buffer = EMPTY_BYTE_ARRAY;
     }
 
     private byte[] doCipher(byte[] input, int inputOffset, int inputLen, int botanFlag) {
-        boolean isEmptyInput = (inputLen == 0) && (buffer.length == 0);
+        boolean isEmptyInput = (inputLen == 0) && (payload_buffer.length == 0);
 
         if (isEmptyInput && Cipher.DECRYPT_MODE == mode) {
             return EMPTY_BYTE_ARRAY;
@@ -175,13 +180,13 @@ public abstract class BotanBlockCipher extends net.randombit.botan.seckey.BotanB
 
     private byte[] addBufferedInput(byte[] input, int inputOffset, int inputLen) {
         // resize buffer
-        final int index = Math.addExact(inputLen, buffer.length);
-        final byte[] result = Arrays.copyOf(buffer, index);
+        final int index = Math.addExact(inputLen, payload_buffer.length);
+        final byte[] result = Arrays.copyOf(payload_buffer, index);
 
         if (inputLen > 0) {
             // append the new input
             byte[] inputFromOffset = Arrays.copyOfRange(input, inputOffset, input.length);
-            System.arraycopy(inputFromOffset, 0, result, buffer.length, index);
+            System.arraycopy(inputFromOffset, 0, result, payload_buffer.length, index);
         }
 
         return result;
