@@ -4,7 +4,7 @@ net.randombit.botan.digest
 net.randombit.botan.jnr
 net.randombit.botan.mac
 net.randombit.botan.seckey
-net.randombit.botan.seckey.aead
 net.randombit.botan.seckey.block
+net.randombit.botan.seckey.block.aead
 net.randombit.botan.seckey.stream
 net.randombit.botan.util
