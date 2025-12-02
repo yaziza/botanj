@@ -439,11 +439,8 @@ public abstract class BotanBaseSymmetricCipher extends CipherSpi {
         int err = singleton().botan_cipher_reset(cipherRef.getValue());
         checkNativeCall(err, "botan_cipher_reset");
 
-        if (iv != null) {
-            //FIXME: nonce reuse - disable starting cipher with same IV
-            err = singleton().botan_cipher_start(cipherRef.getValue(), iv, iv.length);
-            checkNativeCall(err, "botan_cipher_start");
-        }
+        err = singleton().botan_cipher_start(cipherRef.getValue(), iv, iv.length);
+        checkNativeCall(err, "botan_cipher_start");
     }
 
     @Override
