@@ -20,7 +20,7 @@
 
         <!-- global project properties -->
         <java.version>17</java.version>
-        <maven-compiler-plugin>3.14.0</maven-compiler-plugin>
+        <maven-compiler-plugin>3.14.1</maven-compiler-plugin>
         <maven-surefire-version>3.5.3</maven-surefire-version>
         <maven-checkstyle-version>3.6.0</maven-checkstyle-version>
         <jacoco.plugin.version>0.8.13</jacoco.plugin.version>
