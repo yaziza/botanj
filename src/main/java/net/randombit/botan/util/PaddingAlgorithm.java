@@ -11,7 +11,6 @@ package net.randombit.botan.util;
 
 import javax.crypto.NoSuchPaddingException;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -65,7 +64,7 @@ public enum PaddingAlgorithm {
     public static PaddingAlgorithm fromName(String name) throws NoSuchPaddingException {
         List<PaddingAlgorithm> algorithm = Stream.of(PaddingAlgorithm.values())
                 .filter(p -> p.name.equalsIgnoreCase(name))
-                .collect(Collectors.toList());
+                .toList();
 
         if (algorithm.isEmpty()) {
             throw new NoSuchPaddingException("Padding algorithm not supported: " + name);

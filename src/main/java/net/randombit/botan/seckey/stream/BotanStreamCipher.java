@@ -223,7 +223,7 @@ public abstract class BotanStreamCipher extends net.randombit.botan.seckey.Botan
 
         @Override
         protected String getBotanCipherName(int keyLength) {
-            return String.format("AES-%d/OFB", keyLength * Byte.SIZE);
+            return String.format("AES-%d/OFB", Math.multiplyExact(keyLength, Byte.SIZE));
         }
 
         @Override

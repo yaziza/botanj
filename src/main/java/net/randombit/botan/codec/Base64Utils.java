@@ -102,7 +102,7 @@ public final class Base64Utils {
     }
 
     private static int base64InputLength(byte[] input) {
-        int n = input.length / 4;
+        int n = Math.divideExact(input.length, 4);
 
         return Math.multiplyExact(n, 3);
     }

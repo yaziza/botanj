@@ -169,9 +169,9 @@ import jnr.ffi.byref.PointerByReference;
  *   <li><b>Performance</b> - Delegates to native Botan implementation for optimal performance</li>
  * </ul>
  *
+ * @author Yasser Aziza
  * @see java.security.MessageDigestSpi
  * @see java.lang.ref.Cleaner
- * @author Yasser Aziza
  * @since 0.1.0
  */
 public class BotanMessageDigest extends MessageDigestSpi implements Cloneable {
