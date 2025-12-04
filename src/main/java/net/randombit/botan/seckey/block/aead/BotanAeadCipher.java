@@ -196,7 +196,7 @@ public abstract class BotanAeadCipher extends BotanBlockCipher {
 
         @Override
         protected String getBotanCipherName(int keySize) {
-            return String.format("AES-%d/GCM", keySize * Byte.SIZE);
+            return String.format("AES-%d/GCM", Math.multiplyExact(keySize, Byte.SIZE));
         }
 
         @Override
@@ -227,7 +227,7 @@ public abstract class BotanAeadCipher extends BotanBlockCipher {
 
         @Override
         protected String getBotanCipherName(int keySize) {
-            return String.format("AES-%d/CCM(16,4)", keySize * Byte.SIZE);
+            return String.format("AES-%d/CCM(16,4)", Math.multiplyExact(keySize, Byte.SIZE));
         }
 
         @Override
@@ -257,7 +257,7 @@ public abstract class BotanAeadCipher extends BotanBlockCipher {
 
         @Override
         protected String getBotanCipherName(int keySize) {
-            return String.format("AES-%d/SIV", keySize * Byte.SIZE);
+            return String.format("AES-%d/SIV", Math.multiplyExact(keySize, Byte.SIZE) / 2);
         }
 
         @Override
@@ -301,7 +301,7 @@ public abstract class BotanAeadCipher extends BotanBlockCipher {
 
         @Override
         protected String getBotanCipherName(int keySize) {
-            return String.format("AES-%d/EAX", keySize * Byte.SIZE);
+            return String.format("AES-%d/EAX", Math.multiplyExact(keySize, Byte.SIZE));
         }
 
         @Override
@@ -332,7 +332,7 @@ public abstract class BotanAeadCipher extends BotanBlockCipher {
 
         @Override
         protected String getBotanCipherName(int keySize) {
-            return String.format("AES-%d/OCB", keySize * Byte.SIZE);
+            return String.format("AES-%d/OCB", Math.multiplyExact(keySize, Byte.SIZE));
         }
 
         @Override
