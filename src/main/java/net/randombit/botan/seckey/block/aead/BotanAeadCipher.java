@@ -257,7 +257,7 @@ public abstract class BotanAeadCipher extends BotanBlockCipher {
 
         @Override
         protected String getBotanCipherName(int keySize) {
-            return String.format("AES-%d/SIV", keySize * Byte.SIZE);
+            return String.format("AES-%d/SIV", keySize * Byte.SIZE / 2);
         }
 
         @Override

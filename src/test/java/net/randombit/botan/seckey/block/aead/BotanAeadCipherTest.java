@@ -53,7 +53,8 @@ public class BotanAeadCipherTest {
 
     @ParameterizedTest
     @CsvFileSource(resources = {"/seckey/block/aead/ccm_no_padding.csv", "/seckey/block/aead/eax_no_padding.csv",
-            "/seckey/block/aead/gcm_no_padding.csv", "/seckey/block/aead/ocb_no_padding.csv"}, numLinesToSkip = 1)
+            "/seckey/block/aead/gcm_no_padding.csv", "/seckey/block/aead/ocb_no_padding.csv",
+            "/seckey/block/aead/siv_no_padding.csv"}, numLinesToSkip = 1)
     @DisplayName("Test cipher block size")
     public void testCipherBlockSize(String algorithm, String key) throws GeneralSecurityException {
         LOG.info("=== Test: Cipher block size for {} ===", algorithm);
@@ -109,7 +110,8 @@ public class BotanAeadCipherTest {
 
     @ParameterizedTest
     @CsvFileSource(resources = {"/seckey/block/aead/ccm_no_padding.csv", "/seckey/block/aead/eax_no_padding.csv",
-            "/seckey/block/aead/gcm_no_padding.csv", "/seckey/block/aead/ocb_no_padding.csv"}, numLinesToSkip = 1)
+            "/seckey/block/aead/gcm_no_padding.csv", "/seckey/block/aead/ocb_no_padding.csv",
+            "/seckey/block/aead/siv_no_padding.csv"}, numLinesToSkip = 1)
     @DisplayName("Test calling cipher doFinal without input (No Padding)")
     public void testCipherDoFinalWithoutInputNoPadding(String algorithm, String key, String nonce)
             throws GeneralSecurityException {
@@ -126,7 +128,8 @@ public class BotanAeadCipherTest {
 
     @ParameterizedTest
     @CsvFileSource(resources = {"/seckey/block/aead/ccm_no_padding.csv", "/seckey/block/aead/eax_no_padding.csv",
-            "/seckey/block/aead/gcm_no_padding.csv", "/seckey/block/aead/ocb_no_padding.csv"}, numLinesToSkip = 1)
+            "/seckey/block/aead/gcm_no_padding.csv", "/seckey/block/aead/ocb_no_padding.csv",
+            "/seckey/block/aead/siv_no_padding.csv"}, numLinesToSkip = 1)
     @DisplayName("Test encrypt then decrypt")
     public void testEncryptThenDecrypt(String algorithm, String key, String nonce, String ad) throws GeneralSecurityException {
         LOG.info("=== Test: Encrypt then decrypt for {} ===", algorithm);
@@ -145,7 +148,6 @@ public class BotanAeadCipherTest {
 
         cipher.init(Cipher.DECRYPT_MODE, keyBytes, nonceBytes);
         cipher.updateAAD(HexUtils.decode(ad));
-//        cipher.updateAAD(HexUtils.decode(ad));
         final byte[] plainText = cipher.doFinal(cipherText);
         LOG.info("Decrypted: {} bytes", plainText.length);
 
@@ -155,7 +157,8 @@ public class BotanAeadCipherTest {
 
     @ParameterizedTest
     @CsvFileSource(resources = {"/seckey/block/aead/ccm_no_padding.csv", "/seckey/block/aead/eax_no_padding.csv",
-            "/seckey/block/aead/gcm_no_padding.csv", "/seckey/block/aead/ocb_no_padding.csv"}, numLinesToSkip = 1)
+            "/seckey/block/aead/gcm_no_padding.csv", "/seckey/block/aead/ocb_no_padding.csv",
+            "/seckey/block/aead/siv_no_padding.csv"}, numLinesToSkip = 1)
     @DisplayName("Test AEAD cipher encryption with test vectors")
     public void testCipherWithTestVectors(String algorithm, String key, String nonce, String ad, String in, String out)
             throws GeneralSecurityException {
@@ -687,7 +690,6 @@ public class BotanAeadCipherTest {
     }
 
     @Test
-    @Disabled
     @DisplayName("Test SIV with invalid tag length below 128")
     public void testSivInvalidTagLengthBelow128() throws GeneralSecurityException {
         final Cipher cipher = Cipher.getInstance("AES/SIV/NoPadding", BotanProvider.NAME);
@@ -703,7 +705,6 @@ public class BotanAeadCipherTest {
     }
 
     @Test
-    @Disabled
     @DisplayName("Test SIV with invalid tag length above 128")
     public void testSivInvalidTagLengthAbove128() throws GeneralSecurityException {
         final Cipher cipher = Cipher.getInstance("AES/SIV/NoPadding", BotanProvider.NAME);
@@ -719,7 +720,6 @@ public class BotanAeadCipherTest {
     }
 
     @Test
-    @Disabled
     @DisplayName("Test SIV with valid tag length")
     public void testSivValidTagLength() throws GeneralSecurityException {
         final Cipher cipher = Cipher.getInstance("AES/SIV/NoPadding", BotanProvider.NAME);
