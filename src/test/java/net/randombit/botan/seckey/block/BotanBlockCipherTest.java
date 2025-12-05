@@ -427,4 +427,229 @@ public class BotanBlockCipherTest {
         }
     }
 
+    // ===== Edge Case Tests =====
+
+    @Test
+    @DisplayName("Test cipher creation")
+    void testCipherCreation() throws Exception {
+        // Test that we can create a cipher instance successfully
+        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS7", "Botan");
+        assertEquals("Botan", cipher.getProvider().getName(),
+                "Cipher provider should be Botan");
+    }
+
+    @Test
+    @DisplayName("Test doFinal with empty input")
+    void testEmptyDoFinal() throws Exception {
+        // Test doFinal with empty input
+        Cipher cipher = Cipher.getInstance("AES/CTR/NoPadding", "Botan");
+
+        byte[] key = new byte[16]; // 128-bit key
+        byte[] iv = new byte[16];
+        SecretKeySpec keySpec = new SecretKeySpec(key, "AES");
+        IvParameterSpec ivSpec = new IvParameterSpec(iv);
+
+        cipher.init(Cipher.ENCRYPT_MODE, keySpec, ivSpec);
+
+        // Empty input should work for stream ciphers
+        byte[] result = cipher.doFinal(new byte[0]);
+        assertEquals(0, result.length, "Result should be empty for empty input");
+    }
+
+    @Test
+    @DisplayName("Test multiple cipher re-initializations")
+    void testMultipleInitializations() throws Exception {
+        // Test re-initialization with different keys
+        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS7", "Botan");
+
+        // First initialization
+        byte[] key1 = new byte[16];
+        key1[0] = 1;
+        byte[] iv1 = new byte[16];
+        SecretKeySpec keySpec1 = new SecretKeySpec(key1, "AES");
+        IvParameterSpec ivSpec1 = new IvParameterSpec(iv1);
+
+        cipher.init(Cipher.ENCRYPT_MODE, keySpec1, ivSpec1);
+        byte[] plaintext = "Test message".getBytes();
+        byte[] ciphertext1 = cipher.doFinal(plaintext);
+
+        // Re-initialize with different key
+        byte[] key2 = new byte[16];
+        key2[0] = 2;
+        byte[] iv2 = new byte[16];
+        SecretKeySpec keySpec2 = new SecretKeySpec(key2, "AES");
+        IvParameterSpec ivSpec2 = new IvParameterSpec(iv2);
+
+        cipher.init(Cipher.ENCRYPT_MODE, keySpec2, ivSpec2);
+        byte[] ciphertext2 = cipher.doFinal(plaintext);
+
+        // Ciphertexts should be different
+        assertNotEquals(Arrays.hashCode(ciphertext1), Arrays.hashCode(ciphertext2),
+                "Different keys should produce different ciphertexts");
+    }
+
+    @Test
+    @DisplayName("Test getIV returns correct IV")
+    void testGetIV() throws Exception {
+        // Test that getIV returns the correct IV
+        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS7", "Botan");
+
+        byte[] key = new byte[16];
+        byte[] iv = new byte[16];
+        for (int i = 0; i < 16; i++) {
+            iv[i] = (byte) i;
+        }
+
+        SecretKeySpec keySpec = new SecretKeySpec(key, "AES");
+        IvParameterSpec ivSpec = new IvParameterSpec(iv);
+
+        cipher.init(Cipher.ENCRYPT_MODE, keySpec, ivSpec);
+
+        byte[] retrievedIv = cipher.getIV();
+        assertArrayEquals(iv, retrievedIv, "Retrieved IV should match the one provided");
+    }
+
+    @Test
+    @DisplayName("Test getBlockSize for different ciphers")
+    void testGetBlockSize() throws Exception {
+        // Test getBlockSize for block ciphers
+        Cipher aesCipher = Cipher.getInstance("AES/CBC/PKCS7", "Botan");
+        assertEquals(16, aesCipher.getBlockSize(), "AES block size should be 16 bytes");
+
+        // Stream ciphers should return 0 or 1 for block size
+        Cipher streamCipher = Cipher.getInstance("ChaCha20/None/NoPadding", "Botan");
+        assertEquals(1, streamCipher.getBlockSize(),
+                "ChaCha20 stream cipher block size should be 1");
+    }
+
+    @Test
+    @DisplayName("Test incremental update processing")
+    void testIncrementalUpdate() throws Exception {
+        // Test incremental processing with update
+        Cipher cipher = Cipher.getInstance("AES/CTR/NoPadding", "Botan");
+
+        byte[] key = new byte[16];
+        byte[] iv = new byte[16];
+        SecretKeySpec keySpec = new SecretKeySpec(key, "AES");
+        IvParameterSpec ivSpec = new IvParameterSpec(iv);
+
+        cipher.init(Cipher.ENCRYPT_MODE, keySpec, ivSpec);
+
+        // Process data incrementally
+        byte[] part1 = "Hello ".getBytes();
+        byte[] part2 = "World".getBytes();
+
+        byte[] encrypted1 = cipher.update(part1);
+        byte[] encrypted2 = cipher.update(part2);
+        byte[] finalPart = cipher.doFinal();
+
+        // Combine all parts
+        int totalLength = (encrypted1 != null ? encrypted1.length : 0) +
+                (encrypted2 != null ? encrypted2.length : 0) +
+                (finalPart != null ? finalPart.length : 0);
+        byte[] combined = new byte[totalLength];
+
+        int offset = 0;
+        if (encrypted1 != null) {
+            System.arraycopy(encrypted1, 0, combined, offset, encrypted1.length);
+            offset += encrypted1.length;
+        }
+        if (encrypted2 != null) {
+            System.arraycopy(encrypted2, 0, combined, offset, encrypted2.length);
+            offset += encrypted2.length;
+        }
+        if (finalPart != null) {
+            System.arraycopy(finalPart, 0, combined, offset, finalPart.length);
+        }
+
+        // Decrypt to verify
+        cipher.init(Cipher.DECRYPT_MODE, keySpec, ivSpec);
+        byte[] decrypted = cipher.doFinal(combined);
+
+        String original = "Hello World";
+        assertEquals(original, new String(decrypted),
+                "Decrypted text should match original");
+    }
+
+    @Test
+    @DisplayName("Test update with offset and length")
+    void testUpdateWithOffset() throws Exception {
+        // Test update with offset and length parameters
+        Cipher cipher = Cipher.getInstance("AES/CTR/NoPadding", "Botan");
+
+        byte[] key = new byte[16];
+        byte[] iv = new byte[16];
+        SecretKeySpec keySpec = new SecretKeySpec(key, "AES");
+        IvParameterSpec ivSpec = new IvParameterSpec(iv);
+
+        cipher.init(Cipher.ENCRYPT_MODE, keySpec, ivSpec);
+
+        // Create input with extra data at the beginning and end
+        byte[] input = "XXXTestDataYYY".getBytes();
+        int offset = 3;
+        int length = 8; // "TestData"
+
+        byte[] output = new byte[cipher.getOutputSize(length)];
+        int outputLen = cipher.update(input, offset, length, output, 0);
+
+        byte[] finalPart = cipher.doFinal();
+
+        // Verify by decrypting
+        cipher.init(Cipher.DECRYPT_MODE, keySpec, ivSpec);
+        byte[] decrypted = cipher.doFinal(output, 0, outputLen);
+
+        assertEquals("TestData", new String(decrypted),
+                "Decrypted text should match the extracted portion");
+    }
+
+    @Test
+    @DisplayName("Test getOutputSize calculation")
+    void testGetOutputSize() throws Exception {
+        // Test getOutputSize for block ciphers
+        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS7", "Botan");
+
+        byte[] key = new byte[16];
+        byte[] iv = new byte[16];
+        SecretKeySpec keySpec = new SecretKeySpec(key, "AES");
+        IvParameterSpec ivSpec = new IvParameterSpec(iv);
+
+        cipher.init(Cipher.ENCRYPT_MODE, keySpec, ivSpec);
+
+        // For block ciphers with padding, output size should account for padding
+        int inputLen = 10;
+        int outputSize = cipher.getOutputSize(inputLen);
+
+        // With PKCS7 padding, output should be rounded up to next block (16 bytes)
+        assertEquals(16, outputSize,
+                "Output size should be 16 bytes (one block) for 10-byte input with padding");
+    }
+
+    @Test
+    @DisplayName("Test different AES key sizes")
+    void testDifferentKeySizes() throws Exception {
+        // Test with different AES key sizes: 128, 192, 256 bits
+        int[] keySizes = {16, 24, 32};
+
+        for (int keySize : keySizes) {
+            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS7", "Botan");
+
+            byte[] key = new byte[keySize];
+            byte[] iv = new byte[16];
+            SecretKeySpec keySpec = new SecretKeySpec(key, "AES");
+            IvParameterSpec ivSpec = new IvParameterSpec(iv);
+
+            cipher.init(Cipher.ENCRYPT_MODE, keySpec, ivSpec);
+
+            byte[] plaintext = "Test message".getBytes();
+            byte[] ciphertext = cipher.doFinal(plaintext);
+
+            // Decrypt to verify
+            cipher.init(Cipher.DECRYPT_MODE, keySpec, ivSpec);
+            byte[] decrypted = cipher.doFinal(ciphertext);
+
+            assertArrayEquals(plaintext, decrypted,
+                    "Decrypted text should match original for key size " + (keySize * 8));
+        }
+    }
+
 }
