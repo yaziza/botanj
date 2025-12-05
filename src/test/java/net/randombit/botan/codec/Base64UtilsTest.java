@@ -159,4 +159,18 @@ public class Base64UtilsTest {
         LOG.info("SUCCESS: Properly rejected malformed input with correct error message");
     }
 
+    @Test
+    @DisplayName("Test decoding input with invalid length (not multiple of 4)")
+    public void testDecodeInvalidLength() {
+        LOG.info("=== Test: Decoding input with invalid length ===");
+        // Create valid Base64 characters but with length not divisible by 4
+        final String input = "ABC"; // length = 3, not multiple of 4
+        LOG.info("Testing input with length {}, which is not a multiple of 4", input.length());
+
+        final Exception exception = assertThrows(ArithmeticException.class, () -> Base64Utils.decode(input));
+
+        assertEquals("Input length is not a multiple of 4", exception.getMessage());
+        LOG.info("SUCCESS: Properly rejected input with invalid length");
+    }
+
 }
