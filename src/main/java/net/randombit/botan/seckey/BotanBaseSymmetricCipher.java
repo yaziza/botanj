@@ -223,9 +223,9 @@ import net.randombit.botan.util.BotanUtil;
  *   <li>{@code BotanAeadCipher} - Authenticated encryption modes</li>
  * </ul>
  *
+ * @author Yasser Aziza
  * @see javax.crypto.CipherSpi
  * @see java.lang.ref.Cleaner
- * @author Yasser Aziza
  * @since 0.1.0
  */
 public abstract class BotanBaseSymmetricCipher extends CipherSpi {
@@ -406,9 +406,9 @@ public abstract class BotanBaseSymmetricCipher extends CipherSpi {
     /**
      * Performs cipher operation using Botan native library.
      *
-     * @param input input data
+     * @param input       input data
      * @param inputLength length of input
-     * @param botanFlag Botan operation flag
+     * @param botanFlag   Botan operation flag
      * @return encrypted or decrypted output
      */
     protected byte[] doCipher(byte[] input, int inputLength, int botanFlag) {
@@ -450,13 +450,20 @@ public abstract class BotanBaseSymmetricCipher extends CipherSpi {
 
     /**
      * Cleanup action for native Cipher resources.
+     *
+     * TODO: Investigate if botan_cipher_destroy also calls clear internally.
+     * If it does, we should remove the explicit botan_cipher_clear call to avoid redundant operations.
      */
     private record BotanCipherCleanupAction(jnr.ffi.Pointer cipherPointer) implements Runnable {
 
         @Override
         public void run() {
             if (cipherPointer != null) {
-                singleton().botan_cipher_destroy(cipherPointer);
+                try {
+                    singleton().botan_cipher_clear(cipherPointer);
+                } finally {
+                    singleton().botan_cipher_destroy(cipherPointer);
+                }
             }
         }
     }

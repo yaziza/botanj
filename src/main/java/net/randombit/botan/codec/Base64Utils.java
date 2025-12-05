@@ -102,6 +102,9 @@ public final class Base64Utils {
     }
 
     private static int base64InputLength(byte[] input) {
+        if (input.length % 4 != 0) {
+            throw new ArithmeticException("Input length is not a multiple of 4");
+        }
         int n = input.length / 4;
 
         return Math.multiplyExact(n, 3);

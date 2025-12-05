@@ -163,9 +163,9 @@ import jnr.ffi.LibraryLoader;
  *   <li><b>Error Preservation:</b> Original UnsatisfiedLinkError is preserved for accurate diagnosis</li>
  * </ul>
  *
+ * @author Yasser Aziza
  * @see BotanLibrary
  * @see jnr.ffi.LibraryLoader
- * @author Yasser Aziza
  * @since 0.1.0
  */
 public final class BotanInstance {

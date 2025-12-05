@@ -65,9 +65,9 @@ public abstract class BotanBlockCipher extends net.randombit.botan.seckey.BotanB
     /**
      * Constructs a block cipher with the specified parameters.
      *
-     * @param name the algorithm name
+     * @param name       the algorithm name
      * @param cipherMode the cipher mode
-     * @param blockSize the block size in bytes
+     * @param blockSize  the block size in bytes
      */
     protected BotanBlockCipher(String name, CipherMode cipherMode, int blockSize) {
         super(name);

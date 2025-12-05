@@ -149,9 +149,9 @@ import net.randombit.botan.util.BotanUtil;
  *       thanks to the Cleaner API</li>
  * </ul>
  *
+ * @author Yasser Aziza
  * @see javax.crypto.MacSpi
  * @see java.lang.ref.Cleaner
- * @author Yasser Aziza
  * @since 0.1.0
  */
 public abstract class BotanMac extends MacSpi {
@@ -289,13 +289,20 @@ public abstract class BotanMac extends MacSpi {
 
     /**
      * Cleanup action for native MAC resources.
+     *
+     * TODO: Investigate if botan_mac_destroy also calls clear internally.
+     * If it does, we should remove the explicit botan_mac_clear call to avoid redundant operations.
      */
     private record BotanMacCleanupAction(jnr.ffi.Pointer macPointer) implements Runnable {
 
         @Override
         public void run() {
             if (macPointer != null) {
-                singleton().botan_mac_destroy(macPointer);
+                try {
+                    singleton().botan_mac_clear(macPointer);
+                } finally {
+                    singleton().botan_mac_destroy(macPointer);
+                }
             }
         }
     }
@@ -313,7 +320,7 @@ public abstract class BotanMac extends MacSpi {
 
         @Override
         public String getBotanMacName(int keySize) {
-            return String.format("CMAC(AES-%d)", keySize * Byte.SIZE);
+            return String.format("CMAC(AES-%d)", Math.multiplyExact(keySize, Byte.SIZE));
         }
     }
 

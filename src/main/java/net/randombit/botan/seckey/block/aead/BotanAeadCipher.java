@@ -34,21 +34,19 @@ import net.randombit.botan.seckey.block.BotanBlockCipher;
 public abstract class BotanAeadCipher extends BotanBlockCipher {
 
     /**
-     * Holds the tag length for AEAD ciphers.
-     */
-    private int tLen = 128;
-
-    /**
      * Native botan_cipher_set_associated_data() will be called only once.
      * The engineUpdateAAD input will be buffered.
      */
     protected byte[] aad_buffer = EMPTY_BYTE_ARRAY;
-
     /**
      * Whether this cipher has been properly initialized and can start
      * encrypting/decrypting.
      */
     protected boolean isInitialized;
+    /**
+     * Holds the tag length for AEAD ciphers.
+     */
+    private int tLen = 128;
 
     private BotanAeadCipher(String name, CipherMode cipherMode, int blockSize) {
         super(name, cipherMode, blockSize);
@@ -56,6 +54,9 @@ public abstract class BotanAeadCipher extends BotanBlockCipher {
 
     @Override
     protected int engineGetOutputSize(int inputLen) {
+        if (tLen % Byte.SIZE != 0) {
+            throw new ArithmeticException("Tag length is not a multiple of byte size");
+        }
         final int tLenInBytes = tLen / Byte.SIZE;
 
         return Math.addExact(inputLen, tLenInBytes);
@@ -209,7 +210,7 @@ public abstract class BotanAeadCipher extends BotanBlockCipher {
             // GCM supports tag lengths: 96, 104, 112, 120, 128 bits
             // 128 is most common, 96 is minimum recommended
             return tagLength == 96 || tagLength == 104 || tagLength == 112
-                || tagLength == 120 || tagLength == 128;
+                    || tagLength == 120 || tagLength == 128;
         }
     }
 

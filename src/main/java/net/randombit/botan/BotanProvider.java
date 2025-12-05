@@ -202,9 +202,9 @@ import net.randombit.botan.jnr.BotanLibrary;
  *   <li><b>Initialization:</b> Provider checks native library availability during construction</li>
  * </ul>
  *
+ * @author Yasser Aziza
  * @see java.security.Provider
  * @see net.randombit.botan.jnr.BotanInstance
- * @author Yasser Aziza
  * @since 0.1.0
  */
 public final class BotanProvider extends Provider {

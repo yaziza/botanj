@@ -161,9 +161,9 @@ import jnr.ffi.byref.PointerByReference;
  *   <li><b>Performance:</b> Near-native performance due to efficient JNR code generation</li>
  * </ul>
  *
+ * @author Yasser Aziza
  * @see BotanInstance
  * @see jnr.ffi.LibraryLoader
- * @author Yasser Aziza
  * @since 0.1.0
  */
 public interface BotanLibrary {

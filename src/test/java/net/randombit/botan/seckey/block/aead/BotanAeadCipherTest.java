@@ -732,4 +732,23 @@ public class BotanAeadCipherTest {
         // If we get here without exception, the tag length is accepted
     }
 
+    @Test
+    @DisplayName("Test getOutputSize with valid tag length")
+    public void testGetOutputSizeWithValidTagLength() throws GeneralSecurityException {
+        LOG.info("=== Test: getOutputSize with valid tag length ===");
+        final Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding", BotanProvider.NAME);
+        final SecretKeySpec key = new SecretKeySpec(new byte[16], "AES");
+        final byte[] nonce = new byte[12];
+        final GCMParameterSpec params = new GCMParameterSpec(128, nonce);
+
+        cipher.init(Cipher.ENCRYPT_MODE, key, params);
+
+        // Get output size for 32 bytes of input
+        // Expected: 32 (input) + 16 (tag in bytes: 128 bits / 8) = 48
+        int outputSize = cipher.getOutputSize(32);
+        LOG.info("Input size: 32 bytes, Output size: {} bytes", outputSize);
+        assertEquals(48, outputSize, "Output size should be input size + tag size");
+        LOG.info("SUCCESS: getOutputSize returns correct value with valid tag length");
+    }
+
 }
