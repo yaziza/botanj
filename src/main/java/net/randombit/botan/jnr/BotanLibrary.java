@@ -83,6 +83,16 @@ import jnr.ffi.byref.PointerByReference;
  *   <li>{@link #botan_cipher_destroy(Pointer)} - Free cipher object</li>
  * </ul>
  *
+ * <h3>Random Number Generators (RNG)</h3>
+ * <ul>
+ *   <li>{@link #botan_rng_init(PointerByReference, String)} - Initialize RNG object</li>
+ *   <li>{@link #botan_rng_get(Pointer, byte[], long)} - Generate random bytes</li>
+ *   <li>{@link #botan_rng_reseed(Pointer, long)} - Reseed RNG from system entropy</li>
+ *   <li>{@link #botan_rng_reseed_from_rng(Pointer, Pointer, long)} - Reseed from another RNG</li>
+ *   <li>{@link #botan_rng_add_entropy(Pointer, byte[], long)} - Add entropy to RNG</li>
+ *   <li>{@link #botan_rng_destroy(Pointer)} - Free RNG object</li>
+ * </ul>
+ *
  * <h2>Error Handling</h2>
  *
  * <p>All native functions return an integer error code:
@@ -544,5 +554,61 @@ public interface BotanLibrary {
      * @return 0 if success, error if invalid object handle
      */
     int botan_cipher_destroy(@In Pointer cipher);
+
+    /**
+     * Initializes a random number generator object.
+     *
+     * @param rng     RNG object
+     * @param rngType type of RNG (e.g., "system", "user", "user-threadsafe", or null for default)
+     * @return 0 on success, a negative value on failure
+     */
+    int botan_rng_init(@Out PointerByReference rng, @In String rngType);
+
+    /**
+     * Gets random bytes from the RNG.
+     *
+     * @param rng    RNG object
+     * @param out    output buffer
+     * @param length number of bytes to generate
+     * @return 0 on success, a negative value on failure
+     */
+    int botan_rng_get(@In Pointer rng, @Out byte[] out, @In long length);
+
+    /**
+     * Reseeds the random number generator with bits from the system RNG.
+     *
+     * @param rng  RNG object
+     * @param bits number of bits to reseed with
+     * @return 0 on success, a negative value on failure
+     */
+    int botan_rng_reseed(@In Pointer rng, @In long bits);
+
+    /**
+     * Reseeds the random number generator with bits from another RNG.
+     *
+     * @param rng       RNG object
+     * @param sourceRng source RNG object
+     * @param bits      number of bits to reseed with
+     * @return 0 on success, a negative value on failure
+     */
+    int botan_rng_reseed_from_rng(@In Pointer rng, @In Pointer sourceRng, @In long bits);
+
+    /**
+     * Adds entropy to the random number generator.
+     *
+     * @param rng    RNG object
+     * @param entropy entropy buffer
+     * @param length entropy buffer length
+     * @return 0 on success, a negative value on failure
+     */
+    int botan_rng_add_entropy(@In Pointer rng, @In byte[] entropy, @In long length);
+
+    /**
+     * Destroys the RNG object.
+     *
+     * @param rng RNG object
+     * @return 0 if success, error if invalid object handle
+     */
+    int botan_rng_destroy(@In Pointer rng);
 
 }

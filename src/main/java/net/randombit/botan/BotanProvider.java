@@ -98,6 +98,13 @@ import net.randombit.botan.jnr.BotanLibrary;
  *   <li>ChaCha20/None/NoPadding, XChaCha20/None/NoPadding</li>
  * </ul>
  *
+ * <h3>Random Number Generators</h3>
+ * <ul>
+ *   <li><b>Botan (System RNG):</b> OS-provided entropy source (default, thread-safe)</li>
+ *   <li><b>BotanUser:</b> User-space ChaCha20-based CSPRNG (fast, not thread-safe)</li>
+ *   <li><b>BotanUserThreadsafe:</b> Thread-safe user-space CSPRNG</li>
+ * </ul>
+ *
  * <h2>Padding Schemes for Block Ciphers</h2>
  *
  * <p>Block cipher modes (CBC, CFB) support the following padding schemes:</p>
@@ -222,6 +229,7 @@ public final class BotanProvider extends Provider {
     private static final String BLOCK_CIPHER_PREFIX = ".seckey.block.";
     private static final String STREAM_CIPHER_PREFIX = ".seckey.stream.";
     private static final String AEAD_CIPHER_PREFIX = ".seckey.block.aead.";
+    private static final String RNG_PREFIX = ".rng.";
 
     private static final BotanLibrary NATIVE = BotanInstance.singleton();
 
@@ -234,6 +242,9 @@ public final class BotanProvider extends Provider {
         super(NAME, "", INFO);
 
         BotanInstance.checkAvailability();
+
+        // Random Number Generators
+        addRngAlgorithm();
 
         // Message Digests
         addMdAlgorithm();
@@ -272,6 +283,15 @@ public final class BotanProvider extends Provider {
     @Override
     public String toString() {
         return INFO + " version: " + NATIVE.botan_version_string();
+    }
+
+    private void addRngAlgorithm() {
+        put("SecureRandom.Botan", PACKAGE_NAME + RNG_PREFIX + "BotanSecureRandom$SystemRng");
+        put("Alg.Alias.SecureRandom.BotanSystem", "Botan");
+
+        put("SecureRandom.BotanUser", PACKAGE_NAME + RNG_PREFIX + "BotanSecureRandom$UserRng");
+
+        put("SecureRandom.BotanUserThreadsafe", PACKAGE_NAME + RNG_PREFIX + "BotanSecureRandom$UserThreadsafeRng");
     }
 
     private void addMdAlgorithm() {
