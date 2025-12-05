@@ -54,7 +54,10 @@ public abstract class BotanAeadCipher extends BotanBlockCipher {
 
     @Override
     protected int engineGetOutputSize(int inputLen) {
-        final int tLenInBytes = Math.divideExact(tLen, Byte.SIZE);
+        if (tLen % Byte.SIZE != 0) {
+            throw new ArithmeticException("Tag length is not a multiple of byte size");
+        }
+        final int tLenInBytes = tLen / Byte.SIZE;
 
         return Math.addExact(inputLen, tLenInBytes);
     }
