@@ -12,6 +12,7 @@ package net.randombit.botan.mac;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.atLeastOnce;
@@ -442,6 +443,65 @@ public class BotanMacTest {
             mac.clone();
         }, "clone() should throw CloneNotSupportedException");
         LOG.info("SUCCESS: Clone properly threw CloneNotSupportedException");
+    }
+
+    @Test
+    @DisplayName("Test invalid key - too small for Poly1305")
+    public void testInvalidKeyTooSmall() throws Exception {
+        LOG.info("=== Test: Invalid key size - too small for Poly1305 ===");
+        Mac mac = Mac.getInstance("Poly1305", BotanProvider.NAME);
+
+        // Poly1305 requires exactly 32 bytes, try with 16 bytes
+        SecretKeySpec key = new SecretKeySpec(new byte[16], "Poly1305");
+
+        LOG.info("Attempting to initialize with 16-byte key (minimum is 32)...");
+        Exception exception = assertThrows(Exception.class, () -> {
+            mac.init(key);
+        });
+
+        LOG.info("Exception message: {}", exception.getMessage());
+        assertEquals("key.getEncoded() < minimum key length: 32", exception.getMessage());
+        LOG.info("SUCCESS: Properly rejected key that is too small");
+    }
+
+    @Test
+    @DisplayName("Test invalid key - too large for Poly1305")
+    public void testInvalidKeyTooLarge() throws Exception {
+        LOG.info("=== Test: Invalid key size - too large for Poly1305 ===");
+        Mac mac = Mac.getInstance("Poly1305", BotanProvider.NAME);
+
+        // Poly1305 requires exactly 32 bytes, try with 64 bytes
+        SecretKeySpec key = new SecretKeySpec(new byte[64], "Poly1305");
+
+        LOG.info("Attempting to initialize with 64-byte key (maximum is 32)...");
+        Exception exception = assertThrows(Exception.class, () -> {
+            mac.init(key);
+        });
+
+        LOG.info("Exception message: {}", exception.getMessage());
+        assertEquals("key.getEncoded() > maximum key length: 32", exception.getMessage());
+        LOG.info("SUCCESS: Properly rejected key that is too large");
+    }
+
+    @Test
+    @DisplayName("Test invalid key - wrong modulo for SipHash")
+    public void testInvalidKeyModulo() throws Exception {
+        LOG.info("=== Test: Invalid key size - wrong modulo for SipHash ===");
+        Mac mac = Mac.getInstance("SipHash", BotanProvider.NAME);
+
+        // SipHash requires exactly 16 bytes, try with 15 bytes (not a multiple)
+        SecretKeySpec key = new SecretKeySpec(new byte[15], "SipHash");
+
+        LOG.info("Attempting to initialize with 15-byte key (must be 16)...");
+        Exception exception = assertThrows(Exception.class, () -> {
+            mac.init(key);
+        });
+
+        LOG.info("Exception message: {}", exception.getMessage());
+        // The error will be either too small or modulo issue
+        assertTrue(exception.getMessage().contains("key.getEncoded()"),
+                "Exception should be about invalid key size");
+        LOG.info("SUCCESS: Properly rejected key with invalid size");
     }
 
 }
