@@ -324,6 +324,71 @@ public class BotanSecureRandomTest {
     }
 
     @Test
+    @DisplayName("Test reseed with 256 bits")
+    void testReseed256() throws Exception {
+        SecureRandom rng = SecureRandom.getInstance("BotanUser", "Botan");
+
+        // Use reflection to access the protected reseed method
+        java.lang.reflect.Method reseedMethod = BotanSecureRandom.class.getDeclaredMethod("reseed", long.class);
+        reseedMethod.setAccessible(true);
+
+        // Reseed should not throw
+        assertDoesNotThrow(() -> {
+            try {
+                reseedMethod.invoke(rng.getProvider().getService("SecureRandom", "BotanUser").newInstance(null), 256L);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }, "Reseed with 256 bits should succeed");
+
+        // Generate random bytes after creating a new instance
+        byte[] bytes = new byte[32];
+        rng.nextBytes(bytes);
+
+        // Verify output is non-zero
+        boolean hasNonZero = false;
+        for (byte b : bytes) {
+            if (b != 0) {
+                hasNonZero = true;
+                break;
+            }
+        }
+        assertTrue(hasNonZero, "Random bytes should contain non-zero values");
+    }
+
+    @Test
+    @DisplayName("Test reseed with 384 bits")
+    void testReseed384() throws Exception {
+        SecureRandom rng = SecureRandom.getInstance("BotanUser", "Botan");
+
+        // Use reflection to access the protected reseed method
+        java.lang.reflect.Method reseedMethod = BotanSecureRandom.class.getDeclaredMethod("reseed", long.class);
+        reseedMethod.setAccessible(true);
+
+        // Reseed should not throw
+        assertDoesNotThrow(() -> {
+            try {
+                reseedMethod.invoke(rng.getProvider().getService("SecureRandom", "BotanUser").newInstance(null), 384L);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }, "Reseed with 384 bits should succeed");
+
+        // Generate random bytes
+        byte[] bytes = new byte[32];
+        rng.nextBytes(bytes);
+
+        boolean hasNonZero = false;
+        for (byte b : bytes) {
+            if (b != 0) {
+                hasNonZero = true;
+                break;
+            }
+        }
+        assertTrue(hasNonZero, "Random bytes should contain non-zero values");
+    }
+
+    @Test
     @DisplayName("Test nextInt method")
     void testNextInt() throws Exception {
         SecureRandom rng = SecureRandom.getInstance("Botan", "Botan");
