@@ -5,15 +5,15 @@ Botanj - Java Security Provider (JSP)
 > The code within this repository is currently in its early beta phase and has not been officially released.
 > We would strongly advise against using it for production purposes until it reaches a stable, release-ready state.
 
-[![ubuntu-build Actions Status](https://github.com/yaziza/botanj/workflows/ubuntu-build/badge.svg)](https://github.com/yaziza/botanj/actions?query=branch%3Amaster)
+[![ubuntu-build Actions Status](https://github.com/yaziza/botanj/workflows/ubuntu-build/badge.svg)](https://github.com/yaziza/botanj/actions/workflows/ubuntu-build.yml?query=branch%3Amaster)
 
-[![macos-build Actions Status](https://github.com/yaziza/botanj/workflows/macos-build/badge.svg)](https://github.com/yaziza/botanj/actions?query=branch%3Amaster)
+[![macos-build Actions Status](https://github.com/yaziza/botanj/workflows/macos-build/badge.svg)](https://github.com/yaziza/botanj/actions/workflows/macos-build.yml?query=branch%3Amaster)
 
-[![codeql-analysis Actions Status](https://github.com/yaziza/botanj/workflows/codeql-analysis/badge.svg)](https://github.com/yaziza/botanj/actions?query=branch%3Amaster)
+[![codeql-analysis Actions Status](https://github.com/yaziza/botanj/workflows/codeql-analysis/badge.svg)](https://github.com/yaziza/botanj/actions/workflows/codeql-analysis.yml?query=branch%3Amaster)
 
-[![coverage](.github/badges/jacoco.svg)](https://github.com/yaziza/botanj/actions/workflows/code-coverage.yml)
+[![coverage](.github/badges/jacoco.svg)](https://github.com/yaziza/botanj/actions/workflows/code-coverage.yml?query=branch%3Amaster)
 
-[![branch coverage](.github/badges/branches.svg)](https://github.com/yaziza/botanj/actions/workflows/code-coverage.yml)
+[![branch coverage](.github/badges/branches.svg)](https://github.com/yaziza/botanj/actions/workflows/code-coverage.yml?query=branch%3Amaster)
 
 [![Known Vulnerabilities](https://snyk.io/test/github/yaziza/botanj/badge.svg)](https://snyk.io/test/github/yaziza/botanj)
 
