@@ -262,8 +262,6 @@ public abstract class BotanBaseSymmetricCipher extends CipherSpi {
      * @param name the algorithm name
      */
     protected BotanBaseSymmetricCipher(String name) {
-        checkAvailability();
-
         this.name = Objects.requireNonNull(name);
         this.cipherRef = new PointerByReference();
     }

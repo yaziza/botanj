@@ -434,6 +434,42 @@ public class BotanSecureRandomTest {
     }
 
     @Test
+    @DisplayName("Test System RNG has ThreadSafe property set to true")
+    void testSystemRngThreadSafeProperty() throws Exception {
+        BotanProvider provider = new BotanProvider();
+
+        String threadSafeProperty = provider.getProperty("SecureRandom.Botan ThreadSafe");
+
+        assertNotNull(threadSafeProperty, "ThreadSafe property should be set for Botan (System) RNG");
+        assertEquals("true", threadSafeProperty,
+                "System RNG should be marked as thread-safe");
+    }
+
+    @Test
+    @DisplayName("Test User RNG has ThreadSafe property set to false")
+    void testUserRngThreadSafeProperty() throws Exception {
+        BotanProvider provider = new BotanProvider();
+
+        String threadSafeProperty = provider.getProperty("SecureRandom.BotanUser ThreadSafe");
+
+        assertNotNull(threadSafeProperty, "ThreadSafe property should be set for BotanUser RNG");
+        assertEquals("false", threadSafeProperty,
+                "User RNG should be marked as NOT thread-safe");
+    }
+
+    @Test
+    @DisplayName("Test UserThreadsafe RNG has ThreadSafe property set to true")
+    void testUserThreadsafeRngThreadSafeProperty() throws Exception {
+        BotanProvider provider = new BotanProvider();
+
+        String threadSafeProperty = provider.getProperty("SecureRandom.BotanUserThreadsafe ThreadSafe");
+
+        assertNotNull(threadSafeProperty, "ThreadSafe property should be set for BotanUserThreadsafe RNG");
+        assertEquals("true", threadSafeProperty,
+                "UserThreadsafe RNG should be marked as thread-safe");
+    }
+
+    @Test
     @DisplayName("Test concurrent access to threadsafe RNG")
     void testThreadsafeRng() throws Exception {
         SecureRandom rng = SecureRandom.getInstance("BotanUserThreadsafe", "Botan");

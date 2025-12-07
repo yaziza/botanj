@@ -9,7 +9,6 @@
 
 package net.randombit.botan.mac;
 
-import static net.randombit.botan.jnr.BotanInstance.checkAvailability;
 import static net.randombit.botan.jnr.BotanInstance.checkNativeCall;
 import static net.randombit.botan.jnr.BotanInstance.singleton;
 import static net.randombit.botan.util.BotanUtil.checkKeySize;
@@ -191,8 +190,6 @@ public abstract class BotanMac extends MacSpi {
     private byte[] currentKey;
 
     private BotanMac(String name, int size) {
-        checkAvailability();
-
         this.name = name;
         this.size = size;
         this.macRef = new PointerByReference();

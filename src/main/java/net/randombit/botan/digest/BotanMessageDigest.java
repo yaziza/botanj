@@ -16,7 +16,6 @@ import java.util.Arrays;
 
 import jnr.ffi.byref.PointerByReference;
 
-import static net.randombit.botan.jnr.BotanInstance.checkAvailability;
 import static net.randombit.botan.jnr.BotanInstance.checkNativeCall;
 import static net.randombit.botan.jnr.BotanInstance.singleton;
 
@@ -203,8 +202,6 @@ public class BotanMessageDigest extends MessageDigestSpi implements Cloneable {
     private final byte[] singleByte = new byte[1];
 
     private BotanMessageDigest(String name, int size) throws NoSuchAlgorithmException {
-        checkAvailability();
-
         this.name = name;
         this.size = size;
         this.hashRef = new PointerByReference();
@@ -217,8 +214,6 @@ public class BotanMessageDigest extends MessageDigestSpi implements Cloneable {
     }
 
     private BotanMessageDigest(String name, int size, PointerByReference hashRef) {
-        checkAvailability();
-
         this.name = name;
         this.size = size;
         this.hashRef = hashRef;

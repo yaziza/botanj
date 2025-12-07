@@ -100,7 +100,7 @@ import net.randombit.botan.jnr.BotanLibrary;
  *
  * <h3>Random Number Generators</h3>
  * <ul>
- *   <li><b>Botan (System RNG):</b> OS-provided entropy source (default, thread-safe)</li>
+ *   <li><b>BotanSystem (System RNG):</b> OS-provided entropy source (default, thread-safe)</li>
  *   <li><b>BotanUser:</b> User-space ChaCha20-based CSPRNG (fast, not thread-safe)</li>
  *   <li><b>BotanUserThreadsafe:</b> Thread-safe user-space CSPRNG</li>
  * </ul>
@@ -288,10 +288,13 @@ public final class BotanProvider extends Provider {
     private void addRngAlgorithm() {
         put("SecureRandom.Botan", PACKAGE_NAME + RNG_PREFIX + "BotanSecureRandom$SystemRng");
         put("Alg.Alias.SecureRandom.BotanSystem", "Botan");
+        put("SecureRandom.Botan ThreadSafe", "true");
 
         put("SecureRandom.BotanUser", PACKAGE_NAME + RNG_PREFIX + "BotanSecureRandom$UserRng");
+        put("SecureRandom.BotanUser ThreadSafe", "false");
 
         put("SecureRandom.BotanUserThreadsafe", PACKAGE_NAME + RNG_PREFIX + "BotanSecureRandom$UserThreadsafeRng");
+        put("SecureRandom.BotanUserThreadsafe ThreadSafe", "true");
     }
 
     private void addMdAlgorithm() {

@@ -11,14 +11,12 @@ package net.randombit.botan.rng;
 
 import jnr.ffi.Pointer;
 import jnr.ffi.byref.PointerByReference;
-import net.randombit.botan.jnr.BotanInstance;
 
 import java.lang.ref.Cleaner;
 import java.security.SecureRandomSpi;
 
 import static net.randombit.botan.jnr.BotanInstance.checkNativeCall;
 import static net.randombit.botan.jnr.BotanInstance.singleton;
-import static net.randombit.botan.util.BotanUtil.isNullOrEmpty;
 
 /**
  * Botan-based implementation of {@link SecureRandomSpi}.
@@ -26,7 +24,7 @@ import static net.randombit.botan.util.BotanUtil.isNullOrEmpty;
  * <p>This class provides cryptographically secure pseudo-random number generation (CSPRNG)
  * using the Botan cryptographic library's native random number generators. It integrates
  * seamlessly with Java's {@link java.security.SecureRandom} API while leveraging Botan's
- * randomness sources.</p>
+ * randomness API.</p>
  *
  * <h2>Supported RNG Types</h2>
  *
@@ -108,7 +106,6 @@ public abstract class BotanSecureRandom extends SecureRandomSpi {
      * @param rngType the RNG type name ("system", "user", "user-threadsafe", or null for default)
      */
     protected BotanSecureRandom(String rngType) {
-        BotanInstance.checkAvailability();
         this.rngRef = new PointerByReference();
 
         int err = singleton().botan_rng_init(rngRef, rngType);
