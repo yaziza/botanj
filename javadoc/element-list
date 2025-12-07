@@ -3,6 +3,7 @@ net.randombit.botan.codec
 net.randombit.botan.digest
 net.randombit.botan.jnr
 net.randombit.botan.mac
+net.randombit.botan.rng
 net.randombit.botan.seckey
 net.randombit.botan.seckey.block
 net.randombit.botan.seckey.block.aead
