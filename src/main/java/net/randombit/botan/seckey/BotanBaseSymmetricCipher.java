@@ -11,6 +11,7 @@ package net.randombit.botan.seckey;
 
 import static net.randombit.botan.Constants.BOTAN_DO_FINAL_FLAG;
 import static net.randombit.botan.Constants.EMPTY_BYTE_ARRAY;
+import static net.randombit.botan.jnr.BotanInstance.checkAvailability;
 import static net.randombit.botan.jnr.BotanInstance.checkNativeCall;
 import static net.randombit.botan.jnr.BotanInstance.singleton;
 import static net.randombit.botan.util.BotanUtil.checkKeySize;

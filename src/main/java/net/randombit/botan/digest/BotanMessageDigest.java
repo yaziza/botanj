@@ -9,15 +9,15 @@
 
 package net.randombit.botan.digest;
 
-import static net.randombit.botan.jnr.BotanInstance.checkNativeCall;
-import static net.randombit.botan.jnr.BotanInstance.singleton;
-
 import java.lang.ref.Cleaner;
 import java.security.MessageDigestSpi;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
 import jnr.ffi.byref.PointerByReference;
+
+import static net.randombit.botan.jnr.BotanInstance.checkNativeCall;
+import static net.randombit.botan.jnr.BotanInstance.singleton;
 
 /**
  * Message digest (cryptographic hash) implementation using the Botan cryptography library.
