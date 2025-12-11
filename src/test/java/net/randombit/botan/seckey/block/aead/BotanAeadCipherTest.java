@@ -54,7 +54,8 @@ public class BotanAeadCipherTest {
     @ParameterizedTest
     @CsvFileSource(resources = {"/seckey/block/aead/ccm_no_padding.csv", "/seckey/block/aead/eax_no_padding.csv",
             "/seckey/block/aead/gcm_no_padding.csv", "/seckey/block/aead/ocb_no_padding.csv",
-            "/seckey/block/aead/siv_no_padding.csv"}, numLinesToSkip = 1)
+            "/seckey/block/aead/siv_no_padding.csv", "/seckey/block/aead/chacha20poly1305_no_padding.csv",
+            "/seckey/block/aead/xchacha20poly1305_no_padding.csv"}, numLinesToSkip = 1)
     @DisplayName("Test cipher block size")
     public void testCipherBlockSize(String algorithm, String key) throws GeneralSecurityException {
         LOG.info("=== Test: Cipher block size for {} ===", algorithm);
@@ -65,9 +66,12 @@ public class BotanAeadCipherTest {
         cipher.init(Cipher.ENCRYPT_MODE, keyInBytes);
 
         LOG.info("Block size: {} bytes", cipher.getBlockSize());
-        assertEquals(16, cipher.getBlockSize(),
+
+        // ChaCha20-Poly1305 and XChaCha20-Poly1305 have 64-byte block size
+        int expectedBlockSize = (algorithm.contains("ChaCha20")) ? 64 : 16;
+        assertEquals(expectedBlockSize, cipher.getBlockSize(),
                 "Cipher block size mismatch for algorithm: " + algorithm);
-        LOG.info("SUCCESS: Block size is 16 bytes for {}", algorithm);
+        LOG.info("SUCCESS: Block size is {} bytes for {}", expectedBlockSize, algorithm);
     }
 
     @Test
@@ -111,7 +115,8 @@ public class BotanAeadCipherTest {
     @ParameterizedTest
     @CsvFileSource(resources = {"/seckey/block/aead/ccm_no_padding.csv", "/seckey/block/aead/eax_no_padding.csv",
             "/seckey/block/aead/gcm_no_padding.csv", "/seckey/block/aead/ocb_no_padding.csv",
-            "/seckey/block/aead/siv_no_padding.csv"}, numLinesToSkip = 1)
+            "/seckey/block/aead/siv_no_padding.csv", "/seckey/block/aead/chacha20poly1305_no_padding.csv",
+            "/seckey/block/aead/xchacha20poly1305_no_padding.csv"}, numLinesToSkip = 1)
     @DisplayName("Test calling cipher doFinal without input (No Padding)")
     public void testCipherDoFinalWithoutInputNoPadding(String algorithm, String key, String nonce)
             throws GeneralSecurityException {
@@ -129,7 +134,8 @@ public class BotanAeadCipherTest {
     @ParameterizedTest
     @CsvFileSource(resources = {"/seckey/block/aead/ccm_no_padding.csv", "/seckey/block/aead/eax_no_padding.csv",
             "/seckey/block/aead/gcm_no_padding.csv", "/seckey/block/aead/ocb_no_padding.csv",
-            "/seckey/block/aead/siv_no_padding.csv"}, numLinesToSkip = 1)
+            "/seckey/block/aead/siv_no_padding.csv", "/seckey/block/aead/chacha20poly1305_no_padding.csv",
+            "/seckey/block/aead/xchacha20poly1305_no_padding.csv"}, numLinesToSkip = 1)
     @DisplayName("Test encrypt then decrypt")
     public void testEncryptThenDecrypt(String algorithm, String key, String nonce, String ad) throws GeneralSecurityException {
         LOG.info("=== Test: Encrypt then decrypt for {} ===", algorithm);
@@ -158,7 +164,8 @@ public class BotanAeadCipherTest {
     @ParameterizedTest
     @CsvFileSource(resources = {"/seckey/block/aead/ccm_no_padding.csv", "/seckey/block/aead/eax_no_padding.csv",
             "/seckey/block/aead/gcm_no_padding.csv", "/seckey/block/aead/ocb_no_padding.csv",
-            "/seckey/block/aead/siv_no_padding.csv"}, numLinesToSkip = 1)
+            "/seckey/block/aead/siv_no_padding.csv", "/seckey/block/aead/chacha20poly1305_no_padding.csv",
+            "/seckey/block/aead/xchacha20poly1305_no_padding.csv"}, numLinesToSkip = 1)
     @DisplayName("Test AEAD cipher encryption with test vectors")
     public void testCipherWithTestVectors(String algorithm, String key, String nonce, String ad, String in, String out)
             throws GeneralSecurityException {
@@ -749,6 +756,208 @@ public class BotanAeadCipherTest {
         LOG.info("Input size: 32 bytes, Output size: {} bytes", outputSize);
         assertEquals(48, outputSize, "Output size should be input size + tag size");
         LOG.info("SUCCESS: getOutputSize returns correct value with valid tag length");
+    }
+
+    @Test
+    @DisplayName("Test ChaCha20-Poly1305 with invalid tag length")
+    public void testChaCha20Poly1305InvalidTagLength() throws GeneralSecurityException {
+        LOG.info("=== Test: ChaCha20-Poly1305 with invalid tag length ===");
+        final Cipher cipher = Cipher.getInstance("ChaCha20/Poly1305/NoPadding", BotanProvider.NAME);
+        final SecretKeySpec key = new SecretKeySpec(new byte[32], "ChaCha20");
+        final byte[] nonce = new byte[12];
+
+        // Test invalid tag length (96 bits - ChaCha20-Poly1305 only supports 128)
+        LOG.info("Testing invalid tag length: 96 bits");
+        final GCMParameterSpec invalidParams = new GCMParameterSpec(96, nonce);
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            cipher.init(Cipher.ENCRYPT_MODE, key, invalidParams);
+        }, "Should reject invalid tag length for ChaCha20-Poly1305");
+        LOG.info("SUCCESS: Properly rejected invalid ChaCha20-Poly1305 tag length");
+    }
+
+    @Test
+    @DisplayName("Test ChaCha20-Poly1305 with valid tag length")
+    public void testChaCha20Poly1305ValidTagLength() throws GeneralSecurityException {
+        LOG.info("=== Test: ChaCha20-Poly1305 with valid tag length ===");
+        final Cipher cipher = Cipher.getInstance("ChaCha20/Poly1305/NoPadding", BotanProvider.NAME);
+        final SecretKeySpec key = new SecretKeySpec(new byte[32], "ChaCha20");
+        final byte[] nonce = new byte[12];
+
+        // Test valid tag length (128 bits - only valid length for ChaCha20-Poly1305)
+        LOG.info("Testing valid tag length: 128 bits");
+        final GCMParameterSpec params = new GCMParameterSpec(128, nonce);
+        cipher.init(Cipher.ENCRYPT_MODE, key, params);
+        LOG.info("SUCCESS: ChaCha20-Poly1305 accepted valid tag length");
+    }
+
+    @Test
+    @DisplayName("Test XChaCha20-Poly1305 with invalid tag length")
+    public void testXChaCha20Poly1305InvalidTagLength() throws GeneralSecurityException {
+        LOG.info("=== Test: XChaCha20-Poly1305 with invalid tag length ===");
+        final Cipher cipher = Cipher.getInstance("XChaCha20/Poly1305/NoPadding", BotanProvider.NAME);
+        final SecretKeySpec key = new SecretKeySpec(new byte[32], "XChaCha20");
+        final byte[] nonce = new byte[24];
+
+        // Test invalid tag length (96 bits - XChaCha20-Poly1305 only supports 128)
+        LOG.info("Testing invalid tag length: 96 bits");
+        final GCMParameterSpec invalidParams = new GCMParameterSpec(96, nonce);
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            cipher.init(Cipher.ENCRYPT_MODE, key, invalidParams);
+        }, "Should reject invalid tag length for XChaCha20-Poly1305");
+        LOG.info("SUCCESS: Properly rejected invalid XChaCha20-Poly1305 tag length");
+    }
+
+    @Test
+    @DisplayName("Test XChaCha20-Poly1305 with valid tag length")
+    public void testXChaCha20Poly1305ValidTagLength() throws GeneralSecurityException {
+        LOG.info("=== Test: XChaCha20-Poly1305 with valid tag length ===");
+        final Cipher cipher = Cipher.getInstance("XChaCha20/Poly1305/NoPadding", BotanProvider.NAME);
+        final SecretKeySpec key = new SecretKeySpec(new byte[32], "XChaCha20");
+        final byte[] nonce = new byte[24];
+
+        // Test valid tag length (128 bits - only valid length for XChaCha20-Poly1305)
+        LOG.info("Testing valid tag length: 128 bits");
+        final GCMParameterSpec params = new GCMParameterSpec(128, nonce);
+        cipher.init(Cipher.ENCRYPT_MODE, key, params);
+        LOG.info("SUCCESS: XChaCha20-Poly1305 accepted valid tag length");
+    }
+
+    @Test
+    @DisplayName("Test ChaCha20-Poly1305 with invalid nonce length")
+    public void testChaCha20Poly1305InvalidNonceLength() throws GeneralSecurityException {
+        LOG.info("=== Test: ChaCha20-Poly1305 with invalid nonce length ===");
+        final Cipher cipher = Cipher.getInstance("ChaCha20/Poly1305/NoPadding", BotanProvider.NAME);
+        final SecretKeySpec key = new SecretKeySpec(new byte[32], "ChaCha20");
+        final byte[] nonce = new byte[24]; // Wrong size - should be 12
+
+        LOG.info("Testing invalid nonce length: 24 bytes (should be 12)");
+        final GCMParameterSpec params = new GCMParameterSpec(128, nonce);
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            cipher.init(Cipher.ENCRYPT_MODE, key, params);
+        }, "Should reject invalid nonce length for ChaCha20-Poly1305");
+        LOG.info("SUCCESS: Properly rejected invalid ChaCha20-Poly1305 nonce length");
+    }
+
+    @Test
+    @DisplayName("Test XChaCha20-Poly1305 with invalid nonce length")
+    public void testXChaCha20Poly1305InvalidNonceLength() throws GeneralSecurityException {
+        LOG.info("=== Test: XChaCha20-Poly1305 with invalid nonce length ===");
+        final Cipher cipher = Cipher.getInstance("XChaCha20/Poly1305/NoPadding", BotanProvider.NAME);
+        final SecretKeySpec key = new SecretKeySpec(new byte[32], "XChaCha20");
+        final byte[] nonce = new byte[12]; // Wrong size - should be 24
+
+        LOG.info("Testing invalid nonce length: 12 bytes (should be 24)");
+        final GCMParameterSpec params = new GCMParameterSpec(128, nonce);
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            cipher.init(Cipher.ENCRYPT_MODE, key, params);
+        }, "Should reject invalid nonce length for XChaCha20-Poly1305");
+        LOG.info("SUCCESS: Properly rejected invalid XChaCha20-Poly1305 nonce length");
+    }
+
+    @Test
+    @DisplayName("Test ChaCha20-Poly1305 initialization with IvParameterSpec")
+    public void testChaCha20Poly1305WithIvParameterSpec() throws GeneralSecurityException {
+        LOG.info("=== Test: ChaCha20-Poly1305 with IvParameterSpec ===");
+        final Cipher cipher = Cipher.getInstance("ChaCha20/Poly1305/NoPadding", BotanProvider.NAME);
+        final SecretKeySpec key = new SecretKeySpec(new byte[32], "ChaCha20");
+        final byte[] nonce = new byte[12];
+
+        // Initialize with IvParameterSpec instead of GCMParameterSpec
+        LOG.info("Initializing with IvParameterSpec");
+        final IvParameterSpec params = new IvParameterSpec(nonce);
+        cipher.init(Cipher.ENCRYPT_MODE, key, params);
+
+        // Encrypt some data to ensure it works
+        byte[] plaintext = "Hello World!".getBytes();
+        byte[] ciphertext = cipher.doFinal(plaintext);
+        LOG.info("Ciphertext length: {} bytes", ciphertext.length);
+        assertEquals(plaintext.length + 16, ciphertext.length, "Ciphertext should include 16-byte tag");
+        LOG.info("SUCCESS: ChaCha20-Poly1305 works with IvParameterSpec");
+    }
+
+    @Test
+    @DisplayName("Test XChaCha20-Poly1305 initialization with IvParameterSpec")
+    public void testXChaCha20Poly1305WithIvParameterSpec() throws GeneralSecurityException {
+        LOG.info("=== Test: XChaCha20-Poly1305 with IvParameterSpec ===");
+        final Cipher cipher = Cipher.getInstance("XChaCha20/Poly1305/NoPadding", BotanProvider.NAME);
+        final SecretKeySpec key = new SecretKeySpec(new byte[32], "XChaCha20");
+        final byte[] nonce = new byte[24];
+
+        // Initialize with IvParameterSpec instead of GCMParameterSpec
+        LOG.info("Initializing with IvParameterSpec");
+        final IvParameterSpec params = new IvParameterSpec(nonce);
+        cipher.init(Cipher.ENCRYPT_MODE, key, params);
+
+        // Encrypt some data to ensure it works
+        byte[] plaintext = "Hello World!".getBytes();
+        byte[] ciphertext = cipher.doFinal(plaintext);
+        LOG.info("Ciphertext length: {} bytes", ciphertext.length);
+        assertEquals(plaintext.length + 16, ciphertext.length, "Ciphertext should include 16-byte tag");
+        LOG.info("SUCCESS: XChaCha20-Poly1305 works with IvParameterSpec");
+    }
+
+    @Test
+    @DisplayName("Test ChaCha20-Poly1305 update with empty input")
+    public void testChaCha20Poly1305UpdateWithEmptyInput() throws GeneralSecurityException {
+        LOG.info("=== Test: ChaCha20-Poly1305 update with empty input ===");
+        final Cipher cipher = Cipher.getInstance("ChaCha20/Poly1305/NoPadding", BotanProvider.NAME);
+        final SecretKeySpec key = new SecretKeySpec(new byte[32], "ChaCha20");
+        final byte[] nonce = new byte[12];
+        final GCMParameterSpec params = new GCMParameterSpec(128, nonce);
+
+        cipher.init(Cipher.ENCRYPT_MODE, key, params);
+
+        // Update with empty input - per JCE spec, should return null
+        LOG.info("Calling update with empty input");
+        byte[] result = cipher.update(new byte[0]);
+
+        // According to JCE specification, update() returns null when input length is 0
+        assertEquals(null, result, "Update with empty input should return null per JCE spec");
+        LOG.info("SUCCESS: update with empty input returns null (correct JCE behavior)");
+    }
+
+    @Test
+    @DisplayName("Test ChaCha20-Poly1305 reinitialization after use")
+    public void testChaCha20Poly1305Reinitialization() throws GeneralSecurityException {
+        LOG.info("=== Test: ChaCha20-Poly1305 reinitialization after use ===");
+        final Cipher cipher = Cipher.getInstance("ChaCha20/Poly1305/NoPadding", BotanProvider.NAME);
+        final SecretKeySpec key = new SecretKeySpec(new byte[32], "ChaCha20");
+        final byte[] nonce1 = new byte[12];
+        final byte[] nonce2 = new byte[12];
+        java.util.Arrays.fill(nonce1, (byte) 1);
+        java.util.Arrays.fill(nonce2, (byte) 2);
+
+        // First encryption
+        LOG.info("First encryption with nonce1");
+        final GCMParameterSpec params1 = new GCMParameterSpec(128, nonce1);
+        cipher.init(Cipher.ENCRYPT_MODE, key, params1);
+        cipher.updateAAD("aad1".getBytes());
+        byte[] plaintext = "Hello World!".getBytes();
+        byte[] ciphertext1 = cipher.doFinal(plaintext);
+        LOG.info("First ciphertext length: {} bytes", ciphertext1.length);
+
+        // Reinitialize with different nonce and AAD
+        LOG.info("Reinitializing with nonce2");
+        final GCMParameterSpec params2 = new GCMParameterSpec(128, nonce2);
+        cipher.init(Cipher.ENCRYPT_MODE, key, params2);
+        cipher.updateAAD("aad2".getBytes());
+        byte[] ciphertext2 = cipher.doFinal(plaintext);
+        LOG.info("Second ciphertext length: {} bytes", ciphertext2.length);
+
+        // Ciphertexts should be different due to different nonce and AAD
+        boolean different = false;
+        for (int i = 0; i < Math.min(ciphertext1.length, ciphertext2.length); i++) {
+            if (ciphertext1[i] != ciphertext2[i]) {
+                different = true;
+                break;
+            }
+        }
+        assertEquals(true, different, "Ciphertexts should differ with different nonce/AAD");
+        LOG.info("SUCCESS: Reinitialization works correctly");
     }
 
 }

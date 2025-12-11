@@ -47,8 +47,8 @@ Comprehensive API documentation with detailed usage examples, architecture expla
 ## Supported Primitives
 
 ### Ciphers, hashes, MACs, and checksums
-* Authenticated cipher modes: EAX, OCB, GCM, SIV, CCM
-* Cipher modes: CBC, CTR, CFB, OFB
+* Authenticated cipher modes: EAX, OCB, GCM, SIV, CCM, (X)ChaCha20Poly1305
+* Cipher modes: CTR, CBC, CFB, OFB
 * Block ciphers: AES, DES/3DES
 * Stream ciphers: (X)Salsa20, (X)ChaCha20
 * Hash functions: SHA-1, SHA-2, SHA-3, MD4, MD5, RIPEMD-160, BLAKE2b
@@ -102,5 +102,25 @@ final byte[] output = cipher.doFinal("hello world".getBytes());
 final Cipher cipher = Cipher.getInstance("ChaCha20/None/NoPadding", BotanProvider.NAME);
 // Never reuse the IV with the same key
 cipher.init(Cipher.ENCRYPT_MODE, key, iv);
+final byte[] output = cipher.doFinal("hello world".getBytes());
+```
+
+* An example describing the procedure to encrypt using ChaCha20-Poly1305 (AEAD):
+```java
+final Cipher cipher = Cipher.getInstance("ChaCha20/Poly1305/NoPadding", BotanProvider.NAME);
+// ChaCha20-Poly1305 uses 12-byte nonce, never reuse with the same key
+final GCMParameterSpec params = new GCMParameterSpec(128, nonce); // 128-bit tag
+cipher.init(Cipher.ENCRYPT_MODE, key, params);
+cipher.updateAAD(aad); // Optional associated data
+final byte[] output = cipher.doFinal("hello world".getBytes());
+```
+
+* An example describing the procedure to encrypt using XChaCha20-Poly1305 (AEAD):
+```java
+final Cipher cipher = Cipher.getInstance("XChaCha20/Poly1305/NoPadding", BotanProvider.NAME);
+// XChaCha20-Poly1305 uses 24-byte extended nonce for improved security
+final GCMParameterSpec params = new GCMParameterSpec(128, nonce); // 128-bit tag
+cipher.init(Cipher.ENCRYPT_MODE, key, params);
+cipher.updateAAD(aad); // Optional associated data
 final byte[] output = cipher.doFinal("hello world".getBytes());
 ```
