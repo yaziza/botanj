@@ -8,4 +8,5 @@ net.randombit.botan.seckey
 net.randombit.botan.seckey.block
 net.randombit.botan.seckey.block.aead
 net.randombit.botan.seckey.stream
+net.randombit.botan.spec
 net.randombit.botan.util
