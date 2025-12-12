@@ -27,6 +27,7 @@ import java.util.Arrays;
 
 import net.randombit.botan.seckey.CipherMode;
 import net.randombit.botan.seckey.block.BotanBlockCipher;
+import net.randombit.botan.spec.AeadParameterSpec;
 
 /**
  * Base class for AEAD (Authenticated Encryption with Associated Data) cipher implementations.
@@ -71,15 +72,19 @@ public abstract class BotanAeadCipher extends BotanBlockCipher {
     protected void engineInit(int opmode, Key key, AlgorithmParameterSpec params, SecureRandom random)
             throws InvalidKeyException, InvalidAlgorithmParameterException {
 
-        if (params instanceof IvParameterSpec) {
-            iv = ((IvParameterSpec) params).getIV();
+        if (params instanceof AeadParameterSpec aeadParameterSpec) {
+            iv = aeadParameterSpec.getIV();
+            tLen = aeadParameterSpec.getTLen();
 
-        } else if (params instanceof GCMParameterSpec) {
-            iv = ((GCMParameterSpec) params).getIV();
-            tLen = ((GCMParameterSpec) params).getTLen();
+        } else if (params instanceof GCMParameterSpec gcmParameterSpec) {
+            iv = gcmParameterSpec.getIV();
+            tLen = gcmParameterSpec.getTLen();
+
+        } else if (params instanceof IvParameterSpec ivParameterSpec) {
+            iv = ivParameterSpec.getIV();
 
         } else {
-            throw new InvalidAlgorithmParameterException("Error: Missing or invalid IvParameterSpec provided !");
+            throw new InvalidAlgorithmParameterException("Error: Missing or invalid parameter spec provided!");
         }
 
         checkNonceValid(iv.length);

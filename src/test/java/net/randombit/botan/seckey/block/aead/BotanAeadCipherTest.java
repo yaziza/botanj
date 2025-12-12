@@ -30,6 +30,7 @@ import org.junit.jupiter.params.provider.CsvFileSource;
 
 import net.randombit.botan.BotanProvider;
 import net.randombit.botan.codec.HexUtils;
+import net.randombit.botan.spec.AeadParameterSpec;
 import net.randombit.botan.util.PaddingAlgorithm;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -958,6 +959,155 @@ public class BotanAeadCipherTest {
         }
         assertEquals(true, different, "Ciphertexts should differ with different nonce/AAD");
         LOG.info("SUCCESS: Reinitialization works correctly");
+    }
+
+    @Test
+    @DisplayName("Test AeadParameterSpec with ChaCha20-Poly1305")
+    public void testAeadParameterSpecWithChaCha20Poly1305() throws GeneralSecurityException {
+        LOG.info("=== Test: AeadParameterSpec with ChaCha20-Poly1305 ===");
+        final Cipher cipher = Cipher.getInstance("ChaCha20/Poly1305/NoPadding", BotanProvider.NAME);
+        final SecretKeySpec key = new SecretKeySpec(new byte[32], "ChaCha20");
+        final byte[] nonce = new byte[12];
+        final byte[] aad = "additional data".getBytes();
+
+        // Use AeadParameterSpec instead of GCMParameterSpec
+        LOG.info("Creating AeadParameterSpec with 12-byte nonce and 128-bit tag");
+        final AeadParameterSpec params = new AeadParameterSpec(nonce, 128);
+
+        cipher.init(Cipher.ENCRYPT_MODE, key, params);
+        cipher.updateAAD(aad);
+        byte[] plaintext = "Hello World!".getBytes();
+        byte[] ciphertext = cipher.doFinal(plaintext);
+
+        LOG.info("Plaintext length: {} bytes", plaintext.length);
+        LOG.info("Ciphertext length: {} bytes (includes 16-byte tag)", ciphertext.length);
+
+        // Verify ciphertext includes tag
+        assertEquals(plaintext.length + 16, ciphertext.length, "Ciphertext should include 16-byte tag");
+
+        // Decrypt to verify
+        cipher.init(Cipher.DECRYPT_MODE, key, params);
+        cipher.updateAAD(aad);
+        byte[] decrypted = cipher.doFinal(ciphertext);
+
+        assertArrayEquals(plaintext, decrypted, "Decrypted text should match original");
+        LOG.info("SUCCESS: AeadParameterSpec works with ChaCha20-Poly1305");
+    }
+
+    @Test
+    @DisplayName("Test AeadParameterSpec with XChaCha20-Poly1305")
+    public void testAeadParameterSpecWithXChaCha20Poly1305() throws GeneralSecurityException {
+        LOG.info("=== Test: AeadParameterSpec with XChaCha20-Poly1305 ===");
+        final Cipher cipher = Cipher.getInstance("XChaCha20/Poly1305/NoPadding", BotanProvider.NAME);
+        final SecretKeySpec key = new SecretKeySpec(new byte[32], "XChaCha20");
+        final byte[] nonce = new byte[24]; // XChaCha20 uses 24-byte nonce
+        final byte[] aad = "metadata".getBytes();
+
+        // Use AeadParameterSpec with extended nonce
+        LOG.info("Creating AeadParameterSpec with 24-byte nonce and 128-bit tag");
+        final AeadParameterSpec params = new AeadParameterSpec(nonce, 128);
+
+        cipher.init(Cipher.ENCRYPT_MODE, key, params);
+        cipher.updateAAD(aad);
+        byte[] plaintext = "XChaCha20-Poly1305 test".getBytes();
+        byte[] ciphertext = cipher.doFinal(plaintext);
+
+        LOG.info("Plaintext length: {} bytes", plaintext.length);
+        LOG.info("Ciphertext length: {} bytes", ciphertext.length);
+
+        // Decrypt to verify
+        cipher.init(Cipher.DECRYPT_MODE, key, params);
+        cipher.updateAAD(aad);
+        byte[] decrypted = cipher.doFinal(ciphertext);
+
+        assertArrayEquals(plaintext, decrypted, "Decrypted text should match original");
+        LOG.info("SUCCESS: AeadParameterSpec works with XChaCha20-Poly1305");
+    }
+
+    @Test
+    @DisplayName("Test AeadParameterSpec with AES-GCM")
+    public void testAeadParameterSpecWithAesGcm() throws GeneralSecurityException {
+        LOG.info("=== Test: AeadParameterSpec with AES-GCM ===");
+        final Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding", BotanProvider.NAME);
+        final SecretKeySpec key = new SecretKeySpec(new byte[16], "AES");
+        final byte[] nonce = new byte[12];
+        final byte[] aad = "header data".getBytes();
+
+        // Use AeadParameterSpec with AES-GCM
+        LOG.info("Creating AeadParameterSpec for AES-GCM");
+        final AeadParameterSpec params = new AeadParameterSpec(nonce, 128);
+
+        cipher.init(Cipher.ENCRYPT_MODE, key, params);
+        cipher.updateAAD(aad);
+        byte[] plaintext = "AES-GCM with AeadParameterSpec".getBytes();
+        byte[] ciphertext = cipher.doFinal(plaintext);
+
+        LOG.info("Encryption successful, ciphertext length: {} bytes", ciphertext.length);
+
+        // Decrypt to verify
+        cipher.init(Cipher.DECRYPT_MODE, key, params);
+        cipher.updateAAD(aad);
+        byte[] decrypted = cipher.doFinal(ciphertext);
+
+        assertArrayEquals(plaintext, decrypted, "Decrypted text should match original");
+        LOG.info("SUCCESS: AeadParameterSpec works with AES-GCM");
+    }
+
+    @Test
+    @DisplayName("Test AeadParameterSpec without AAD")
+    public void testAeadParameterSpecWithoutAAD() throws GeneralSecurityException {
+        LOG.info("=== Test: AeadParameterSpec without AAD ===");
+        final Cipher cipher = Cipher.getInstance("ChaCha20/Poly1305/NoPadding", BotanProvider.NAME);
+        final SecretKeySpec key = new SecretKeySpec(new byte[32], "ChaCha20");
+        final byte[] nonce = new byte[12];
+
+        // Use AeadParameterSpec without AAD
+        LOG.info("Creating AeadParameterSpec without AAD");
+        final AeadParameterSpec params = new AeadParameterSpec(nonce, 128);
+
+        cipher.init(Cipher.ENCRYPT_MODE, key, params);
+        byte[] plaintext = "No AAD".getBytes();
+        byte[] ciphertext = cipher.doFinal(plaintext);
+
+        LOG.info("Encryption without AAD successful");
+
+        // Decrypt to verify
+        cipher.init(Cipher.DECRYPT_MODE, key, params);
+        byte[] decrypted = cipher.doFinal(ciphertext);
+
+        assertArrayEquals(plaintext, decrypted, "Decrypted text should match original");
+        LOG.info("SUCCESS: AeadParameterSpec works without AAD");
+    }
+
+    @Test
+    @DisplayName("Test AeadParameterSpec AAD mismatch detection")
+    public void testAeadParameterSpecAADMismatch() throws GeneralSecurityException {
+        LOG.info("=== Test: AeadParameterSpec AAD mismatch detection ===");
+        final Cipher cipher = Cipher.getInstance("ChaCha20/Poly1305/NoPadding", BotanProvider.NAME);
+        final SecretKeySpec key = new SecretKeySpec(new byte[32], "ChaCha20");
+        final byte[] nonce = new byte[12];
+        final byte[] aad1 = "correct data".getBytes();
+        final byte[] aad2 = "wrong data".getBytes();
+
+        // Encrypt with AAD1
+        LOG.info("Encrypting with AAD: 'correct data'");
+        AeadParameterSpec encryptParams = new AeadParameterSpec(nonce, 128);
+        cipher.init(Cipher.ENCRYPT_MODE, key, encryptParams);
+        cipher.updateAAD(aad1);
+        byte[] plaintext = "Secret message".getBytes();
+        byte[] ciphertext = cipher.doFinal(plaintext);
+
+        // Try to decrypt with AAD2 (wrong AAD)
+        LOG.info("Attempting to decrypt with AAD: 'wrong data'");
+        AeadParameterSpec decryptParams = new AeadParameterSpec(nonce, 128);
+        cipher.init(Cipher.DECRYPT_MODE, key, decryptParams);
+        cipher.updateAAD(aad2);
+
+        // Should throw exception due to authentication failure
+        assertThrows(Exception.class, () -> {
+            cipher.doFinal(ciphertext);
+        }, "Decryption should fail with wrong AAD");
+        LOG.info("SUCCESS: AAD mismatch properly detected");
     }
 
 }
