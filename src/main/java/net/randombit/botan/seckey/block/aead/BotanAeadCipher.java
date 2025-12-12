@@ -349,4 +349,66 @@ public abstract class BotanAeadCipher extends BotanBlockCipher {
         }
     }
 
+    /**
+     * ChaCha20-Poly1305 AEAD cipher implementation.
+     */
+    public static final class ChaCha20Poly1305 extends BotanAeadCipher {
+
+        /**
+         * Constructs a new ChaCha20-Poly1305 cipher.
+         */
+        public ChaCha20Poly1305() {
+            super("ChaCha20", CipherMode.Poly1305, 64);
+        }
+
+        @Override
+        protected String getBotanCipherName(int keySize) {
+            return "ChaCha20Poly1305";
+        }
+
+        @Override
+        protected boolean isValidNonceLength(int nonceLength) {
+            // ChaCha20-Poly1305 uses 96-bit (12-byte) nonce
+            return nonceLength == 12;
+        }
+
+        @Override
+        protected boolean isValidTagLength(int tagLength) {
+            // ChaCha20-Poly1305 uses fixed 128-bit tag
+            return tagLength == 128;
+        }
+    }
+
+    /**
+     * XChaCha20-Poly1305 AEAD cipher implementation.
+     */
+    public static final class XChaCha20Poly1305 extends BotanAeadCipher {
+
+        /**
+         * Constructs a new XChaCha20-Poly1305 cipher.
+         */
+        public XChaCha20Poly1305() {
+            super("XChaCha20", CipherMode.Poly1305, 64);
+        }
+
+        @Override
+        protected String getBotanCipherName(int keySize) {
+            // Botan uses the same cipher name "ChaCha20Poly1305" for XChaCha20-Poly1305
+            // The XChaCha20 variant is automatically selected when a 192-bit (24-byte) nonce is used
+            return "ChaCha20Poly1305";
+        }
+
+        @Override
+        protected boolean isValidNonceLength(int nonceLength) {
+            // XChaCha20-Poly1305 uses 192-bit (24-byte) extended nonce
+            return nonceLength == 24;
+        }
+
+        @Override
+        protected boolean isValidTagLength(int tagLength) {
+            // XChaCha20-Poly1305 uses fixed 128-bit tag
+            return tagLength == 128;
+        }
+    }
+
 }

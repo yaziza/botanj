@@ -476,6 +476,14 @@ public final class BotanProvider extends Provider {
     private void addChaCha20Algorithm() {
         put("Cipher.ChaCha20/None/NoPadding", PACKAGE_NAME + STREAM_CIPHER_PREFIX + "BotanStreamCipher$ChaCha20");
         put("Cipher.XChaCha20/None/NoPadding", PACKAGE_NAME + STREAM_CIPHER_PREFIX + "BotanStreamCipher$XChaCha20");
+
+        put("Cipher.ChaCha20/Poly1305", PACKAGE_NAME + AEAD_CIPHER_PREFIX + "BotanAeadCipher$ChaCha20Poly1305");
+        put("Alg.Alias.Cipher.ChaCha20Poly1305", "ChaCha20/Poly1305");
+        put("Alg.Alias.Cipher.ChaCha20-Poly1305", "ChaCha20/Poly1305");
+
+        put("Cipher.XChaCha20/Poly1305", PACKAGE_NAME + AEAD_CIPHER_PREFIX + "BotanAeadCipher$XChaCha20Poly1305");
+        put("Alg.Alias.Cipher.XChaCha20Poly1305", "XChaCha20/Poly1305");
+        put("Alg.Alias.Cipher.XChaCha20-Poly1305", "XChaCha20/Poly1305");
     }
 
 }

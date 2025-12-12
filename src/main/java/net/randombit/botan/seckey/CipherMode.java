@@ -59,7 +59,12 @@ public enum CipherMode {
     /**
      * Offset Codebook Mode.
      */
-    OCB(PaddingAlgorithm.NO_PADDING);
+    OCB(PaddingAlgorithm.NO_PADDING),
+
+    /**
+     * (X)ChaCha20-Poly1305 authenticated encryption.
+     */
+    Poly1305(PaddingAlgorithm.NO_PADDING);
 
     private final PaddingAlgorithm[] supportedPadding;
 
