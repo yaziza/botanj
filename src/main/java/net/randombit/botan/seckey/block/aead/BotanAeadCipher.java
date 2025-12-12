@@ -47,7 +47,7 @@ public abstract class BotanAeadCipher extends BotanBlockCipher {
     /**
      * Holds the tag length for AEAD ciphers.
      */
-    private int tLen = 128;
+    protected int tLen = 128;
 
     private BotanAeadCipher(String name, CipherMode cipherMode, int blockSize) {
         super(name, cipherMode, blockSize);
@@ -233,12 +233,23 @@ public abstract class BotanAeadCipher extends BotanBlockCipher {
 
         @Override
         protected String getBotanCipherName(int keySize) {
-            return String.format("AES-%d/CCM(16,4)", Math.multiplyExact(keySize, Byte.SIZE));
+            // Calculate T (tag length in bytes) from tLen (tag length in bits)
+            int tagLengthBytes = tLen / Byte.SIZE;
+
+            // Calculate L value from nonce length
+            // In CCM: nonce_length = 15 - L, so L = 15 - nonce_length
+            // Use default L=4 (11-byte nonce) if IV not yet set
+            int lValue = (iv != null && iv.length > 0) ? (15 - iv.length) : 4;
+
+            return String.format("AES-%d/CCM(%d,%d)",
+                Math.multiplyExact(keySize, Byte.SIZE), tagLengthBytes, lValue);
         }
 
         @Override
         protected boolean isValidNonceLength(int nonceLength) {
-            return nonceLength >= 0 && nonceLength <= 16;
+            // CCM nonce length must be between 7 and 13 bytes
+            // This corresponds to L values between 2 and 8 (L = 15 - nonceLength)
+            return nonceLength >= 7 && nonceLength <= 13;
         }
 
         @Override

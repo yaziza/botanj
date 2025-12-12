@@ -251,7 +251,7 @@ public class BotanAeadCipherTest {
     public void testCcmValidTagLengths() throws GeneralSecurityException {
         final Cipher cipher = Cipher.getInstance("AES/CCM/NoPadding", BotanProvider.NAME);
         final SecretKeySpec key = new SecretKeySpec(new byte[16], "AES");
-        final byte[] nonce = new byte[12];
+        final byte[] nonce = new byte[11]; // L=4, nonce length = 15-4 = 11
 
         // Test all valid CCM tag lengths: 32, 48, 64, 80, 96, 112, 128 (multiples of 16)
         int[] validTagLengths = {32, 48, 64, 80, 96, 112, 128};
@@ -261,6 +261,93 @@ public class BotanAeadCipherTest {
             cipher.init(Cipher.ENCRYPT_MODE, key, params);
             // If we get here without exception, the tag length is accepted
         }
+    }
+
+    @Test
+    @DisplayName("Test CCM with dynamic tag and L values")
+    public void testCcmDynamicTagAndLValues() throws GeneralSecurityException {
+        LOG.info("=== Test: CCM with dynamic tag and L values ===");
+        final Cipher cipher = Cipher.getInstance("AES/CCM/NoPadding", BotanProvider.NAME);
+        final SecretKeySpec key = new SecretKeySpec(new byte[16], "AES");
+
+        // Test different combinations of tag lengths and L values
+        // L value determines nonce length: nonce_length = 15 - L
+        // L can be 2-8, so nonce can be 7-13 bytes
+
+        int[][] testCombos = {
+            {128, 2}, // tag=128 bits, L=2, nonce=13 bytes
+            {96, 3},  // tag=96 bits, L=3, nonce=12 bytes
+            {128, 4}, // tag=128 bits, L=4, nonce=11 bytes (default)
+            {64, 5},  // tag=64 bits, L=5, nonce=10 bytes
+            {48, 6},  // tag=48 bits, L=6, nonce=9 bytes
+            {128, 7}, // tag=128 bits, L=7, nonce=8 bytes
+            {32, 8},  // tag=32 bits, L=8, nonce=7 bytes
+        };
+
+        for (int[] combo : testCombos) {
+            int tagLen = combo[0];
+            int lValue = combo[1];
+            int nonceLen = 15 - lValue;
+
+            LOG.info("Testing CCM with tag={} bits, L={}, nonce={} bytes", tagLen, lValue, nonceLen);
+
+            byte[] nonce = new byte[nonceLen];
+            java.util.Arrays.fill(nonce, (byte) 1);
+
+            final AeadParameterSpec params = new AeadParameterSpec(nonce, tagLen);
+            cipher.init(Cipher.ENCRYPT_MODE, key, params);
+
+            // Encrypt some data
+            byte[] plaintext = "Test CCM with dynamic parameters".getBytes();
+            byte[] ciphertext = cipher.doFinal(plaintext);
+
+            LOG.info("  Plaintext: {} bytes, Ciphertext: {} bytes", plaintext.length, ciphertext.length);
+
+            // Verify expected ciphertext length = plaintext + tag
+            int expectedLen = plaintext.length + (tagLen / 8);
+            assertEquals(expectedLen, ciphertext.length,
+                String.format("Ciphertext length mismatch for tag=%d, L=%d", tagLen, lValue));
+
+            // Decrypt to verify
+            cipher.init(Cipher.DECRYPT_MODE, key, params);
+            byte[] decrypted = cipher.doFinal(ciphertext);
+            assertArrayEquals(plaintext, decrypted,
+                String.format("Decryption failed for tag=%d, L=%d", tagLen, lValue));
+
+            LOG.info("  SUCCESS: Round-trip encrypt/decrypt for tag={}, L={}", tagLen, lValue);
+        }
+
+        LOG.info("SUCCESS: All CCM dynamic parameter combinations work correctly");
+    }
+
+    @Test
+    @DisplayName("Test CCM with invalid nonce length for L value")
+    public void testCcmInvalidNonceLengthForLValue() throws GeneralSecurityException {
+        LOG.info("=== Test: CCM with invalid nonce length ===");
+        final Cipher cipher = Cipher.getInstance("AES/CCM/NoPadding", BotanProvider.NAME);
+        final SecretKeySpec key = new SecretKeySpec(new byte[16], "AES");
+
+        // Nonce too short (6 bytes) - valid range is 7-13 bytes
+        LOG.info("Testing nonce length: 6 bytes (too short)");
+        byte[] shortNonce = new byte[6];
+        final GCMParameterSpec shortParams = new GCMParameterSpec(128, shortNonce);
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            cipher.init(Cipher.ENCRYPT_MODE, key, shortParams);
+        }, "Should reject nonce length < 7 bytes");
+        LOG.info("  Properly rejected nonce length < 7");
+
+        // Nonce too long (14 bytes) - valid range is 7-13 bytes
+        LOG.info("Testing nonce length: 14 bytes (too long)");
+        byte[] longNonce = new byte[14];
+        final GCMParameterSpec longParams = new GCMParameterSpec(128, longNonce);
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            cipher.init(Cipher.ENCRYPT_MODE, key, longParams);
+        }, "Should reject nonce length > 13 bytes");
+        LOG.info("  Properly rejected nonce length > 13");
+
+        LOG.info("SUCCESS: Invalid nonce lengths properly rejected");
     }
 
     @Test
