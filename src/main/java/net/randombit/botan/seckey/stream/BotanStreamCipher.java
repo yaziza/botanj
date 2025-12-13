@@ -119,7 +119,7 @@ public abstract class BotanStreamCipher extends net.randombit.botan.seckey.Botan
 
         @Override
         protected boolean isValidNonceLength(int nonceLength) {
-            return nonceLength == 8 || nonceLength == 12 || nonceLength == 24;
+            return nonceLength == 8 || nonceLength == 12;
         }
     }
 

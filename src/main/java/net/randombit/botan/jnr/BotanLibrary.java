@@ -198,7 +198,7 @@ public interface BotanLibrary {
     int botan_ffi_supports_api(long apiVersion);
 
     /**
-     * Returns a free-form version string, e.g., 2.0.0
+     * Returns a free-form version string, e.g., 3.10.0
      *
      * @return {@link String} version
      */

@@ -94,9 +94,7 @@ public final class Base64Utils {
     }
 
     private static int base64OutputLength(byte[] output) {
-        int n = Math.addExact(output.length, 2);
-
-        n = (int) Math.floor(n / 3);
+        int n = Math.addExact(output.length, 2) / 3;
 
         return Math.multiplyExact(n, 4);
     }

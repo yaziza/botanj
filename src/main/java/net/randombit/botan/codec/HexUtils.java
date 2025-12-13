@@ -38,14 +38,15 @@ public final class HexUtils {
      * Performs hex encoding.
      *
      * @param input input
+     * @param upperCase output be upper case
      * @return encoded output
      */
-    public static byte[] encode(byte[] input) {
+    public static byte[] encode(byte[] input, boolean upperCase) {
         // Throwing an exception if the result overflows
         final int resultSize = Math.multiplyExact(input.length, 2);
         final byte[] result = new byte[resultSize];
 
-        final int err = singleton().botan_hex_encode(input, input.length, result, 1);
+        final int err = singleton().botan_hex_encode(input, input.length, result, upperCase ? 1 : 0);
         checkNativeCall(err, "botan_hex_encode");
 
         return result;
@@ -55,10 +56,11 @@ public final class HexUtils {
      * Performs hex encoding.
      *
      * @param input input
+     * @param upperCase output be upper case
      * @return encoded output {@link String}
      */
-    public static String encodeToHexString(byte[] input) {
-        return new String(encode(input));
+    public static String encodeToHexString(byte[] input, boolean upperCase) {
+        return new String(encode(input, upperCase));
     }
 
     /**

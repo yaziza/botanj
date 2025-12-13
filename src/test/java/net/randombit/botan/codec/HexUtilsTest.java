@@ -33,7 +33,7 @@ public class HexUtilsTest {
         LOG.info("Input string: '{}'", input);
 
         final byte[] expected = Hex.encode(input.getBytes());
-        final byte[] actual = HexUtils.encode(input.getBytes());
+        final byte[] actual = HexUtils.encode(input.getBytes(), true);
 
         LOG.info("Expected (Bouncy Castle): {} bytes", expected.length);
         LOG.info("Actual (Botan): {} bytes", actual.length);
@@ -95,7 +95,7 @@ public class HexUtilsTest {
         LOG.info("=== Test: Encoding then decoding string ===");
         final String input = "some input";
         LOG.info("Original input: '{}'", input);
-        final byte[] encoded = HexUtils.encode(input.getBytes());
+        final byte[] encoded = HexUtils.encode(input.getBytes(), true);
         LOG.info("Encoded to: {} bytes", encoded.length);
         final byte[] decoded = HexUtils.decode(encoded);
         LOG.info("Decoded to: {} bytes", decoded.length);
