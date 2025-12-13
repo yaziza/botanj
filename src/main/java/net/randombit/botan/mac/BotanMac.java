@@ -225,7 +225,7 @@ public abstract class BotanMac extends MacSpi {
         checkNativeCall(err, "botan_mac_init");
 
         // Register cleaner for the newly created MAC object
-        cleanable = CLEANER.register(this, new BotanMacCleanupAction(macRef.getValue()));
+        cleanable = CLEANER.register(this, new BotanMacCleanupAction(macRef.getValue(), encodedKey));
 
         BotanUtil.FourParameterFunction<Pointer, NativeLongByReference> getKeySpec = (a, b, c, d) -> {
             return singleton().botan_mac_get_keyspec(a, b, c, d);
@@ -233,10 +233,11 @@ public abstract class BotanMac extends MacSpi {
 
         checkKeySize(macRef.getValue(), length, getKeySpec);
 
-        err = singleton().botan_mac_set_key(macRef.getValue(), key.getEncoded(), length);
+        err = singleton().botan_mac_set_key(macRef.getValue(), encodedKey, length);
         checkNativeCall(err, "botan_mac_set_key");
 
-        currentKey = key.getEncoded();
+        currentKey = encodedKey;
+
         macFinalized = false;
     }
 
@@ -293,10 +294,14 @@ public abstract class BotanMac extends MacSpi {
      * TODO: Investigate if botan_mac_destroy also calls clear internally.
      * If it does, we should remove the explicit botan_mac_clear call to avoid redundant operations.
      */
-    private record BotanMacCleanupAction(jnr.ffi.Pointer macPointer) implements Runnable {
+    private record BotanMacCleanupAction(jnr.ffi.Pointer macPointer, byte[] key) implements Runnable {
 
         @Override
         public void run() {
+            if (key != null) {
+                Arrays.fill(key, (byte) 0x00);
+            }
+
             if (macPointer != null) {
                 try {
                     singleton().botan_mac_clear(macPointer);

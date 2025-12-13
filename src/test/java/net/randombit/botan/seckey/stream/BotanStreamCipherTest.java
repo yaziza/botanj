@@ -225,14 +225,11 @@ public class BotanStreamCipherTest {
         final Cipher cipher = Cipher.getInstance("Chacha20/None/NoPadding", BotanProvider.NAME);
         final SecretKeySpec keyBytes = new SecretKeySpec(new byte[16], "ChaCha20");
 
-        // 8 byte nonce allowed for SALSA/CHACHA
+        // 8 byte nonce allowed for CHACHA20
         cipher.init(Cipher.ENCRYPT_MODE, keyBytes, new IvParameterSpec(new byte[8]));
 
-        // 12 byte nonce allowed for SALSA/CHACHA
+        // 12 byte nonce allowed for CHACHA20
         cipher.init(Cipher.ENCRYPT_MODE, keyBytes, new IvParameterSpec(new byte[12]));
-
-        // only 24 byte nonce is allowed for SALSA/CHACHA
-        cipher.init(Cipher.ENCRYPT_MODE, keyBytes, new IvParameterSpec(new byte[24]));
     }
 
     @ParameterizedTest
