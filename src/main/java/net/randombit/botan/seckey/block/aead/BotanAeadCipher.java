@@ -384,8 +384,7 @@ public abstract class BotanAeadCipher extends BotanBlockCipher {
 
         @Override
         protected boolean isValidNonceLength(int nonceLength) {
-            // ChaCha20-Poly1305 uses 96-bit (12-byte) nonce
-            return nonceLength == 12;
+            return nonceLength == 8  || nonceLength == 12 || nonceLength == 24;
         }
 
         @Override

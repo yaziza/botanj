@@ -142,7 +142,7 @@ public class BotanAeadCipherTest {
         LOG.info("=== Test: Encrypt then decrypt for {} ===", algorithm);
         final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
         final SecretKeySpec keyBytes = new SecretKeySpec(HexUtils.decode(key), algorithm);
-        final GCMParameterSpec nonceBytes = new GCMParameterSpec(128, HexUtils.decode(nonce));
+        final AeadParameterSpec nonceBytes = new AeadParameterSpec(HexUtils.decode(nonce), 128);
 
         final byte[] expected = "some plain text to be encrypted.".getBytes();
         LOG.info("Plaintext: {} bytes", expected.length);
@@ -918,9 +918,9 @@ public class BotanAeadCipherTest {
         LOG.info("=== Test: ChaCha20-Poly1305 with invalid nonce length ===");
         final Cipher cipher = Cipher.getInstance("ChaCha20/Poly1305/NoPadding", BotanProvider.NAME);
         final SecretKeySpec key = new SecretKeySpec(new byte[32], "ChaCha20");
-        final byte[] nonce = new byte[24]; // Wrong size - should be 12
+        final byte[] nonce = new byte[32];
 
-        LOG.info("Testing invalid nonce length: 24 bytes (should be 12)");
+        LOG.info("Testing invalid nonce length: 32 bytes");
         final GCMParameterSpec params = new GCMParameterSpec(128, nonce);
 
         assertThrows(IllegalArgumentException.class, () -> {
