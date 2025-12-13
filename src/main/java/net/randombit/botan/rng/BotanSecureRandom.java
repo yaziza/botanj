@@ -1,5 +1,5 @@
 /*
- * (C) 2020 Yasser Aziza
+ * (C) 2025 Yasser Aziza
  *
  * Botanj is released under the MIT License (see license.txt)
  *
