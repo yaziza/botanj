@@ -437,4 +437,52 @@ public abstract class BotanMac extends MacSpi {
         }
     }
 
+    /**
+     * HMAC-SHA3-224 implementation.
+     */
+    public static final class HMacSha3224 extends BotanMac {
+        /**
+         * Constructs a new HMAC-SHA3-224 instance.
+         */
+        public HMacSha3224() {
+            super("HMAC(SHA-3(224))", 28);
+        }
+    }
+
+    /**
+     * HMAC-SHA3-256 implementation.
+     */
+    public static final class HMacSha3256 extends BotanMac {
+        /**
+         * Constructs a new HMAC-SHA3-256 instance.
+         */
+        public HMacSha3256() {
+            super("HMAC(SHA-3(256))", 32);
+        }
+    }
+
+    /**
+     * HMAC-SHA3-384 implementation.
+     */
+    public static final class HMacSha3384 extends BotanMac {
+        /**
+         * Constructs a new HMAC-SHA3-384 instance.
+         */
+        public HMacSha3384() {
+            super("HMAC(SHA-3(384))", 48);
+        }
+    }
+
+    /**
+     * HMAC-SHA3-512 implementation.
+     */
+    public static final class HMacSha3512 extends BotanMac {
+        /**
+         * Constructs a new HMAC-SHA3-512 instance.
+         */
+        public HMacSha3512() {
+            super("HMAC(SHA-3(512))", 64);
+        }
+    }
+
 }
