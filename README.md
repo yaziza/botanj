@@ -52,7 +52,7 @@ Comprehensive API documentation with detailed usage examples, architecture expla
 * Block ciphers: AES, DES/3DES
 * Stream ciphers: (X)Salsa20, (X)ChaCha20
 * Hash functions: SHA-1, SHA-2, SHA-3, MD4, MD5, RIPEMD-160, BLAKE2b
-* Message Authentication codes: HMAC, CMAC, Poly1305, SipHash
+* Message Authentication codes: HMAC (SHA-1, SHA-2, SHA-3), CMAC, Poly1305, SipHash
 
 ### Public Key Cryptography
 * Not yet supported

@@ -65,7 +65,9 @@ import net.randombit.botan.jnr.BotanLibrary;
  *
  * <h3>Message Authentication Codes (MACs)</h3>
  * <ul>
- *   <li><b>HMAC:</b> HMAC-MD5, HMAC-RIPEMD160, HMAC-SHA1, HMAC-SHA224, HMAC-SHA256, HMAC-SHA384, HMAC-SHA512</li>
+ *   <li><b>HMAC-SHA2:</b> HMAC-SHA1, HMAC-SHA224, HMAC-SHA256, HMAC-SHA384, HMAC-SHA512</li>
+ *   <li><b>HMAC-SHA3:</b> HMAC-SHA3-224, HMAC-SHA3-256, HMAC-SHA3-384, HMAC-SHA3-512</li>
+ *   <li><b>HMAC-Other:</b> HMAC-MD5, HMAC-RIPEMD160</li>
  *   <li><b>CMAC:</b> CMAC (AES-based cipher MAC)</li>
  *   <li><b>Poly1305:</b> Poly1305</li>
  *   <li><b>SipHash:</b> SipHash (SipHash-2-4)</li>
@@ -405,6 +407,18 @@ public final class BotanProvider extends Provider {
         put("Mac.HMAC-SHA512", PACKAGE_NAME + MAC_PREFIX + "BotanMac$HMacSha512");
         put("Alg.Alias.Mac.HMAC-SHA2", "HMAC-SHA512");
         put("Alg.Alias.Mac.HmacSHA512", "HMAC-SHA512");
+
+        put("Mac.HMAC-SHA3-224", PACKAGE_NAME + MAC_PREFIX + "BotanMac$HMacSha3224");
+        put("Alg.Alias.Mac.HmacSHA3-224", "HMAC-SHA3-224");
+
+        put("Mac.HMAC-SHA3-256", PACKAGE_NAME + MAC_PREFIX + "BotanMac$HMacSha3256");
+        put("Alg.Alias.Mac.HmacSHA3-256", "HMAC-SHA3-256");
+
+        put("Mac.HMAC-SHA3-384", PACKAGE_NAME + MAC_PREFIX + "BotanMac$HMacSha3384");
+        put("Alg.Alias.Mac.HmacSHA3-384", "HMAC-SHA3-384");
+
+        put("Mac.HMAC-SHA3-512", PACKAGE_NAME + MAC_PREFIX + "BotanMac$HMacSha3512");
+        put("Alg.Alias.Mac.HmacSHA3-512", "HMAC-SHA3-512");
     }
 
     private void addCmacAlgorithm() {
