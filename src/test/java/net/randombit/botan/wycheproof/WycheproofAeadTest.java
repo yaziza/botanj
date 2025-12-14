@@ -167,14 +167,14 @@ public abstract class WycheproofAeadTest extends WycheproofTestBase {
             return new GCMParameterSpec(tagSize, iv);
         } else if (mode.contains("CCM") || mode.contains("EAX") || mode.contains("OCB") || mode.contains("SIV")) {
             // CCM, EAX, OCB, SIV need tag size - use AeadParameterSpec
-            return new AeadParameterSpec(iv, tagSize);
+            return new AeadParameterSpec(tagSize, iv);
         } else if (mode.contains("CHACHA20")) {
             // ChaCha20-Poly1305 and XChaCha20-Poly1305 use IvParameterSpec
             // ChaCha20: 96-bit nonce, XChaCha20: 192-bit nonce and fixed 128-bit tag length
             return new IvParameterSpec(iv);
         } else {
             // Default to AeadParameterSpec for unknown modes
-            return new AeadParameterSpec(iv, tagSize);
+            return new AeadParameterSpec(tagSize, iv);
         }
     }
 

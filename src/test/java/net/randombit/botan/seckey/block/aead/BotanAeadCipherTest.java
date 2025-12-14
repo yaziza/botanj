@@ -142,7 +142,7 @@ public class BotanAeadCipherTest {
         LOG.info("=== Test: Encrypt then decrypt for {} ===", algorithm);
         final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
         final SecretKeySpec keyBytes = new SecretKeySpec(HexUtils.decode(key), algorithm);
-        final AeadParameterSpec nonceBytes = new AeadParameterSpec(HexUtils.decode(nonce), 128);
+        final AeadParameterSpec nonceBytes = new AeadParameterSpec(128, HexUtils.decode(nonce));
 
         final byte[] expected = "some plain text to be encrypted.".getBytes();
         LOG.info("Plaintext: {} bytes", expected.length);
@@ -294,7 +294,7 @@ public class BotanAeadCipherTest {
             byte[] nonce = new byte[nonceLen];
             java.util.Arrays.fill(nonce, (byte) 1);
 
-            final AeadParameterSpec params = new AeadParameterSpec(nonce, tagLen);
+            final AeadParameterSpec params = new AeadParameterSpec(tagLen, nonce);
             cipher.init(Cipher.ENCRYPT_MODE, key, params);
 
             // Encrypt some data
@@ -1059,7 +1059,7 @@ public class BotanAeadCipherTest {
 
         // Use AeadParameterSpec instead of GCMParameterSpec
         LOG.info("Creating AeadParameterSpec with 12-byte nonce and 128-bit tag");
-        final AeadParameterSpec params = new AeadParameterSpec(nonce, 128);
+        final AeadParameterSpec params = new AeadParameterSpec(128, nonce);
 
         cipher.init(Cipher.ENCRYPT_MODE, key, params);
         cipher.updateAAD(aad);
@@ -1092,7 +1092,7 @@ public class BotanAeadCipherTest {
 
         // Use AeadParameterSpec with extended nonce
         LOG.info("Creating AeadParameterSpec with 24-byte nonce and 128-bit tag");
-        final AeadParameterSpec params = new AeadParameterSpec(nonce, 128);
+        final AeadParameterSpec params = new AeadParameterSpec(128, nonce);
 
         cipher.init(Cipher.ENCRYPT_MODE, key, params);
         cipher.updateAAD(aad);
@@ -1122,7 +1122,7 @@ public class BotanAeadCipherTest {
 
         // Use AeadParameterSpec with AES-GCM
         LOG.info("Creating AeadParameterSpec for AES-GCM");
-        final AeadParameterSpec params = new AeadParameterSpec(nonce, 128);
+        final AeadParameterSpec params = new AeadParameterSpec(128, nonce);
 
         cipher.init(Cipher.ENCRYPT_MODE, key, params);
         cipher.updateAAD(aad);
@@ -1150,7 +1150,7 @@ public class BotanAeadCipherTest {
 
         // Use AeadParameterSpec without AAD
         LOG.info("Creating AeadParameterSpec without AAD");
-        final AeadParameterSpec params = new AeadParameterSpec(nonce, 128);
+        final AeadParameterSpec params = new AeadParameterSpec(128, nonce);
 
         cipher.init(Cipher.ENCRYPT_MODE, key, params);
         byte[] plaintext = "No AAD".getBytes();
@@ -1178,7 +1178,7 @@ public class BotanAeadCipherTest {
 
         // Encrypt with AAD1
         LOG.info("Encrypting with AAD: 'correct data'");
-        AeadParameterSpec encryptParams = new AeadParameterSpec(nonce, 128);
+        AeadParameterSpec encryptParams = new AeadParameterSpec(128, nonce);
         cipher.init(Cipher.ENCRYPT_MODE, key, encryptParams);
         cipher.updateAAD(aad1);
         byte[] plaintext = "Secret message".getBytes();
@@ -1186,7 +1186,7 @@ public class BotanAeadCipherTest {
 
         // Try to decrypt with AAD2 (wrong AAD)
         LOG.info("Attempting to decrypt with AAD: 'wrong data'");
-        AeadParameterSpec decryptParams = new AeadParameterSpec(nonce, 128);
+        AeadParameterSpec decryptParams = new AeadParameterSpec(128, nonce);
         cipher.init(Cipher.DECRYPT_MODE, key, decryptParams);
         cipher.updateAAD(aad2);
 

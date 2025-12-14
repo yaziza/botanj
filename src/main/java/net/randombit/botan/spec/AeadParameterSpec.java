@@ -25,9 +25,9 @@ import java.util.Arrays;
  *
  * <h2>Usage Example</h2>
  * <pre>{@code
- * // Create parameter spec with nonce and tag size
+ * // Create parameter spec with tag size and nonce
  * byte[] nonce = new byte[12];
- * AeadParameterSpec spec = new AeadParameterSpec(nonce, 128);
+ * AeadParameterSpec spec = new AeadParameterSpec(128, nonce);
  *
  * // Using with cipher
  * Cipher cipher = Cipher.getInstance("ChaCha20/Poly1305/NoPadding", "Botan");
@@ -46,35 +46,49 @@ public class AeadParameterSpec implements AlgorithmParameterSpec {
     private final int tLen;
 
     /**
-     * Constructs a parameter specification for AEAD cipher modes with a nonce and tag length.
+     * Constructs a parameter specification for AEAD cipher modes with a tag length and nonce.
+     * <p>
+     * This constructor signature matches {@link javax.crypto.spec.GCMParameterSpec} for compatibility.
+     * </p>
      *
-     * @param iv the buffer containing the nonce (initialization vector).
-     *           The required length depends on the cipher algorithm (e.g., 12 bytes for
-     *           ChaCha20-Poly1305, 24 bytes for XChaCha20-Poly1305).
      * @param tLen the authentication tag length in bits. The supported tag lengths
      *             depend on the cipher algorithm (e.g., 128 bits for ChaCha20-Poly1305).
-     * @throws IllegalArgumentException if {@code iv} is null, or if {@code tLen} is negative
+     * @param iv the buffer containing the nonce (initialization vector).
+     *            The required length depends on the cipher algorithm (e.g., 12 bytes for
+     *            ChaCha20-Poly1305, 24 bytes for XChaCha20-Poly1305).
+     * @throws IllegalArgumentException if {@code src} is null, or if {@code tLen} is negative
      *                                  or not a multiple of 8
      */
-    public AeadParameterSpec(byte[] iv, int tLen) {
-        this(iv, 0, iv == null ? 0 : iv.length, tLen);
+    public AeadParameterSpec(int tLen, byte[] iv) {
+        this(tLen, iv, 0, iv == null ? 0 : iv.length);
     }
 
     /**
      * Constructs a parameter specification for AEAD cipher modes using a subset of a buffer as the nonce.
+     * <p>
+     * This constructor signature matches {@link javax.crypto.spec.GCMParameterSpec} for compatibility.
+     * </p>
      *
+     * @param tLen the authentication tag length in bits. The supported tag lengths
+     *             depend on the cipher algorithm (e.g., 128 bits for ChaCha20-Poly1305).
      * @param iv the buffer containing the nonce (initialization vector).
      * @param offset the offset in {@code iv} where the nonce data starts
      * @param len the number of nonce bytes. The required length depends on the cipher algorithm
      *            (e.g., 12 bytes for ChaCha20-Poly1305, 24 bytes for XChaCha20-Poly1305).
-     * @param tLen the authentication tag length in bits. The supported tag lengths
-     *             depend on the cipher algorithm (e.g., 128 bits for ChaCha20-Poly1305).
      * @throws IllegalArgumentException if {@code iv} is null, or if {@code tLen} is negative
      *                                  or not a multiple of 8, or if {@code offset} and {@code len}
      *                                  specify a range that exceeds the bounds of {@code iv}
      * @throws ArrayIndexOutOfBoundsException if {@code offset} or {@code len} is negative
      */
-    public AeadParameterSpec(byte[] iv, int offset, int len, int tLen) {
+    public AeadParameterSpec(int tLen, byte[] iv, int offset, int len) {
+        if (tLen < 0) {
+            throw new IllegalArgumentException("Tag length cannot be negative");
+        }
+
+        if (tLen % Byte.SIZE != 0) {
+            throw new IllegalArgumentException("Tag length must be a multiple of 8 bits");
+        }
+
         if (iv == null) {
             throw new IllegalArgumentException("IV missing");
         }
@@ -88,16 +102,8 @@ public class AeadParameterSpec implements AlgorithmParameterSpec {
             throw new IllegalArgumentException("IV buffer too short for given offset/length combination");
         }
 
-        if (tLen < 0) {
-            throw new IllegalArgumentException("Tag length cannot be negative");
-        }
-
-        if (tLen % Byte.SIZE != 0) {
-            throw new IllegalArgumentException("Tag length must be a multiple of 8 bits");
-        }
-
-        this.iv = Arrays.copyOfRange(iv, offset, offset + len);
         this.tLen = tLen;
+        this.iv = Arrays.copyOfRange(iv, offset, offset + len);
     }
 
     /**
