@@ -57,17 +57,20 @@ public enum PaddingAlgorithm {
     /**
      * Returns the padding algorithm matching the given name.
      *
-     * @param name the padding algorithm name
+     * <p>Supports both Botan-style names (e.g., "PKCS7", "NoPadding") and
+     * standard JCE-style names with "Padding" suffix (e.g., "PKCS7Padding", "PKCS5Padding").</p>
+     *
+     * @param padding the padding algorithm name
      * @return the corresponding PaddingAlgorithm
      * @throws NoSuchPaddingException if the algorithm is not supported
      */
-    public static PaddingAlgorithm fromName(String name) throws NoSuchPaddingException {
+    public static PaddingAlgorithm fromName(String padding) throws NoSuchPaddingException {
         List<PaddingAlgorithm> algorithm = Stream.of(PaddingAlgorithm.values())
-                .filter(p -> p.name.equalsIgnoreCase(name))
+                .filter(p -> padding.contains(p.name))
                 .toList();
 
         if (algorithm.isEmpty()) {
-            throw new NoSuchPaddingException("Padding algorithm not supported: " + name);
+            throw new NoSuchPaddingException("Padding algorithm not supported: " + padding);
         }
 
         return getNormalized(algorithm.get(0));
