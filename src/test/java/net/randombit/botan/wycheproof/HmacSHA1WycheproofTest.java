@@ -12,15 +12,13 @@ package net.randombit.botan.wycheproof;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-/**
- * Wycheproof test vectors for HmacSHA1.
- */
+/** Wycheproof test vectors for HmacSHA1. */
 @DisplayName("Wycheproof HmacSHA1 tests")
 public class HmacSHA1WycheproofTest extends WycheproofMacTest {
 
-    @Test
-    @DisplayName("Run Wycheproof HmacSHA1 test vectors")
-    void testHmacSHA1Wycheproof() throws Exception {
-        runWycheproofMacTests("/wycheproof/hmac_sha1_test.json", "HmacSHA1");
-    }
+  @Test
+  @DisplayName("Run Wycheproof HmacSHA1 test vectors")
+  void testHmacSHA1Wycheproof() throws Exception {
+    runWycheproofMacTests("/wycheproof/hmac_sha1_test.json", "HmacSHA1");
+  }
 }
