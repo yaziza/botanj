@@ -35,7 +35,7 @@ public class AeadParameterSpecTest {
         byte[] nonce = new byte[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
         int tLen = 128;
 
-        AeadParameterSpec spec = new AeadParameterSpec(nonce, tLen);
+        AeadParameterSpec spec = new AeadParameterSpec(tLen, nonce);
 
         LOG.info("Nonce length: {} bytes", spec.getIV().length);
         LOG.info("Tag length: {} bits", spec.getTLen());
@@ -53,7 +53,7 @@ public class AeadParameterSpecTest {
         int tLen = 128;
 
         assertThrows(IllegalArgumentException.class, () -> {
-            new AeadParameterSpec(nonce, tLen);
+            new AeadParameterSpec(tLen, nonce);
         }, "Should throw IllegalArgumentException for null nonce");
         LOG.info("SUCCESS: Null nonce properly rejected");
     }
@@ -66,7 +66,7 @@ public class AeadParameterSpecTest {
         int tLen = -1;
 
         Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            new AeadParameterSpec(nonce, tLen);
+            new AeadParameterSpec(tLen, nonce);
         }, "Should throw IllegalArgumentException for negative tag length");
 
         assertEquals("Tag length cannot be negative", exception.getMessage());
@@ -81,7 +81,7 @@ public class AeadParameterSpecTest {
         int tLen = 127; // Not a multiple of 8
 
         Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            new AeadParameterSpec(nonce, tLen);
+            new AeadParameterSpec(tLen, nonce);
         }, "Should throw IllegalArgumentException for tag length not multiple of 8");
 
         assertEquals("Tag length must be a multiple of 8 bits", exception.getMessage());
@@ -96,7 +96,7 @@ public class AeadParameterSpecTest {
         byte[] nonceCopy = Arrays.copyOf(originalNonce, originalNonce.length);
         int tLen = 128;
 
-        AeadParameterSpec spec = new AeadParameterSpec(nonceCopy, tLen);
+        AeadParameterSpec spec = new AeadParameterSpec(tLen, nonceCopy);
 
         // Modify the original array
         nonceCopy[0] = 99;
@@ -118,7 +118,7 @@ public class AeadParameterSpecTest {
         byte[] nonce = new byte[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
         int tLen = 128;
 
-        AeadParameterSpec spec = new AeadParameterSpec(nonce, tLen);
+        AeadParameterSpec spec = new AeadParameterSpec(tLen, nonce);
 
         // Get arrays
         byte[] returnedNonce1 = spec.getIV();
@@ -144,10 +144,10 @@ public class AeadParameterSpecTest {
         byte[] nonce = new byte[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
         int tLen = 128;
 
-        AeadParameterSpec spec1 = new AeadParameterSpec(nonce, tLen);
-        AeadParameterSpec spec2 = new AeadParameterSpec(nonce, tLen);
-        AeadParameterSpec spec3 = new AeadParameterSpec(nonce, 96);
-        AeadParameterSpec spec4 = new AeadParameterSpec(new byte[12], tLen);
+        AeadParameterSpec spec1 = new AeadParameterSpec(tLen, nonce);
+        AeadParameterSpec spec2 = new AeadParameterSpec(tLen, nonce);
+        AeadParameterSpec spec3 = new AeadParameterSpec(96, nonce);
+        AeadParameterSpec spec4 = new AeadParameterSpec(tLen, new byte[12]);
 
         // Equal objects
         assertEquals(spec1, spec2, "Identical specs should be equal");
@@ -178,7 +178,7 @@ public class AeadParameterSpecTest {
         byte[] nonce = new byte[12];
         int tLen = 128;
 
-        AeadParameterSpec spec = new AeadParameterSpec(nonce, tLen);
+        AeadParameterSpec spec = new AeadParameterSpec(tLen, nonce);
 
         String str = spec.toString();
 
@@ -199,7 +199,7 @@ public class AeadParameterSpecTest {
 
         for (int tagLength : validTagLengths) {
             LOG.info("Testing tag length: {} bits", tagLength);
-            AeadParameterSpec spec = new AeadParameterSpec(nonce, tagLength);
+            AeadParameterSpec spec = new AeadParameterSpec(tagLength, nonce);
             assertEquals(tagLength, spec.getTLen(), "Tag length should be " + tagLength);
         }
         LOG.info("SUCCESS: All valid tag lengths accepted");
@@ -215,7 +215,7 @@ public class AeadParameterSpecTest {
         // Fill with some data
         Arrays.fill(largeNonce, (byte) 0x42);
 
-        AeadParameterSpec spec = new AeadParameterSpec(largeNonce, tLen);
+        AeadParameterSpec spec = new AeadParameterSpec(tLen, largeNonce);
 
         LOG.info("Large nonce length: {} bytes", spec.getIV().length);
 
@@ -231,7 +231,7 @@ public class AeadParameterSpecTest {
         byte[] nonce = new byte[12];
         int tLen = 0;
 
-        AeadParameterSpec spec = new AeadParameterSpec(nonce, tLen);
+        AeadParameterSpec spec = new AeadParameterSpec(tLen, nonce);
 
         assertEquals(0, spec.getTLen(), "Tag length should be 0");
         LOG.info("SUCCESS: Zero tag length accepted");
@@ -246,7 +246,7 @@ public class AeadParameterSpecTest {
         int len = 12;
         int tLen = 128;
 
-        AeadParameterSpec spec = new AeadParameterSpec(buffer, offset, len, tLen);
+        AeadParameterSpec spec = new AeadParameterSpec(tLen, buffer, offset, len);
 
         LOG.info("Buffer length: {} bytes", buffer.length);
         LOG.info("Offset: {}, Length: {}", offset, len);
@@ -272,7 +272,7 @@ public class AeadParameterSpecTest {
         int tLen = 128;
 
         assertThrows(ArrayIndexOutOfBoundsException.class, () -> {
-            new AeadParameterSpec(buffer, offset, len, tLen);
+            new AeadParameterSpec(tLen, buffer, offset, len);
         }, "Should throw ArrayIndexOutOfBoundsException for negative offset");
 
         LOG.info("SUCCESS: Negative offset properly rejected");
@@ -288,7 +288,7 @@ public class AeadParameterSpecTest {
         int tLen = 128;
 
         assertThrows(ArrayIndexOutOfBoundsException.class, () -> {
-            new AeadParameterSpec(buffer, offset, len, tLen);
+            new AeadParameterSpec(tLen, buffer, offset, len);
         }, "Should throw ArrayIndexOutOfBoundsException for negative length");
 
         LOG.info("SUCCESS: Negative length properly rejected");
@@ -304,7 +304,7 @@ public class AeadParameterSpecTest {
         int tLen = 128;
 
         assertThrows(IllegalArgumentException.class, () -> {
-            new AeadParameterSpec(buffer, offset, len, tLen);
+            new AeadParameterSpec(tLen, buffer, offset, len);
         }, "Should throw IllegalArgumentException when offset + length exceeds buffer");
 
         LOG.info("SUCCESS: Exceeding range properly rejected");
@@ -319,7 +319,7 @@ public class AeadParameterSpecTest {
         int len = 0;
         int tLen = 128;
 
-        AeadParameterSpec spec = new AeadParameterSpec(buffer, offset, len, tLen);
+        AeadParameterSpec spec = new AeadParameterSpec(tLen, buffer, offset, len);
 
         assertEquals(0, spec.getIV().length, "IV length should be 0");
         assertEquals(tLen, spec.getTLen(), "Tag length should match");
@@ -336,7 +336,7 @@ public class AeadParameterSpecTest {
         int len = 12;
         int tLen = 128;
 
-        AeadParameterSpec spec = new AeadParameterSpec(buffer, offset, len, tLen);
+        AeadParameterSpec spec = new AeadParameterSpec(tLen, buffer, offset, len);
 
         // Modify the original buffer
         buffer[4] = 99;

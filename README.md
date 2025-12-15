@@ -109,7 +109,7 @@ final byte[] output = cipher.doFinal("hello world".getBytes());
 ```java
 final Cipher cipher = Cipher.getInstance("ChaCha20/Poly1305/NoPadding", BotanProvider.NAME);
 // ChaCha20-Poly1305 uses 12-byte nonce, never reuse with the same key
-final AeadParameterSpec params = new AeadParameterSpec(nonce, 128); // 128-bit tag
+final AeadParameterSpec params = new AeadParameterSpec(128, nonce); // 128-bit tag
 cipher.init(Cipher.ENCRYPT_MODE, key, params);
 cipher.updateAAD(aad); // Optional associated data
 final byte[] output = cipher.doFinal("hello world".getBytes());
@@ -119,7 +119,7 @@ final byte[] output = cipher.doFinal("hello world".getBytes());
 ```java
 final Cipher cipher = Cipher.getInstance("XChaCha20/Poly1305/NoPadding", BotanProvider.NAME);
 // XChaCha20-Poly1305 uses 24-byte extended nonce for improved security
-final AeadParameterSpec params = new AeadParameterSpec(nonce, 128); // 128-bit tag
+final AeadParameterSpec params = new AeadParameterSpec(128, nonce); // 128-bit tag
 cipher.init(Cipher.ENCRYPT_MODE, key, params);
 cipher.updateAAD(aad); // Optional associated data
 final byte[] output = cipher.doFinal("hello world".getBytes());
