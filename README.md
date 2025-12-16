@@ -17,6 +17,8 @@ Botanj - Java Security Provider (JSP)
 
 [![Known Vulnerabilities](https://snyk.io/test/github/yaziza/botanj/badge.svg)](https://snyk.io/test/github/yaziza/botanj)
 
+[![License](https://img.shields.io/:license-mit-31c653.svg)](https://mit-license.org/)
+
 ## Index
 
 1. [Introduction](#introduction)
