@@ -9,20 +9,16 @@
 
 package net.randombit.botan.wycheproof;
 
-import com.google.gson.JsonObject;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-/**
- * Wycheproof test vectors for AES-EAX.
- */
+/** Wycheproof test vectors for AES-EAX. */
 @DisplayName("Wycheproof AES-EAX tests")
 public class AesEaxWycheproofTest extends WycheproofAeadTest {
 
-    @Test
-    @DisplayName("Run Wycheproof AES-EAX test vectors")
-    void testAesEaxWycheproof() throws Exception {
-        runWycheproofAeadTests("/wycheproof/aes_eax_test.json", "AES/EAX/NoPadding");
-    }
-
+  @Test
+  @DisplayName("Run Wycheproof AES-EAX test vectors")
+  void testAesEaxWycheproof() throws Exception {
+    runWycheproofAeadTests("/wycheproof/aes_eax_test.json", "AES/EAX/NoPadding");
+  }
 }

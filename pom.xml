@@ -169,12 +169,20 @@
                             <goal>check</goal>
                         </goals>
                         <configuration>
-                            <configLocation>checkstyle/config.xml</configLocation>
+                            <configLocation>checkstyle/google_checks.xml</configLocation>
+                            <suppressionsLocation>checkstyle/google_checks_suppressions.xml</suppressionsLocation>
                             <includeTestSourceDirectory>true</includeTestSourceDirectory>
                             <logViolationsToConsole>true</logViolationsToConsole>
                         </configuration>
                     </execution>
                 </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.puppycrawl.tools</groupId>
+                        <artifactId>checkstyle</artifactId>
+                        <version>12.2.0</version>
+                    </dependency>
+                </dependencies>
             </plugin>
 
             <!-- JaCoCo for code coverage -->
