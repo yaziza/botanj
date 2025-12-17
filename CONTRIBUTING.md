@@ -19,9 +19,8 @@ Botanj is a Java Security Provider (JSP) that implements parts of the Java Crypt
 
 Before contributing, please:
 
-1. Review the project architecture in [TBA](TBA)
-2. Check existing issues and pull requests to avoid duplicates
-3. For major changes, open an issue first to discuss your proposed changes
+1. Check existing issues and pull requests to avoid duplicates
+2. For major changes, open an issue first to discuss your proposed changes
 
 ## Development Setup
 
@@ -41,17 +40,6 @@ git clone https://github.com/randombit/botanj.git
 cd botanj
 ```
 
-### Configure Native Library Path
-
-Set the native library path for your system:
-
-```bash
-# macOS example
-export NATIVE_LIB_PATH=/opt/homebrew/opt/botan/lib
-
-# Or specify in Maven commands (see below)
-```
-
 ## Building the Project
 
 ### Compile
@@ -63,7 +51,7 @@ mvn clean compile
 ### Package
 
 ```bash
-mvn clean package
+mvn clean package -Dnative.lib.path=/opt/homebrew/opt/botan/lib
 ```
 
 This creates two JARs in `target/`:
@@ -82,36 +70,41 @@ mvn test -Dnative.lib.path=/opt/homebrew/opt/botan/lib
 ### Run Single Test Class
 
 ```bash
-mvn test -Dtest=BotanMessageDigestTest
+mvn test -Dtest=BotanMessageDigestTest -Dnative.lib.path=/opt/homebrew/opt/botan/lib
 ```
 
 ### Run Single Test Method
 
 ```bash
-mvn test -Dtest=BotanMessageDigestTest#testSha256
+mvn test -Dtest=BotanMessageDigestTest#testSha256 -Dnative.lib.path=/opt/homebrew/opt/botan/lib
 ```
 
 ### Generate Code Coverage Report
 
 ```bash
-mvn jacoco:report
+mvn jacoco:report -Dnative.lib.path=/opt/homebrew/opt/botan/lib
 ```
 
 The coverage report will be available at `target/site/jacoco/index.html`.
 
 ## Code Style
 
-This project follows **Google Java Style** with checkstyle enforcement.
+This project follows [Google Java Style](https://github.com/google/google-java-format/blob/master/README.md#intellij-jre-config). with checkstyle enforcement.
 
 ### Running Checkstyle
 
 ```bash
-# Run checkstyle with Google checks
-mvn checkstyle:check -Dcheckstyle.config.location=checkstyle/google_checks.xml
-
-# Or run as part of verify phase
-mvn verify
+# Run checkstyle as part of verify phase
+mvn verify -Dnative.lib.path=/opt/homebrew/opt/botan/lib
 ```
+
+### Code Formatting
+
+Configure your IDE with the Google java formatter:
+
+- **IntelliJ IDEA**: Install "google-java-format" plugin
+- **VS Code**: Use "Language Support for Java" extension with Google formatter
+- **Eclipse**: Import [google-java-format settings](https://github.com/google/styleguide)
 
 ### Style Guidelines
 
@@ -119,18 +112,10 @@ mvn verify
 - **Line length**: Maximum 100 characters
 - **Javadoc**: Required for all public classes and methods
 - **Naming conventions**:
-  - Classes: `PascalCase`
-  - Methods: `camelCase`
-  - Constants: `UPPER_SNAKE_CASE`
-  - Variables: `camelCase`
-
-### Code Formatting
-
-The project uses Google Java Style. Configure your IDE:
-
-- **IntelliJ IDEA**: Install "google-java-format" plugin
-- **Eclipse**: Import [google-java-format settings](https://github.com/google/styleguide)
-- **VS Code**: Use "Language Support for Java" extension with Google formatter
+    - Classes: `PascalCase`
+    - Methods: `camelCase`
+    - Constants: `UPPER_SNAKE_CASE`
+    - Variables: `camelCase`
 
 ### Suppressions
 
@@ -249,9 +234,9 @@ When reporting bugs, please include:
 - **Actual behavior**: What actually happened
 - **Environment**:
   - Java version (`java -version`)
-  - Botan version
+  - Botan version (`botan --version`)
+  - Maven version (`mvn --version`)
   - OS and version
-  - Maven version
 
 ### Feature Requests
 
