@@ -64,6 +64,9 @@ import net.randombit.botan.util.BotanUtil;
  *   <li>Automatically by the Cleaner when the Java object becomes unreachable (garbage collection)
  * </ul>
  *
+ * <p>Key material is securely cleared (zeroed out) when the cipher object is cleaned up, ensuring
+ * sensitive data does not remain in memory longer than necessary.
+ *
  * <h2>Thread Safety</h2>
  *
  * <p>This implementation is NOT thread-safe. Each thread should use its own Cipher instance. The
@@ -225,6 +228,8 @@ import net.randombit.botan.util.BotanUtil;
  *       during initialization
  *   <li><b>Memory Safety</b> - Native resources are guaranteed to be freed even if explicit cleanup
  *       is not called, thanks to the Cleaner API
+ *   <li><b>Secure Key Clearing</b> - Key material is automatically zeroed out when the cipher is
+ *       destroyed or re-initialized, preventing sensitive data from lingering in memory
  *   <li><b>Mode Setting</b> - The JCE API method {@code setMode()} is not supported because the
  *       mode is specified in the transformation string during {@code getInstance()}
  * </ul>
@@ -386,7 +391,7 @@ public abstract class BotanBaseSymmetricCipher extends CipherSpi {
         CLEANER.register(
             this,
             new net.randombit.botan.seckey.BotanBaseSymmetricCipher.BotanCipherCleanupAction(
-                cipherRef.getValue()));
+                cipherRef.getValue(), encodedKey));
 
     BotanUtil.FourParameterFunction<Pointer, NativeLongByReference> getKeySpec =
         (a, b, c, d) -> {
@@ -479,10 +484,15 @@ public abstract class BotanBaseSymmetricCipher extends CipherSpi {
    * <p>TODO: Investigate if botan_cipher_destroy also calls clear internally. If it does, we should
    * remove the explicit botan_cipher_clear call to avoid redundant operations.
    */
-  private record BotanCipherCleanupAction(jnr.ffi.Pointer cipherPointer) implements Runnable {
+  private record BotanCipherCleanupAction(jnr.ffi.Pointer cipherPointer, byte[] key)
+      implements Runnable {
 
     @Override
     public void run() {
+      if (key != null) {
+        Arrays.fill(key, (byte) 0x00);
+      }
+
       if (cipherPointer != null) {
         try {
           singleton().botan_cipher_clear(cipherPointer);

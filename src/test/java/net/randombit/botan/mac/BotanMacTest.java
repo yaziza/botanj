@@ -191,6 +191,73 @@ public class BotanMacTest {
 
   @ParameterizedTest
   @CsvFileSource(resources = "/mac/mac.csv", numLinesToSkip = 1)
+  @DisplayName("Test reset before update")
+  public void testResetBeforeUpdate(String algorithm, int keySize) throws GeneralSecurityException {
+    LOG.info("=== Test: Reset before update for {} ===", algorithm);
+    final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
+
+    final Mac bc = Mac.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
+    final Mac botan = Mac.getInstance(algorithm, BotanProvider.NAME);
+
+    bc.init(key);
+    botan.init(key);
+
+    LOG.info("Calling reset on newly initialized MAC (before any update)...");
+    bc.reset();
+    botan.reset();
+
+    LOG.info("Updating both MACs with 'Hello World'...");
+    bc.update("Hello World".getBytes());
+    botan.update("Hello World".getBytes());
+
+    final byte[] expected = bc.doFinal();
+    final byte[] actual = botan.doFinal();
+
+    LOG.info("Expected (BC): {} bytes", expected.length);
+    LOG.info("Actual (Botan after reset before update): {} bytes", actual.length);
+    assertArrayEquals(
+        expected, actual, "MAC mismatch with Bouncy Castle provider for algorithm: " + algorithm);
+    LOG.info("SUCCESS: Reset before update works correctly for {}", algorithm);
+  }
+
+  @ParameterizedTest
+  @CsvFileSource(resources = "/mac/mac.csv", numLinesToSkip = 1)
+  @DisplayName("Test multiple reset after doFinal")
+  public void testMultipleResetAfterDoFinal(String algorithm, int keySize)
+      throws GeneralSecurityException {
+    LOG.info("=== Test: Multiple reset after doFinal for {} ===", algorithm);
+    final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
+
+    final Mac bc = Mac.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
+    final Mac botan = Mac.getInstance(algorithm, BotanProvider.NAME);
+
+    bc.init(key);
+    botan.init(key);
+
+    LOG.info("Computing MAC...");
+    botan.update("First message".getBytes());
+    botan.doFinal();
+
+    LOG.info("Calling reset twice (both should be no-op after doFinal)...");
+    botan.reset();
+    botan.reset();
+
+    LOG.info("Updating both MACs with 'Second message'...");
+    bc.update("Second message".getBytes());
+    botan.update("Second message".getBytes());
+
+    final byte[] expected = bc.doFinal();
+    final byte[] actual = botan.doFinal();
+
+    LOG.info("Expected (BC): {} bytes", expected.length);
+    LOG.info("Actual (Botan after multiple resets): {} bytes", actual.length);
+    assertArrayEquals(
+        expected, actual, "MAC mismatch with Bouncy Castle provider for algorithm: " + algorithm);
+    LOG.info("SUCCESS: Multiple reset after doFinal works correctly for {}", algorithm);
+  }
+
+  @ParameterizedTest
+  @CsvFileSource(resources = "/mac/mac.csv", numLinesToSkip = 1)
   @DisplayName("Test single Byte update")
   public void testSingleByteUpdate(String algorithm, int keySize) throws GeneralSecurityException {
     LOG.info("=== Test: Single byte update for {} ===", algorithm);

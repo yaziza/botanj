@@ -38,6 +38,15 @@ import jnr.ffi.byref.PointerByReference;
  * <p>This implementation is NOT thread-safe. Each thread should use its own MessageDigest instance.
  * The JCE API does not require MessageDigest implementations to be thread-safe.
  *
+ * <h2>State Management</h2>
+ *
+ * <p>The MessageDigest maintains internal state to optimize reset operations:
+ *
+ * <ul>
+ *   <li>{@code digestFinalized} - tracks whether {@code digest()} has been called, which
+ *       auto-resets the state
+ * </ul>
+ *
  * <h2>Cloning Support</h2>
  *
  * <p>This implementation supports cloning via {@link #clone()}. When a MessageDigest is cloned, the
@@ -176,7 +185,9 @@ import jnr.ffi.byref.PointerByReference;
  *       state copy
  *   <li><b>Immutable Algorithm</b> - The hash algorithm cannot be changed after construction
  *   <li><b>Auto-Reset After Digest</b> - After {@code digest()}, the state is automatically reset
- *       by Botan
+ *       by Botan, so explicit {@code reset()} is not needed
+ *   <li><b>Reset Optimization</b> - The {@code digestFinalized} flag avoids redundant native calls
+ *       to {@code botan_hash_clear} when the state is already reset
  *   <li><b>Memory Safety</b> - Native resources are guaranteed to be freed even if explicit cleanup
  *       is not called, thanks to the Cleaner API
  *   <li><b>Performance</b> - Delegates to native Botan implementation for optimal performance
@@ -206,6 +217,9 @@ public class BotanMessageDigest extends MessageDigestSpi implements Cloneable {
 
   /** Holds a dummy buffer for writing single bytes to the hash. */
   private final byte[] singleByte = new byte[1];
+
+  /** Tracks whether botan_hash_final has been called since the last update. */
+  private boolean digestFinalized = false;
 
   private BotanMessageDigest(String name, int size) throws NoSuchAlgorithmException {
     this.name = name;
@@ -246,6 +260,8 @@ public class BotanMessageDigest extends MessageDigestSpi implements Cloneable {
 
     final int err = singleton().botan_hash_update(hashRef.getValue(), bytes, len);
     checkNativeCall(err, "botan_hash_update");
+
+    digestFinalized = false;
   }
 
   @Override
@@ -254,13 +270,21 @@ public class BotanMessageDigest extends MessageDigestSpi implements Cloneable {
     final int err = singleton().botan_hash_final(hashRef.getValue(), result);
     checkNativeCall(err, "botan_hash_final");
 
+    digestFinalized = true;
+
     return result;
   }
 
   @Override
   protected void engineReset() {
-    final int err = singleton().botan_hash_clear(hashRef.getValue());
-    checkNativeCall(err, "botan_hash_clear");
+    // If botan_hash_final has already been called, the digest is already reset
+    if (!digestFinalized) {
+      // Otherwise, call botan_hash_clear to reset the state
+      final int err = singleton().botan_hash_clear(hashRef.getValue());
+      checkNativeCall(err, "botan_hash_clear");
+
+      digestFinalized = true;
+    }
   }
 
   @Override
