@@ -132,6 +132,67 @@ public class BotanMessageDigestTest {
 
   @ParameterizedTest
   @CsvFileSource(resources = "/digest/hash.csv", numLinesToSkip = 1)
+  @DisplayName("Test reset before update")
+  public void testResetBeforeUpdate(String algorithm) throws GeneralSecurityException {
+    LOG.info("=== Test: Reset before update for {} ===", algorithm);
+    final MessageDigest bc =
+        MessageDigest.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
+    final MessageDigest botan = MessageDigest.getInstance(algorithm, BotanProvider.NAME);
+
+    LOG.info("Calling reset on newly initialized digest (before any update)...");
+    botan.reset();
+
+    LOG.info("Updating both digests with 'Hello World'...");
+    bc.update("Hello World".getBytes());
+    botan.update("Hello World".getBytes());
+
+    final byte[] expected = bc.digest();
+    final byte[] actual = botan.digest();
+
+    LOG.info("Expected (BC): {} bytes", expected.length);
+    LOG.info("Actual (Botan after reset before update): {} bytes", actual.length);
+    assertArrayEquals(
+        expected,
+        actual,
+        "Digest mismatch with Bouncy Castle provider for algorithm: " + algorithm);
+    LOG.info("SUCCESS: Reset before update works correctly for {}", algorithm);
+  }
+
+  @ParameterizedTest
+  @CsvFileSource(resources = "/digest/hash.csv", numLinesToSkip = 1)
+  @DisplayName("Test multiple reset after digest")
+  public void testMultipleResetAfterDigest(String algorithm) throws GeneralSecurityException {
+    LOG.info("=== Test: Multiple reset after digest for {} ===", algorithm);
+    final MessageDigest bc =
+        MessageDigest.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
+    final MessageDigest botan = MessageDigest.getInstance(algorithm, BotanProvider.NAME);
+
+    LOG.info("Computing digest...");
+    botan.update("First message".getBytes());
+    botan.digest();
+
+    LOG.info("Calling reset twice (both should be no-op after digest)...");
+    botan.reset();
+    botan.reset();
+
+    LOG.info("Updating both digests with 'Second message'...");
+    bc.update("Second message".getBytes());
+    botan.update("Second message".getBytes());
+
+    final byte[] expected = bc.digest();
+    final byte[] actual = botan.digest();
+
+    LOG.info("Expected (BC): {} bytes", expected.length);
+    LOG.info("Actual (Botan after multiple resets): {} bytes", actual.length);
+    assertArrayEquals(
+        expected,
+        actual,
+        "Digest mismatch with Bouncy Castle provider for algorithm: " + algorithm);
+    LOG.info("SUCCESS: Multiple reset after digest works correctly for {}", algorithm);
+  }
+
+  @ParameterizedTest
+  @CsvFileSource(resources = "/digest/hash.csv", numLinesToSkip = 1)
   @DisplayName("Test digest single byte update")
   public void testSingleByteUpdate(String algorithm) throws GeneralSecurityException {
     LOG.info("=== Test: Single byte update for {} ===", algorithm);

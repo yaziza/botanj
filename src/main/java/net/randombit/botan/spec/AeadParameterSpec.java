@@ -136,11 +136,10 @@ public class AeadParameterSpec implements AlgorithmParameterSpec {
       return true;
     }
 
-    if (!(obj instanceof AeadParameterSpec)) {
+    if (!(obj instanceof AeadParameterSpec other)) {
       return false;
     }
 
-    AeadParameterSpec other = (AeadParameterSpec) obj;
     return this.tLen == other.tLen && Arrays.equals(this.iv, other.iv);
   }
 

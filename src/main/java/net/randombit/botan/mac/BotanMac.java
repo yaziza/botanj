@@ -9,6 +9,7 @@
 
 package net.randombit.botan.mac;
 
+import static net.randombit.botan.Constants.BOTAN_DO_FINAL_FLAG;
 import static net.randombit.botan.jnr.BotanInstance.checkNativeCall;
 import static net.randombit.botan.jnr.BotanInstance.singleton;
 import static net.randombit.botan.util.BotanUtil.checkKeySize;
@@ -43,6 +44,9 @@ import net.randombit.botan.util.BotanUtil;
  *       one)
  *   <li>Automatically by the Cleaner when the Java object becomes unreachable (garbage collection)
  * </ul>
+ *
+ * <p>Key material is securely cleared (zeroed out) when the MAC object is cleaned up, ensuring
+ * sensitive data does not remain in memory longer than necessary.
  *
  * <h2>Thread Safety</h2>
  *
@@ -159,6 +163,8 @@ import net.randombit.botan.util.BotanUtil;
  *       Botan, so explicit {@code reset()} is not needed
  *   <li><b>Memory Safety</b> - Native resources are guaranteed to be freed even if explicit cleanup
  *       is not called, thanks to the Cleaner API
+ *   <li><b>Secure Key Clearing</b> - Key material is automatically zeroed out when the MAC is
+ *       destroyed or re-initialized, preventing sensitive data from lingering in memory
  * </ul>
  *
  * @author Yasser Aziza
@@ -265,8 +271,11 @@ public abstract class BotanMac extends MacSpi {
   @Override
   protected byte[] engineDoFinal() {
     final byte[] result = new byte[size];
-    final int err = singleton().botan_mac_final(macRef.getValue(), result);
+    int err = singleton().botan_mac_final(macRef.getValue(), result);
     checkNativeCall(err, "botan_mac_final");
+
+    err = singleton().botan_mac_set_key(macRef.getValue(), currentKey, currentKey.length);
+    checkNativeCall(err, "botan_mac_set_key");
 
     macFinalized = true;
 
@@ -283,8 +292,9 @@ public abstract class BotanMac extends MacSpi {
 
       err = singleton().botan_mac_set_key(macRef.getValue(), currentKey, currentKey.length);
       checkNativeCall(err, "botan_mac_set_key");
+
+      macFinalized = true;
     }
-    macFinalized = false;
   }
 
   @Override

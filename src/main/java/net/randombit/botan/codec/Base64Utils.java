@@ -61,6 +61,16 @@ public final class Base64Utils {
   }
 
   /**
+   * Performs bas64 encoding to String.
+   *
+   * @param input input
+   * @return encoded output {@link String}
+   */
+  public static String encodeToString(byte[] input) {
+    return new String(encode(input));
+  }
+
+  /**
    * Performs bas64 decoding.
    *
    * @param input encoded input

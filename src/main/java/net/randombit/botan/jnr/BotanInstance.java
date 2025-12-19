@@ -219,7 +219,7 @@ public final class BotanInstance {
   }
 
   /**
-   * Checks whether or not the native library was successfully loaded.
+   * Checks whether the native library was successfully loaded.
    *
    * @throws UnsatisfiedLinkError if the library failed to load
    */
