@@ -56,7 +56,7 @@ public final class Base64Utils {
     final int err = singleton().botan_base64_encode(input, input.length, result, outputLength);
     checkNativeCall(err, "botan_base64_encode");
 
-    // remove botan native last empty byte
+    // remove botan native last null-terminated C string byte (\0)
     return Arrays.copyOfRange(result, 0, outputLength.intValue() - 1);
   }
 

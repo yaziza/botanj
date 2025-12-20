@@ -74,7 +74,7 @@ import net.randombit.botan.util.BotanUtil;
  *
  * <h2>Initialization and IV/Nonce Management</h2>
  *
- * <p>Ciphers require initialization with a key and optional IV (Initialization Vector) or nonce:
+ * <p>Ciphers require initialization with a key and optional IV (Initialization Vector) aka nonce:
  *
  * <ul>
  *   <li>The IV/nonce must be provided via {@link IvParameterSpec} during initialization
@@ -229,7 +229,7 @@ import net.randombit.botan.util.BotanUtil;
  *   <li><b>Memory Safety</b> - Native resources are guaranteed to be freed even if explicit cleanup
  *       is not called, thanks to the Cleaner API
  *   <li><b>Secure Key Clearing</b> - Key material is automatically zeroed out when the cipher is
- *       destroyed or re-initialized, preventing sensitive data from lingering in memory
+ *       destroyed or re-initialized, preventing sensitive data from remaining in memory
  *   <li><b>Mode Setting</b> - The JCE API method {@code setMode()} is not supported because the
  *       mode is specified in the transformation string during {@code getInstance()}
  * </ul>
@@ -282,10 +282,9 @@ public abstract class BotanBaseSymmetricCipher extends CipherSpi {
   /**
    * Checks if the cipher is in decryption mode.
    *
-   * @param mode the cipher mode
    * @return true if decrypting, false otherwise
    */
-  protected static boolean isDecrypting(int mode) {
+  protected boolean isDecrypting() {
     return mode == 1;
   }
 
@@ -307,7 +306,7 @@ public abstract class BotanBaseSymmetricCipher extends CipherSpi {
 
   @Override
   protected void engineSetMode(String mode) throws NoSuchAlgorithmException {
-    throw new NoSuchAlgorithmException("Cipher mode not supported " + mode);
+    throw new NoSuchAlgorithmException("Cipher set mode not supported " + mode);
   }
 
   @Override
@@ -416,16 +415,12 @@ public abstract class BotanBaseSymmetricCipher extends CipherSpi {
   @Override
   protected int engineDoFinal(
       byte[] input, int inputOffset, int inputLen, byte[] output, int outputOffset)
-      throws IllegalBlockSizeException {
+      throws IllegalBlockSizeException, javax.crypto.BadPaddingException {
     final byte[] result = engineDoFinal(input, inputOffset, inputLen);
     System.arraycopy(result, 0, output, outputOffset, result.length);
 
     return result.length;
   }
-
-  @Override
-  protected abstract byte[] engineDoFinal(byte[] input, int inputOffset, int inputLen)
-      throws IllegalBlockSizeException;
 
   /**
    * Performs cipher operation using Botan native library.

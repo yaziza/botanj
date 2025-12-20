@@ -90,7 +90,7 @@ public abstract class BotanBlockCipher extends net.randombit.botan.seckey.BotanB
 
   @Override
   protected int engineGetOutputSize(int inputLen) {
-    if (isWithoutPadding() || isDecrypting(mode)) {
+    if (isWithoutPadding() || isDecrypting()) {
       return inputLen;
     }
 
