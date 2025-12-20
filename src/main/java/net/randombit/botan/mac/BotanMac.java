@@ -164,7 +164,7 @@ import net.randombit.botan.util.BotanUtil;
  *   <li><b>Memory Safety</b> - Native resources are guaranteed to be freed even if explicit cleanup
  *       is not called, thanks to the Cleaner API
  *   <li><b>Secure Key Clearing</b> - Key material is automatically zeroed out when the MAC is
- *       destroyed or re-initialized, preventing sensitive data from lingering in memory
+ *       destroyed or re-initialized, preventing sensitive data from remaining in memory
  * </ul>
  *
  * @author Yasser Aziza

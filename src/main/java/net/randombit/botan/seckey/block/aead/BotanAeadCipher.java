@@ -63,6 +63,24 @@ public abstract class BotanAeadCipher extends BotanBlockCipher {
   }
 
   @Override
+  protected java.security.AlgorithmParameters engineGetParameters() {
+    java.security.AlgorithmParameters parameters = null;
+
+    if (iv != null && iv.length > 0) {
+      try {
+        parameters = java.security.AlgorithmParameters.getInstance(name);
+        parameters.init(new AeadParameterSpec(tLen, iv));
+
+      } catch (java.security.NoSuchAlgorithmException
+               | java.security.spec.InvalidParameterSpecException e) {
+        parameters = null;
+      }
+    }
+
+    return parameters;
+  }
+
+  @Override
   protected void engineInit(int opmode, Key key, AlgorithmParameterSpec params, SecureRandom random)
       throws InvalidKeyException, InvalidAlgorithmParameterException {
 
