@@ -175,14 +175,15 @@ public abstract class BotanBlockCipher extends net.randombit.botan.seckey.BotanB
   }
 
   private byte[] addBufferedInput(byte[] input, int inputOffset, int inputLen) {
-    // resize buffer
-    final int index = Math.addExact(inputLen, payload_buffer.length);
-    final byte[] result = Arrays.copyOf(payload_buffer, index);
+    // resize payload buffer
+    final int newPayloadLen = Math.addExact(inputLen, payload_buffer.length);
+    final byte[] result = Arrays.copyOf(payload_buffer, newPayloadLen);
 
     if (inputLen > 0) {
-      // append the new input
-      byte[] inputFromOffset = Arrays.copyOfRange(input, inputOffset, input.length);
-      System.arraycopy(inputFromOffset, 0, result, payload_buffer.length, index);
+      // append the new input - only copy inputLen bytes from the specified offset
+      byte[] inputFromOffset =
+          Arrays.copyOfRange(input, inputOffset, Math.addExact(inputOffset, inputLen));
+      System.arraycopy(inputFromOffset, 0, result, payload_buffer.length, inputLen);
     }
 
     return result;

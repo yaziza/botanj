@@ -683,4 +683,116 @@ public class BotanBlockCipherTest {
           "Decrypted text should match original for key size " + (keySize * 8));
     }
   }
+
+  @Test
+  @DisplayName("Test doFinal with input offset does not copy extra data beyond inputLen")
+  void testDoFinalWithOffsetDoesNotCopyExtraData() throws Exception {
+    LOG.info("=== Test: doFinal with offset should only process inputLen bytes ===");
+
+    // This test verifies the fix for the addBufferedInput bug (lines 184-185) where:
+    // 1. Arrays.copyOfRange copies from inputOffset to input.length (too much!)
+    // 2. System.arraycopy uses 'index' instead of 'inputLen' as the copy length
+    //
+    // To trigger the bug, we need:
+    // - payload_buffer with some data (from prior update() call)
+    // - doFinal() called with offset and length on a small buffer
+    // - Condition: (inputLen + payload_buffer.length) > (input.length - inputOffset)
+
+    Cipher cipher = Cipher.getInstance("AES/CBC/PKCS7", "Botan");
+
+    byte[] key = new byte[16];
+    byte[] iv = new byte[16];
+    SecretKeySpec keySpec = new SecretKeySpec(key, "AES");
+    IvParameterSpec ivSpec = new IvParameterSpec(iv);
+
+    cipher.init(Cipher.ENCRYPT_MODE, keySpec, ivSpec);
+
+    // Step 1: Call update() to put data in payload_buffer
+    // Send 10 bytes - this gets buffered (less than 16-byte block size)
+    byte[] firstInput = new byte[] {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A};
+    byte[] out1 = cipher.update(firstInput);
+    LOG.info(
+        "After update: output length = {}, payload_buffer should have 10 bytes",
+        out1 != null ? out1.length : 0);
+
+    // Now payload_buffer has 10 bytes
+
+    // Step 2: Call doFinal() with a small buffer using offset
+    // We want only 2 bytes from a 4-byte array at offset 2
+    // only want bytes at index 2-3
+    byte[] finalInput = new byte[] {(byte) 0x00, (byte) 0x00, (byte) 0xBB, (byte) 0xBB};
+
+    // The bug will manifest as:
+    // - inputOffset = 2, inputLen = 2
+    // - inputFromOffset = Arrays.copyOfRange(finalInput, 2, 4) = 2 bytes
+    // - index = 2 + 10 = 12
+    // - System.arraycopy tries to copy 12 bytes from a 2-byte array
+    // - ArrayIndexOutOfBoundsException!
+
+    LOG.info("Calling doFinal with offset=2, length=2 on 4-byte array");
+    LOG.info("Bug should cause: System.arraycopy to copy 12 bytes from 2-byte array");
+
+    byte[] ciphertext = cipher.doFinal(finalInput, 2, 2);
+
+    LOG.info("SUCCESS: doFinal correctly processes only inputLen bytes");
+  }
+
+  @Test
+  @DisplayName("Test update with input offset does not copy extra data beyond inputLen")
+  void testUpdateWithOffsetDoesNotCopyExtraData() throws Exception {
+    LOG.info("=== Test: update with offset should only process inputLen bytes ===");
+
+    // This test triggers the bug in addBufferedInput where:
+    // 1. Line 184: Arrays.copyOfRange(input, inputOffset, input.length) copies too much
+    // 2. Line 185: System.arraycopy uses 'index' instead of 'inputLen' as length
+    //
+    // The bug causes ArrayIndexOutOfBoundsException when:
+    // - payload_buffer.length > 0 (there's buffered data)
+    // - inputLen < (input.length - inputOffset) (we want partial data from buffer)
+    // - inputLen < payload_buffer.length (the new input is smaller than buffered data)
+    //
+    // In this case:
+    // - index = inputLen + payload_buffer.length
+    // - inputFromOffset.length = input.length - inputOffset
+    // - If inputLen + payload_buffer.length > input.length - inputOffset,
+    //   System.arraycopy will throw ArrayIndexOutOfBoundsException
+
+    Cipher cipher = Cipher.getInstance("AES/CBC/PKCS7", "Botan");
+
+    byte[] key = new byte[16];
+    byte[] iv = new byte[16];
+    SecretKeySpec keySpec = new SecretKeySpec(key, "AES");
+    IvParameterSpec ivSpec = new IvParameterSpec(iv);
+
+    cipher.init(Cipher.ENCRYPT_MODE, keySpec, ivSpec);
+
+    // First update: Send 10 bytes - this will be buffered since it's less than block size
+    byte[] firstInput = new byte[] {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A};
+    byte[] out1 = cipher.update(firstInput);
+    LOG.info("First update output length: {}", out1 != null ? out1.length : 0);
+
+    // Now payload_buffer has 10 bytes in it
+
+    // Second update: Send a small input (3 bytes) from a larger buffer using offset
+    // Create scenario where: inputLen (3) + payload_buffer.length (10) = 13
+    // But inputFromOffset will only have (input.length - inputOffset) bytes
+    byte[] smallInput = new byte[5]; // total size is 5
+    Arrays.fill(smallInput, 2, 5, (byte) 0xBB); // bytes 2-4 (3 bytes) are what we want
+
+    // This call should trigger the bug:
+    // - inputOffset = 2, inputLen = 3
+    // - inputFromOffset = Arrays.copyOfRange(smallInput, 2, 5) = 3 bytes [0xBB, 0xBB, 0xBB]
+    // - index = 3 + 10 = 13
+    // - System.arraycopy tries to copy 13 bytes from a 3-byte array
+    // - This WILL throw ArrayIndexOutOfBoundsException!
+
+    LOG.info(
+        "About to call update with offset - if bug exists, this will throw "
+            + "ArrayIndexOutOfBoundsException");
+    byte[] out2 = cipher.update(smallInput, 2, 3);
+
+    byte[] finalOut = cipher.doFinal();
+
+    LOG.info("SUCCESS: update correctly processes only inputLen bytes even with buffered data");
+  }
 }
