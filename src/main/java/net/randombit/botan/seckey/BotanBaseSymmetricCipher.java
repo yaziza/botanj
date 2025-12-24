@@ -35,273 +35,28 @@ import jnr.ffi.byref.NativeLongByReference;
 import jnr.ffi.byref.PointerByReference;
 import net.randombit.botan.util.BotanUtil;
 
-/**
- * Abstract base class for symmetric cipher implementations using the Botan cryptography library.
- *
- * <p>This class provides a JCE-compliant Cipher implementation that delegates cryptographic
- * operations to native Botan library functions via JNR-FFI. It implements automatic native resource
- * management using the Java {@link Cleaner} API to ensure native cipher objects are properly
- * destroyed when no longer needed.
- *
- * <h2>Cipher Categories</h2>
- *
- * <p>This base class supports three main categories of symmetric ciphers:
- *
- * <ul>
- *   <li><b>Block Ciphers</b> - Traditional block cipher modes (CBC, CFB) with padding support
- *   <li><b>Stream Ciphers</b> - Stream modes (CTR, OFB) and native stream ciphers (ChaCha20,
- *       Salsa20)
- *   <li><b>AEAD Ciphers</b> - Authenticated encryption modes (GCM, CCM, EAX, OCB, SIV)
- * </ul>
- *
- * <h2>Lifecycle and Resource Management</h2>
- *
- * <p>Native Botan cipher objects are created during initialization and destroyed either:
- *
- * <ul>
- *   <li>Explicitly when re-initializing with a new key (old object destroyed before creating new
- *       one)
- *   <li>Automatically by the Cleaner when the Java object becomes unreachable (garbage collection)
- * </ul>
- *
- * <p>Key material is securely cleared (zeroed out) when the cipher object is cleaned up, ensuring
- * sensitive data does not remain in memory longer than necessary.
- *
- * <h2>Thread Safety</h2>
- *
- * <p>This implementation is NOT thread-safe. Each thread should use its own Cipher instance. The
- * JCE API does not require Cipher implementations to be thread-safe.
- *
- * <h2>Initialization and IV/Nonce Management</h2>
- *
- * <p>Ciphers require initialization with a key and optional IV (Initialization Vector) aka nonce:
- *
- * <ul>
- *   <li>The IV/nonce must be provided via {@link IvParameterSpec} during initialization
- *   <li>IV/nonce sizes are validated by {@link #isValidNonceLength(int)}
- *   <li>The IV is stored and can be retrieved via {@link #engineGetIV()}
- *   <li><b>Important:</b> Reusing the same IV/nonce with the same key is cryptographically unsafe
- *       for most modes
- * </ul>
- *
- * <h2>Usage Examples</h2>
- *
- * <h3>Basic AES-CBC Encryption with Padding</h3>
- *
- * <pre>{@code
- * // Get cipher instance from the Botan provider
- * Cipher cipher = Cipher.getInstance("AES/CBC/PKCS7", "Botan");
- *
- * // Generate key and IV
- * SecretKeySpec key = new SecretKeySpec(keyBytes, "AES");  // 16, 24, or 32 bytes
- * IvParameterSpec iv = new IvParameterSpec(ivBytes);        // 16 bytes for AES
- *
- * // Initialize for encryption
- * cipher.init(Cipher.ENCRYPT_MODE, key, iv);
- *
- * // Encrypt data
- * byte[] plaintext = "Secret message".getBytes();
- * byte[] ciphertext = cipher.doFinal(plaintext);
- *
- * // Decrypt
- * cipher.init(Cipher.DECRYPT_MODE, key, iv);
- * byte[] decrypted = cipher.doFinal(ciphertext);
- * }</pre>
- *
- * <h3>Stream Cipher (ChaCha20)</h3>
- *
- * <pre>{@code
- * Cipher cipher = Cipher.getInstance("ChaCha20/None/NoPadding", "Botan");
- *
- * SecretKeySpec key = new SecretKeySpec(keyBytes, "ChaCha20");  // 32 bytes
- * IvParameterSpec nonce = new IvParameterSpec(nonceBytes);      // 8 bytes
- *
- * // Encryption
- * cipher.init(Cipher.ENCRYPT_MODE, key, nonce);
- * byte[] ciphertext = cipher.doFinal(plaintext);
- *
- * // Decryption (same nonce required)
- * cipher.init(Cipher.DECRYPT_MODE, key, nonce);
- * byte[] plaintext = cipher.doFinal(ciphertext);
- * }</pre>
- *
- * <h3>AEAD Mode (AES-GCM) with Authentication</h3>
- *
- * <pre>{@code
- * Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding", "Botan");
- *
- * SecretKeySpec key = new SecretKeySpec(keyBytes, "AES");
- * GCMParameterSpec params = new GCMParameterSpec(128, nonceBytes);  // 128-bit tag, 12-byte nonce
- *
- * // Encryption with authentication
- * cipher.init(Cipher.ENCRYPT_MODE, key, params);
- * cipher.updateAAD(additionalData);  // Optional authenticated data
- * byte[] ciphertext = cipher.doFinal(plaintext);  // Includes authentication tag
- *
- * // Decryption and verification
- * cipher.init(Cipher.DECRYPT_MODE, key, params);
- * cipher.updateAAD(additionalData);  // Must match encryption
- * byte[] plaintext = cipher.doFinal(ciphertext);  // Throws exception if authentication fails
- * }</pre>
- *
- * <h3>Incremental Processing with Update</h3>
- *
- * <pre>{@code
- * Cipher cipher = Cipher.getInstance("AES/CTR/NoPadding", "Botan");
- * cipher.init(Cipher.ENCRYPT_MODE, key, iv);
- *
- * // Process data incrementally
- * byte[] part1 = cipher.update(data1);
- * byte[] part2 = cipher.update(data2);
- * byte[] part3 = cipher.update(data3);
- * byte[] finalPart = cipher.doFinal();
- *
- * // Combine all parts
- * byte[] complete = concatenate(part1, part2, part3, finalPart);
- * }</pre>
- *
- * <h3>Re-initialization with Different Key</h3>
- *
- * <pre>{@code
- * Cipher cipher = Cipher.getInstance("AES/CBC/PKCS7", "Botan");
- *
- * // First encryption
- * SecretKeySpec key1 = new SecretKeySpec(keyBytes1, "AES");
- * IvParameterSpec iv1 = new IvParameterSpec(ivBytes1);
- * cipher.init(Cipher.ENCRYPT_MODE, key1, iv1);
- * byte[] ciphertext1 = cipher.doFinal(plaintext1);
- *
- * // Re-initialize with different key (automatically destroys old native object)
- * SecretKeySpec key2 = new SecretKeySpec(keyBytes2, "AES");
- * IvParameterSpec iv2 = new IvParameterSpec(ivBytes2);
- * cipher.init(Cipher.ENCRYPT_MODE, key2, iv2);  // Old Botan cipher destroyed, new one created
- * byte[] ciphertext2 = cipher.doFinal(plaintext2);
- * }</pre>
- *
- * <h3>Different Padding Modes</h3>
- *
- * <pre>{@code
- * // PKCS#7 padding (most common)
- * Cipher pkcs7 = Cipher.getInstance("AES/CBC/PKCS7", "Botan");
- *
- * // No padding (plaintext must be multiple of block size)
- * Cipher noPad = Cipher.getInstance("AES/CBC/NoPadding", "Botan");
- *
- * // Other padding schemes
- * Cipher x923 = Cipher.getInstance("AES/CBC/X9.23", "Botan");
- * Cipher oneZero = Cipher.getInstance("AES/CBC/OneAndZeros", "Botan");
- * }</pre>
- *
- * <h2>Cipher Mode Categories and Padding</h2>
- *
- * <p><b>Block Cipher Modes (CBC, CFB):</b>
- *
- * <ul>
- *   <li>Support multiple padding schemes: PKCS7, PKCS5, X9.23, OneAndZeros, ESP, NoPadding
- *   <li>IV size must match the block size of the underlying algorithm (e.g., 16 bytes for AES)
- *   <li>With NoPadding, plaintext length must be a multiple of block size
- * </ul>
- *
- * <p><b>Stream Modes (CTR, OFB, ChaCha20, Salsa20):</b>
- *
- * <ul>
- *   <li>Use "/None/NoPadding" or just "/NoPadding" (no padding needed for stream modes)
- *   <li>Can process any length of plaintext without padding
- *   <li>Nonce/IV sizes vary by algorithm (e.g., 8 bytes for ChaCha20, 16 bytes for AES-CTR)
- * </ul>
- *
- * <p><b>AEAD Modes (GCM, CCM, EAX, OCB, SIV):</b>
- *
- * <ul>
- *   <li>Always use "/NoPadding" (AEAD modes don't use padding)
- *   <li>Provide built-in authentication - no separate MAC needed
- *   <li>Support Additional Authenticated Data (AAD) via {@code updateAAD()}
- *   <li>Nonce sizes vary by mode (typically 12 bytes for GCM)
- * </ul>
- *
- * <h2>Implementation Notes</h2>
- *
- * <ul>
- *   <li><b>Cloning Not Supported</b> - Calling {@link #clone()} throws {@link
- *       CloneNotSupportedException} because native cipher state cannot be safely cloned
- *   <li><b>Key Size Validation</b> - Key sizes are validated against Botan's key specification
- *       during initialization
- *   <li><b>Memory Safety</b> - Native resources are guaranteed to be freed even if explicit cleanup
- *       is not called, thanks to the Cleaner API
- *   <li><b>Secure Key Clearing</b> - Key material is automatically zeroed out when the cipher is
- *       destroyed or re-initialized, preventing sensitive data from remaining in memory
- *   <li><b>Mode Setting</b> - The JCE API method {@code setMode()} is not supported because the
- *       mode is specified in the transformation string during {@code getInstance()}
- * </ul>
- *
- * <h2>Concrete Implementations</h2>
- *
- * <p>This class has three main subclass hierarchies:
- *
- * <ul>
- *   <li>{@code BotanBlockCipher} - Block cipher modes (CBC, CFB) with padding
- *   <li>{@code BotanStreamCipher} - Stream modes and stream ciphers
- *   <li>{@code BotanAeadCipher} - Authenticated encryption modes
- * </ul>
- *
- * @author Yasser Aziza
- * @see javax.crypto.CipherSpi
- * @see java.lang.ref.Cleaner
- * @since 0.1.0
- */
 public abstract class BotanBaseSymmetricCipher extends CipherSpi {
 
-  /** Shared Cleaner instance for all BotanBaseSymmetricCipher instances. */
   private static final Cleaner CLEANER = Cleaner.create();
 
-  /** Holds the reference to the cipher object referenced by botan. */
   protected final PointerByReference cipherRef;
-
-  /** Holds the name of the cipher algorithm. */
   protected final String name;
-
-  /** Holds the Initial Vector (IV). */
   protected byte[] iv = EMPTY_BYTE_ARRAY;
-
-  /** Holds the cipher operation mode in native botan terms (0: Encryption, 1: Decryption). */
   protected int mode;
 
-  /** Cleaner registration for automatic cleanup. */
   private Cleaner.Cleanable cleanable;
 
-  /**
-   * Constructs a base symmetric cipher with the specified algorithm name.
-   *
-   * @param name the algorithm name
-   */
   protected BotanBaseSymmetricCipher(String name) {
     this.name = Objects.requireNonNull(name);
     this.cipherRef = new PointerByReference();
   }
 
-  /**
-   * Checks if the cipher is in decryption mode.
-   *
-   * @return true if decrypting, false otherwise
-   */
   protected boolean isDecrypting() {
     return mode == 1;
   }
 
-  /**
-   * Gets the native botan cipher name (e.g. 'AES-128/CBC/PKCS7').
-   *
-   * @param keyLength the key length
-   * @return {@link String} containing the Botan cipher name.
-   */
   protected abstract String getBotanCipherName(int keyLength);
 
-  /**
-   * Checks whether the given nonce size is supported.
-   *
-   * @param nonceLength the nonce length
-   * @return {@code True} is the given nonce length is supported, {@code False} otherwise.
-   */
   protected abstract boolean isValidNonceLength(int nonceLength);
 
   @Override
@@ -322,12 +77,10 @@ public abstract class BotanBaseSymmetricCipher extends CipherSpi {
       try {
         parameters = AlgorithmParameters.getInstance(name);
         parameters.init(new IvParameterSpec(iv));
-
       } catch (NoSuchAlgorithmException | InvalidParameterSpecException e) {
         parameters = null;
       }
     }
-
     return parameters;
   }
 
@@ -373,11 +126,8 @@ public abstract class BotanBaseSymmetricCipher extends CipherSpi {
     final int keySize = encodedKey.length;
 
     final String algName = getBotanCipherName(keySize);
-
-    // Translate java cipher mode to botan native mode (0: Encryption, 1: Decryption)
     mode = Math.subtractExact(opmode, 1);
 
-    // Clean up existing cipher object if re-initializing
     if (cleanable != null) {
       cleanable.clean();
     }
@@ -385,17 +135,13 @@ public abstract class BotanBaseSymmetricCipher extends CipherSpi {
     int err = singleton().botan_cipher_init(cipherRef, algName, mode);
     checkNativeCall(err, "botan_cipher_init");
 
-    // Register cleaner for the newly created cipher object
     cleanable =
         CLEANER.register(
             this,
-            new net.randombit.botan.seckey.BotanBaseSymmetricCipher.BotanCipherCleanupAction(
-                cipherRef.getValue(), encodedKey));
+            new BotanCipherCleanupAction(cipherRef.getValue(), encodedKey));
 
     BotanUtil.FourParameterFunction<Pointer, NativeLongByReference> getKeySpec =
-        (a, b, c, d) -> {
-          return singleton().botan_cipher_get_keyspec(a, b, c, d);
-        };
+        (a, b, c, d) -> singleton().botan_cipher_get_keyspec(a, b, c, d);
 
     checkKeySize(cipherRef.getValue(), keySize, getKeySpec);
 
@@ -403,33 +149,6 @@ public abstract class BotanBaseSymmetricCipher extends CipherSpi {
     checkNativeCall(err, "botan_cipher_set_key");
   }
 
-  @Override
-  protected int engineUpdate(
-      byte[] input, int inputOffset, int inputLen, byte[] output, int outputOffset) {
-    final byte[] result = engineUpdate(input, inputOffset, inputLen);
-    System.arraycopy(result, 0, output, outputOffset, result.length);
-
-    return result.length;
-  }
-
-  @Override
-  protected int engineDoFinal(
-      byte[] input, int inputOffset, int inputLen, byte[] output, int outputOffset)
-      throws IllegalBlockSizeException, javax.crypto.BadPaddingException {
-    final byte[] result = engineDoFinal(input, inputOffset, inputLen);
-    System.arraycopy(result, 0, output, outputOffset, result.length);
-
-    return result.length;
-  }
-
-  /**
-   * Performs cipher operation using Botan native library.
-   *
-   * @param input input data
-   * @param inputLength length of input
-   * @param botanFlag Botan operation flag
-   * @return encrypted or decrypted output
-   */
   protected byte[] doCipher(byte[] input, int inputLength, int botanFlag) {
     final NativeLongByReference outputWritten = new NativeLongByReference();
     final NativeLongByReference inputConsumed = new NativeLongByReference();
@@ -459,7 +178,6 @@ public abstract class BotanBaseSymmetricCipher extends CipherSpi {
     return result;
   }
 
-  /** Resets the cipher to its initial state. */
   protected void engineReset() {
     int err = singleton().botan_cipher_reset(cipherRef.getValue());
     checkNativeCall(err, "botan_cipher_reset");
@@ -476,10 +194,10 @@ public abstract class BotanBaseSymmetricCipher extends CipherSpi {
   /**
    * Cleanup action for native Cipher resources.
    *
-   * <p>TODO: Investigate if botan_cipher_destroy also calls clear internally. If it does, we should
-   * remove the explicit botan_cipher_clear call to avoid redundant operations.
+   * <p>Botan destroy functions already clear internal state before freeing
+   * memory, so an explicit clear call is unnecessary.
    */
-  private record BotanCipherCleanupAction(jnr.ffi.Pointer cipherPointer, byte[] key)
+  private record BotanCipherCleanupAction(Pointer cipherPointer, byte[] key)
       implements Runnable {
 
     @Override
@@ -488,13 +206,7 @@ public abstract class BotanBaseSymmetricCipher extends CipherSpi {
         Arrays.fill(key, (byte) 0x00);
       }
 
-      if (cipherPointer != null) {
-        try {
-          singleton().botan_cipher_clear(cipherPointer);
-        } finally {
-          singleton().botan_cipher_destroy(cipherPointer);
-        }
-      }
+      singleton().botan_cipher_destroy(cipherPointer);
     }
   }
 }
