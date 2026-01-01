@@ -30,7 +30,7 @@
 
         <!-- test dependencies versions -->
         <junit-version>6.0.1</junit-version>
-        <bouncy-castle-version>1.82</bouncy-castle-version>
+        <bouncy-castle-version>1.83</bouncy-castle-version>
         <log4j-version>2.25.3</log4j-version>
         <gson-version>2.11.0</gson-version>
     </properties>
