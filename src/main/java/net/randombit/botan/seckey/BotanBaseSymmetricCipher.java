@@ -475,9 +475,6 @@ public abstract class BotanBaseSymmetricCipher extends CipherSpi {
 
   /**
    * Cleanup action for native Cipher resources.
-   *
-   * <p>TODO: Investigate if botan_cipher_destroy also calls clear internally. If it does, we should
-   * remove the explicit botan_cipher_clear call to avoid redundant operations.
    */
   private record BotanCipherCleanupAction(jnr.ffi.Pointer cipherPointer, byte[] key)
       implements Runnable {
@@ -489,11 +486,7 @@ public abstract class BotanBaseSymmetricCipher extends CipherSpi {
       }
 
       if (cipherPointer != null) {
-        try {
-          singleton().botan_cipher_clear(cipherPointer);
-        } finally {
-          singleton().botan_cipher_destroy(cipherPointer);
-        }
+        singleton().botan_cipher_destroy(cipherPointer);
       }
     }
   }
