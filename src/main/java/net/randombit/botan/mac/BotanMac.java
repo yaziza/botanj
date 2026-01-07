@@ -304,9 +304,6 @@ public abstract class BotanMac extends MacSpi {
 
   /**
    * Cleanup action for native MAC resources.
-   *
-   * <p>TODO: Investigate if botan_mac_destroy also calls clear internally. If it does, we should
-   * remove the explicit botan_mac_clear call to avoid redundant operations.
    */
   private record BotanMacCleanupAction(jnr.ffi.Pointer macPointer, byte[] key) implements Runnable {
 
@@ -317,11 +314,7 @@ public abstract class BotanMac extends MacSpi {
       }
 
       if (macPointer != null) {
-        try {
-          singleton().botan_mac_clear(macPointer);
-        } finally {
-          singleton().botan_mac_destroy(macPointer);
-        }
+        singleton().botan_mac_destroy(macPointer);
       }
     }
   }
