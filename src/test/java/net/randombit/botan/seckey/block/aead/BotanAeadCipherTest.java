@@ -1302,4 +1302,87 @@ public class BotanAeadCipherTest {
         "Decryption should fail with wrong AAD");
     LOG.info("SUCCESS: AAD mismatch properly detected");
   }
+
+  @Test
+  @DisplayName("Test OCB zero-length nonce is rejected")
+  public void testOcbZeroLengthNonceRejected() throws GeneralSecurityException {
+    final Cipher cipher = Cipher.getInstance("AES/OCB/NoPadding", BotanProvider.NAME);
+    final SecretKeySpec key = new SecretKeySpec(new byte[16], "AES");
+    final AeadParameterSpec zeroLengthNonce = new AeadParameterSpec(128, new byte[0]);
+
+    final Exception exception =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> cipher.init(Cipher.ENCRYPT_MODE, key, zeroLengthNonce));
+
+    assertEquals(
+        "Nonce with length 0 not allowed for algorithm AES",
+        exception.getMessage(),
+        "Zero-length nonce should be rejected for OCB");
+  }
+
+  @Test
+  @DisplayName("Test OCB nonce length equal to block size is rejected")
+  public void testOcbBlockSizeNonceRejected() throws GeneralSecurityException {
+    final Cipher cipher = Cipher.getInstance("AES/OCB/NoPadding", BotanProvider.NAME);
+    final SecretKeySpec key = new SecretKeySpec(new byte[16], "AES");
+    // OCB requires nonce < block size, so 16-byte nonce should be rejected for AES
+    final AeadParameterSpec blockSizeNonce = new AeadParameterSpec(128, new byte[16]);
+
+    final Exception exception =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> cipher.init(Cipher.ENCRYPT_MODE, key, blockSizeNonce));
+
+    assertEquals(
+        "Nonce with length 16 not allowed for algorithm AES",
+        exception.getMessage(),
+        "Nonce length equal to block size should be rejected for OCB");
+  }
+
+  @Test
+  @DisplayName("Test OCB nonce length greater than block size is rejected")
+  public void testOcbTooLongNonceRejected() throws GeneralSecurityException {
+    final Cipher cipher = Cipher.getInstance("AES/OCB/NoPadding", BotanProvider.NAME);
+    final SecretKeySpec key = new SecretKeySpec(new byte[16], "AES");
+    // OCB requires nonce < block size, so 20-byte nonce should be rejected for AES
+    final AeadParameterSpec tooLongNonce = new AeadParameterSpec(128, new byte[20]);
+
+    final Exception exception =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> cipher.init(Cipher.ENCRYPT_MODE, key, tooLongNonce));
+
+    assertEquals(
+        "Nonce with length 20 not allowed for algorithm AES",
+        exception.getMessage(),
+        "Nonce length greater than block size should be rejected for OCB");
+  }
+
+  @Test
+  @DisplayName("Test OCB valid nonce lengths are accepted")
+  public void testOcbValidNonceLengthsAccepted() throws GeneralSecurityException {
+    final Cipher cipher = Cipher.getInstance("AES/OCB/NoPadding", BotanProvider.NAME);
+    final SecretKeySpec key = new SecretKeySpec(new byte[16], "AES");
+
+    // Test various valid nonce lengths (1-15 bytes for AES with 16-byte block size)
+    int[] validLengths = {1, 8, 12, 15};
+
+    for (int length : validLengths) {
+      final AeadParameterSpec validNonce = new AeadParameterSpec(128, new byte[length]);
+
+      // This should not throw an exception
+      cipher.init(Cipher.ENCRYPT_MODE, key, validNonce);
+
+      // Verify cipher is properly initialized by encrypting some data
+      byte[] plaintext = "Test message".getBytes();
+      byte[] ciphertext = cipher.doFinal(plaintext);
+
+      // Ciphertext should be plaintext + tag (16 bytes for 128-bit tag)
+      assertEquals(
+          plaintext.length + 16,
+          ciphertext.length,
+          "Encryption should succeed with nonce length " + length + " for OCB");
+    }
+  }
 }
