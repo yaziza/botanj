@@ -795,4 +795,81 @@ public class BotanBlockCipherTest {
 
     LOG.info("SUCCESS: update correctly processes only inputLen bytes even with buffered data");
   }
+
+  @ParameterizedTest
+  @CsvFileSource(
+      resources = {"/seckey/block/cbc_no_padding.csv", "/seckey/block/cfb_no_padding.csv"},
+      numLinesToSkip = 1)
+  @DisplayName("Test zero-length nonce is rejected")
+  public void testZeroLengthNonceRejected(String algorithm, int blockSize, int keySize)
+      throws GeneralSecurityException {
+    final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
+    final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
+    final IvParameterSpec zeroLengthIv = new IvParameterSpec(new byte[0]);
+
+    // Extract base cipher name (e.g., "AES" from "AES/CBC/NoPadding")
+    String baseCipherName = algorithm.substring(0, algorithm.indexOf('/'));
+
+    final Exception exception =
+        assertThrows(
+            java.security.InvalidAlgorithmParameterException.class,
+            () -> cipher.init(Cipher.ENCRYPT_MODE, key, zeroLengthIv));
+
+    assertEquals(
+        String.format("Nonce with length 0 not allowed for algorithm %s", baseCipherName),
+        exception.getMessage(),
+        "Zero-length nonce should be rejected for " + algorithm);
+  }
+
+  @ParameterizedTest
+  @CsvFileSource(
+      resources = {"/seckey/block/cbc_no_padding.csv", "/seckey/block/cfb_no_padding.csv"},
+      numLinesToSkip = 1)
+  @DisplayName("Test incorrect nonce length is rejected")
+  public void testIncorrectNonceLengthRejected(String algorithm, int blockSize, int keySize)
+      throws GeneralSecurityException {
+    final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
+    final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
+
+    // Use wrong nonce length (blockSize + 1 instead of blockSize)
+    final IvParameterSpec wrongLengthIv = new IvParameterSpec(new byte[blockSize + 1]);
+
+    // Extract base cipher name (e.g., "AES" from "AES/CBC/NoPadding")
+    String baseCipherName = algorithm.substring(0, algorithm.indexOf('/'));
+
+    final Exception exception =
+        assertThrows(
+            java.security.InvalidAlgorithmParameterException.class,
+            () -> cipher.init(Cipher.ENCRYPT_MODE, key, wrongLengthIv));
+
+    assertEquals(
+        String.format(
+            "Nonce with length %d not allowed for algorithm %s", blockSize + 1, baseCipherName),
+        exception.getMessage(),
+        "Incorrect nonce length should be rejected for " + algorithm);
+  }
+
+  @ParameterizedTest
+  @CsvFileSource(
+      resources = {"/seckey/block/cbc_no_padding.csv", "/seckey/block/cfb_no_padding.csv"},
+      numLinesToSkip = 1)
+  @DisplayName("Test correct nonce length is accepted")
+  public void testCorrectNonceLengthAccepted(String algorithm, int blockSize, int keySize)
+      throws GeneralSecurityException {
+    final Cipher cipher = Cipher.getInstance(algorithm, BotanProvider.NAME);
+    final SecretKeySpec key = new SecretKeySpec(new byte[keySize], algorithm);
+    final IvParameterSpec correctLengthIv = new IvParameterSpec(new byte[blockSize]);
+
+    // This should not throw an exception
+    cipher.init(Cipher.ENCRYPT_MODE, key, correctLengthIv);
+
+    // Verify cipher is properly initialized by encrypting some data
+    byte[] plaintext = new byte[blockSize];
+    byte[] ciphertext = cipher.doFinal(plaintext);
+
+    assertEquals(
+        blockSize,
+        ciphertext.length,
+        "Encryption should succeed with correct nonce length for " + algorithm);
+  }
 }

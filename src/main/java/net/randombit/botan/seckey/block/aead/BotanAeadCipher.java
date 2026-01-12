@@ -72,7 +72,7 @@ public abstract class BotanAeadCipher extends BotanBlockCipher {
         parameters.init(new AeadParameterSpec(tLen, iv));
 
       } catch (java.security.NoSuchAlgorithmException
-               | java.security.spec.InvalidParameterSpecException e) {
+          | java.security.spec.InvalidParameterSpecException e) {
         parameters = null;
       }
     }
@@ -356,7 +356,14 @@ public abstract class BotanAeadCipher extends BotanBlockCipher {
 
     @Override
     protected boolean isValidNonceLength(int nonceLength) {
-      return nonceLength != 0 && nonceLength < 16;
+      if (nonceLength == 0) {
+        return false;
+      }
+      if (engineGetBlockSize() == 16) {
+        return nonceLength < 16;
+      } else {
+        return nonceLength < (engineGetBlockSize() - 1);
+      }
     }
 
     @Override

@@ -193,9 +193,20 @@ public abstract class BotanBlockCipher extends net.randombit.botan.seckey.BotanB
     return PaddingAlgorithm.NO_PADDING == padding;
   }
 
+  /**
+   * Validates the nonce/IV length for block cipher modes.
+   *
+   * <p>Zero-length nonce are not allowed since Botan will interpret them as all-zero nonce,
+   * which is a security risk for CBC/CFB modes. If an all-zero nonce is needed for legacy
+   * reasons, use a properly-sized byte array filled with zeros (e.g., {@code byte[16]} for AES)
+   * instead of a zero-length array.
+   *
+   * @param nonceLength the length of the nonce/IV in bytes
+   * @return {@code true} if the nonce length is valid, {@code false} otherwise
+   */
   @Override
   protected boolean isValidNonceLength(int nonceLength) {
-    return true;
+    return nonceLength == engineGetBlockSize();
   }
 
   /** AES-CBC cipher implementation. */
