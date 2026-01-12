@@ -43,7 +43,9 @@ jobs:
           generate-branches-badge: true
           generate-summary: true
           fail-on-coverage-decrease: true
+          coverage-decrease-limit: 95
           fail-on-branches-decrease: true
+          branches-decrease-limit: 80
 
       - name: Log coverage percentages to workflow output
         run: |
