@@ -11,6 +11,7 @@ package net.randombit.botan.digest;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
@@ -25,6 +26,7 @@ import org.apache.logging.log4j.message.StringFormattedMessage;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
 
@@ -276,5 +278,119 @@ public class BotanMessageDigestTest {
         expected,
         actual,
         "Digest mismatch with Bouncy Castle provider for algorithm: " + algorithm);
+  }
+
+  @Test
+  @DisplayName("Test update with non-zero offset")
+  public void testUpdateWithNonZeroOffset() throws Exception {
+    LOG.info("=== Test: MessageDigest update with non-zero offset ===");
+    MessageDigest bcDigest =
+        MessageDigest.getInstance("SHA-256", BouncyCastleProvider.PROVIDER_NAME);
+    MessageDigest botanDigest = MessageDigest.getInstance("SHA-256", BotanProvider.NAME);
+
+    byte[] buffer = new byte[100];
+    for (int i = 0; i < buffer.length; i++) {
+      buffer[i] = (byte) i;
+    }
+
+    LOG.info("Updating with offset=50, length=10 (bytes 50-59)");
+    bcDigest.update(buffer, 50, 10);
+    botanDigest.update(buffer, 50, 10);
+
+    byte[] expected = bcDigest.digest();
+    byte[] actual = botanDigest.digest();
+
+    LOG.info("Bouncy Castle output: {} bytes", expected.length);
+    LOG.info("Botan output: {} bytes", actual.length);
+    assertArrayEquals(expected, actual, "Digest mismatch with offset=50, length=10");
+    LOG.info("SUCCESS: Update with non-zero offset works correctly");
+  }
+
+  @Test
+  @DisplayName("Test update with offset at end of array")
+  public void testUpdateWithOffsetAtEnd() throws Exception {
+    LOG.info("=== Test: MessageDigest update with offset at end of array ===");
+    MessageDigest bcDigest =
+        MessageDigest.getInstance("SHA-256", BouncyCastleProvider.PROVIDER_NAME);
+    MessageDigest botanDigest = MessageDigest.getInstance("SHA-256", BotanProvider.NAME);
+
+    byte[] buffer = new byte[100];
+    for (int i = 0; i < buffer.length; i++) {
+      buffer[i] = (byte) i;
+    }
+
+    LOG.info("Updating with offset=95, length=5 (last 5 bytes)");
+    bcDigest.update(buffer, 95, 5);
+    botanDigest.update(buffer, 95, 5);
+
+    byte[] expected = bcDigest.digest();
+    byte[] actual = botanDigest.digest();
+
+    LOG.info("Bouncy Castle output: {} bytes", expected.length);
+    LOG.info("Botan output: {} bytes", actual.length);
+    assertArrayEquals(expected, actual, "Digest mismatch with offset at end");
+    LOG.info("SUCCESS: Update with offset at end works correctly");
+  }
+
+  @Test
+  @DisplayName("Test update with multiple different offsets")
+  public void testUpdateWithMultipleOffsets() throws Exception {
+    LOG.info("=== Test: MessageDigest update with multiple different offsets ===");
+    MessageDigest bcDigest =
+        MessageDigest.getInstance("SHA-256", BouncyCastleProvider.PROVIDER_NAME);
+    MessageDigest botanDigest = MessageDigest.getInstance("SHA-256", BotanProvider.NAME);
+
+    byte[] buffer = new byte[100];
+    for (int i = 0; i < buffer.length; i++) {
+      buffer[i] = (byte) i;
+    }
+
+    LOG.info("Update 1: offset=10, length=5");
+    bcDigest.update(buffer, 10, 5);
+    botanDigest.update(buffer, 10, 5);
+
+    LOG.info("Update 2: offset=20, length=10");
+    bcDigest.update(buffer, 20, 10);
+    botanDigest.update(buffer, 20, 10);
+
+    LOG.info("Update 3: offset=50, length=20");
+    bcDigest.update(buffer, 50, 20);
+    botanDigest.update(buffer, 50, 20);
+
+    byte[] expected = bcDigest.digest();
+    byte[] actual = botanDigest.digest();
+
+    LOG.info("Bouncy Castle output: {} bytes", expected.length);
+    LOG.info("Botan output: {} bytes", actual.length);
+    assertArrayEquals(expected, actual, "Digest mismatch with multiple offsets");
+    LOG.info("SUCCESS: Multiple updates with different offsets work correctly");
+  }
+
+  @Test
+  @DisplayName("Test update with offset and compare to full array")
+  public void testUpdateOffsetVsFullArray() throws Exception {
+    LOG.info("=== Test: MessageDigest update with offset vs full array ===");
+    MessageDigest digest1 = MessageDigest.getInstance("SHA-256", BotanProvider.NAME);
+    MessageDigest digest2 = MessageDigest.getInstance("SHA-256", BotanProvider.NAME);
+
+    byte[] buffer = new byte[100];
+    for (int i = 0; i < buffer.length; i++) {
+      buffer[i] = (byte) i;
+    }
+
+    LOG.info("Digest 1: update(buffer, 10, 20) - bytes 10-29");
+    digest1.update(buffer, 10, 20);
+    byte[] result1 = digest1.digest();
+
+    LOG.info("Digest 2: update with extracted subarray");
+    byte[] subarray = new byte[20];
+    System.arraycopy(buffer, 10, subarray, 0, 20);
+    digest2.update(subarray);
+    byte[] result2 = digest2.digest();
+
+    LOG.info("Result 1: {}", HexUtils.encodeToHexString(result1, false));
+    LOG.info("Result 2: {}", HexUtils.encodeToHexString(result2, false));
+    assertArrayEquals(result1, result2, "Results should match when using offset vs subarray");
+    LOG.info("SUCCESS: Offset behavior matches subarray behavior");
   }
 }

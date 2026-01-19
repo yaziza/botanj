@@ -256,9 +256,9 @@ public class BotanMessageDigest extends MessageDigestSpi implements Cloneable {
 
   @Override
   protected void engineUpdate(byte[] input, int offset, int len) {
-    final byte[] bytes = Arrays.copyOfRange(input, offset, input.length);
+    final byte[] bytes = Arrays.copyOfRange(input, offset, Math.addExact(offset, len));
 
-    final int err = singleton().botan_hash_update(hashRef.getValue(), bytes, len);
+    final int err = singleton().botan_hash_update(hashRef.getValue(), bytes, bytes.length);
     checkNativeCall(err, "botan_hash_update");
 
     digestFinalized = false;

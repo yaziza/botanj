@@ -585,4 +585,142 @@ public class BotanMacTest {
         "Exception should be about invalid key size");
     LOG.info("SUCCESS: Properly rejected key with invalid size");
   }
+
+  @Test
+  @DisplayName("Test update with non-zero offset")
+  public void testUpdateWithNonZeroOffset() throws Exception {
+    LOG.info("=== Test: MAC update with non-zero offset ===");
+    Mac bcMac = Mac.getInstance("HmacSHA256", BouncyCastleProvider.PROVIDER_NAME);
+    Mac botanMac = Mac.getInstance("HmacSHA256", BotanProvider.NAME);
+
+    byte[] keyBytes = new byte[32];
+    for (int i = 0; i < keyBytes.length; i++) {
+      keyBytes[i] = (byte) i;
+    }
+    SecretKeySpec key = new SecretKeySpec(keyBytes, "HmacSHA256");
+
+    bcMac.init(key);
+    botanMac.init(key);
+
+    byte[] buffer = new byte[100];
+    for (int i = 0; i < buffer.length; i++) {
+      buffer[i] = (byte) i;
+    }
+
+    LOG.info("Updating with offset=50, length=10 (bytes 50-59)");
+    bcMac.update(buffer, 50, 10);
+    botanMac.update(buffer, 50, 10);
+
+    byte[] expected = bcMac.doFinal();
+    byte[] actual = botanMac.doFinal();
+
+    LOG.info("Bouncy Castle output: {} bytes", expected.length);
+    LOG.info("Botan output: {} bytes", actual.length);
+    assertArrayEquals(expected, actual, "MAC mismatch with offset=50, length=10");
+    LOG.info("SUCCESS: Update with non-zero offset works correctly");
+  }
+
+  @Test
+  @DisplayName("Test update with offset at end of array")
+  public void testUpdateWithOffsetAtEnd() throws Exception {
+    LOG.info("=== Test: MAC update with offset at end of array ===");
+    Mac bcMac = Mac.getInstance("HmacSHA256", BouncyCastleProvider.PROVIDER_NAME);
+    Mac botanMac = Mac.getInstance("HmacSHA256", BotanProvider.NAME);
+
+    byte[] keyBytes = new byte[32];
+    SecretKeySpec key = new SecretKeySpec(keyBytes, "HmacSHA256");
+
+    bcMac.init(key);
+    botanMac.init(key);
+
+    byte[] buffer = new byte[100];
+    for (int i = 0; i < buffer.length; i++) {
+      buffer[i] = (byte) i;
+    }
+
+    LOG.info("Updating with offset=95, length=5 (last 5 bytes)");
+    bcMac.update(buffer, 95, 5);
+    botanMac.update(buffer, 95, 5);
+
+    byte[] expected = bcMac.doFinal();
+    byte[] actual = botanMac.doFinal();
+
+    LOG.info("Bouncy Castle output: {} bytes", expected.length);
+    LOG.info("Botan output: {} bytes", actual.length);
+    assertArrayEquals(expected, actual, "MAC mismatch with offset at end");
+    LOG.info("SUCCESS: Update with offset at end works correctly");
+  }
+
+  @Test
+  @DisplayName("Test update with multiple different offsets")
+  public void testUpdateWithMultipleOffsets() throws Exception {
+    LOG.info("=== Test: MAC update with multiple different offsets ===");
+    Mac bcMac = Mac.getInstance("HmacSHA256", BouncyCastleProvider.PROVIDER_NAME);
+    Mac botanMac = Mac.getInstance("HmacSHA256", BotanProvider.NAME);
+
+    byte[] keyBytes = new byte[32];
+    SecretKeySpec key = new SecretKeySpec(keyBytes, "HmacSHA256");
+
+    bcMac.init(key);
+    botanMac.init(key);
+
+    byte[] buffer = new byte[100];
+    for (int i = 0; i < buffer.length; i++) {
+      buffer[i] = (byte) i;
+    }
+
+    LOG.info("Update 1: offset=10, length=5");
+    bcMac.update(buffer, 10, 5);
+    botanMac.update(buffer, 10, 5);
+
+    LOG.info("Update 2: offset=20, length=10");
+    bcMac.update(buffer, 20, 10);
+    botanMac.update(buffer, 20, 10);
+
+    LOG.info("Update 3: offset=50, length=20");
+    bcMac.update(buffer, 50, 20);
+    botanMac.update(buffer, 50, 20);
+
+    byte[] expected = bcMac.doFinal();
+    byte[] actual = botanMac.doFinal();
+
+    LOG.info("Bouncy Castle output: {} bytes", expected.length);
+    LOG.info("Botan output: {} bytes", actual.length);
+    assertArrayEquals(expected, actual, "MAC mismatch with multiple offsets");
+    LOG.info("SUCCESS: Multiple updates with different offsets work correctly");
+  }
+
+  @Test
+  @DisplayName("Test update with offset and compare to full array")
+  public void testUpdateOffsetVsFullArray() throws Exception {
+    LOG.info("=== Test: MAC update with offset vs full array ===");
+    Mac mac1 = Mac.getInstance("HmacSHA256", BotanProvider.NAME);
+    Mac mac2 = Mac.getInstance("HmacSHA256", BotanProvider.NAME);
+
+    byte[] keyBytes = new byte[32];
+    SecretKeySpec key = new SecretKeySpec(keyBytes, "HmacSHA256");
+
+    mac1.init(key);
+    mac2.init(key);
+
+    byte[] buffer = new byte[100];
+    for (int i = 0; i < buffer.length; i++) {
+      buffer[i] = (byte) i;
+    }
+
+    LOG.info("MAC 1: update(buffer, 10, 20) - bytes 10-29");
+    mac1.update(buffer, 10, 20);
+    byte[] result1 = mac1.doFinal();
+
+    LOG.info("MAC 2: update with extracted subarray");
+    byte[] subarray = new byte[20];
+    System.arraycopy(buffer, 10, subarray, 0, 20);
+    mac2.update(subarray);
+    byte[] result2 = mac2.doFinal();
+
+    LOG.info("Result 1: {}", HexUtils.encodeToHexString(result1, false));
+    LOG.info("Result 2: {}", HexUtils.encodeToHexString(result2, false));
+    assertArrayEquals(result1, result2, "Results should match when using offset vs subarray");
+    LOG.info("SUCCESS: Offset behavior matches subarray behavior");
+  }
 }
