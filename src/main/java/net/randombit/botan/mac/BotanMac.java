@@ -223,14 +223,13 @@ public abstract class BotanMac extends MacSpi {
   @Override
   protected void engineInit(Key key, AlgorithmParameterSpec params) throws InvalidKeyException {
     final byte[] encodedKey = checkSecretKey(key);
-    final int length = encodedKey.length;
 
     // Clean up existing MAC object if re-initializing
     if (cleanable != null) {
       cleanable.clean();
     }
 
-    int err = singleton().botan_mac_init(macRef, getBotanMacName(length), 0);
+    int err = singleton().botan_mac_init(macRef, getBotanMacName(encodedKey.length), 0);
     checkNativeCall(err, "botan_mac_init");
 
     // Register cleaner for the newly created MAC object
@@ -241,9 +240,9 @@ public abstract class BotanMac extends MacSpi {
           return singleton().botan_mac_get_keyspec(a, b, c, d);
         };
 
-    checkKeySize(macRef.getValue(), length, getKeySpec);
+    checkKeySize(macRef.getValue(), encodedKey.length, getKeySpec);
 
-    err = singleton().botan_mac_set_key(macRef.getValue(), encodedKey, length);
+    err = singleton().botan_mac_set_key(macRef.getValue(), encodedKey, encodedKey.length);
     checkNativeCall(err, "botan_mac_set_key");
 
     currentKey = encodedKey;
@@ -260,9 +259,9 @@ public abstract class BotanMac extends MacSpi {
 
   @Override
   protected void engineUpdate(byte[] input, int offset, int len) {
-    final byte[] bytes = Arrays.copyOfRange(input, offset, input.length);
+    final byte[] bytes = Arrays.copyOfRange(input, offset, Math.addExact(offset, len));
 
-    final int err = singleton().botan_mac_update(macRef.getValue(), bytes, len);
+    final int err = singleton().botan_mac_update(macRef.getValue(), bytes, bytes.length);
     checkNativeCall(err, "botan_mac_update");
 
     macFinalized = false;
