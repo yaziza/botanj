@@ -13,6 +13,7 @@ import static net.randombit.botan.jnr.BotanInstance.checkNativeCall;
 
 import java.security.InvalidKeyException;
 import java.security.Key;
+import java.util.Arrays;
 import java.util.List;
 import javax.crypto.SecretKey;
 import jnr.ffi.Pointer;
@@ -45,8 +46,13 @@ public final class BotanUtil {
   /**
    * Checks the key type and content not null.
    *
+   * <p>The returned array is a defensive copy of {@link Key#getEncoded()}. Callers routinely zero
+   * out the returned array once the key material is no longer needed; {@code getEncoded()} is not
+   * guaranteed by the {@link Key} contract to return a fresh copy, so cloning here ensures such
+   * zeroing never mutates memory owned by the {@link Key} implementation itself.
+   *
    * @param key the key to check
-   * @return byte[] encoded key
+   * @return byte[] defensive copy of the encoded key
    * @throws InvalidKeyException if key is invalid or not in RAW format
    */
   public static byte[] checkSecretKey(Key key) throws InvalidKeyException {
@@ -63,7 +69,7 @@ public final class BotanUtil {
       throw new InvalidKeyException("key.getEncoded() == null");
     }
 
-    return encodedKey;
+    return Arrays.copyOf(encodedKey, encodedKey.length);
   }
 
   /**
