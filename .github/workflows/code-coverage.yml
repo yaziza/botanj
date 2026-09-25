@@ -21,10 +21,10 @@ jobs:
       - name: checkout repository code
         uses: actions/checkout@v4
         with:
-          # Both push and schedule runs target master.
-          # PR runs remain detached, but the commit step is skipped below.
-          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || 'master' }}
+          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+          ref: ${{ github.event.pull_request.head.ref || github.ref_name }}
           fetch-depth: 0
+          persist-credentials: true
 
       - name: Set up JDK
         uses: actions/setup-java@v5
@@ -61,12 +61,13 @@ jobs:
           echo "branches = ${{ steps.jacoco.outputs.branches }}"
 
       - name: Add new badge
-        if: github.event_name != 'pull_request'
+        if: github.event_name == 'pull_request'
         uses: EndBug/add-and-commit@v10
         with:
           default_author: github_actions
           message: '[ci/cd] upload code coverage badge'
           add: '*.svg'
+          push: true
 
       - name: Upload JaCoCo coverage report as a workflow artifact
         uses: actions/upload-artifact@v7
