@@ -14,13 +14,13 @@ Botanj is a Java Security Provider (JSP) that implements parts of the Java Crypt
 mvn test -Dnative.lib.path=/opt/homebrew/opt/botan/lib
 
 # Run single test class
-mvn test -Dtest=BotanMessageDigestTest
+mvn test -Dtest=BotanMessageDigestTest -Dnative.lib.path=/opt/homebrew/opt/botan/lib
 
 # Run single test method
-mvn test -Dtest=BotanMessageDigestTest#testSha256
+mvn test -Dtest=BotanMessageDigestTest#testSha256 -Dnative.lib.path=/opt/homebrew/opt/botan/lib
 
 # Run checkstyle
-mvn checkstyle:check
+mvn --update-snapshots clean verify -Dnative.lib.path=/opt/homebrew/opt/botan/lib
 
 # Generate code coverage report
 mvn jacoco:report

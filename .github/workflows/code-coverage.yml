@@ -3,14 +3,15 @@ name: code-coverage
 on:
   push:
     branches:
-    - master # build after merging code to master
-
+      - master # build after merging code to master
   pull_request:
     branches:
-    - master # build after opening a new PR
-
+      - master # build after opening a new PR
   schedule:
     - cron: '0 2 * * *' # run at 2 AM UTC
+
+permissions:
+  contents: write
 
 jobs:
   coverage:
@@ -19,9 +20,14 @@ jobs:
     steps:
       - name: checkout repository code
         uses: actions/checkout@v6
+        with:
+          # Both push and schedule runs target master.
+          # PR runs remain detached, but the commit step is skipped below.
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || 'master' }}
+          fetch-depth: 0
 
       - name: Set up JDK
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           java-version: 21
           distribution: 'adopt'
@@ -34,7 +40,9 @@ jobs:
       - name: Build with Maven
         run: |
           eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-          mvn --batch-mode --update-snapshots verify -Dnative.lib.path=/home/linuxbrew/.linuxbrew/opt/botan/lib jacoco:report
+          mvn --batch-mode --update-snapshots verify \
+            -Dnative.lib.path=/home/linuxbrew/.linuxbrew/opt/botan/lib \
+            jacoco:report
 
       - name: Generate JaCoCo Badge
         id: jacoco
@@ -43,7 +51,9 @@ jobs:
           generate-branches-badge: true
           generate-summary: true
           fail-on-coverage-decrease: true
+          coverage-decrease-limit: 95
           fail-on-branches-decrease: true
+          branches-decrease-limit: 80
 
       - name: Log coverage percentages to workflow output
         run: |
@@ -51,14 +61,15 @@ jobs:
           echo "branches = ${{ steps.jacoco.outputs.branches }}"
 
       - name: Add new badge
-        uses: EndBug/add-and-commit@v7
+        if: github.event_name != 'pull_request'
+        uses: EndBug/add-and-commit@v10
         with:
           default_author: github_actions
           message: '[ci/cd] upload code coverage badge'
           add: '*.svg'
 
       - name: Upload JaCoCo coverage report as a workflow artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: jacoco-report
           path: target/site/jacoco/

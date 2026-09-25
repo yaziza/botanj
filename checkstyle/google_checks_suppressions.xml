@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<!DOCTYPE suppressions PUBLIC
+    "-//Checkstyle//DTD SuppressionFilter Configuration 1.2//EN"
+    "https://checkstyle.org/dtds/suppressions_1_2.dtd">
+
+<suppressions>
+  <!-- Suppress AbbreviationAsWordInName for all native method names in BotanLibrary -->
+  <suppress checks="MethodName" files="BotanLibrary\.java" />
+
+  <!-- Suppress AbbreviationAsWordInName for standard algorithm class names -->
+  <suppress checks="AbbreviationAsWordInName" files="BotanMessageDigest\.java" />
+  <suppress checks="AbbreviationAsWordInName" files="BotanMac\.java" />
+  <suppress checks="AbbreviationAsWordInName" files="BotanStreamCipher\.java" />
+  <suppress checks="AbbreviationAsWordInName" files="BotanAeadCipher\.java" />
+
+  <!-- Suppress naming checks for AeadParameterSpec to maintain API compatibility -->
+  <suppress checks="AbbreviationAsWordInName" files="AeadParameterSpec\.java" />
+  <suppress checks="MemberName" files="AeadParameterSpec\.java" />
+  <suppress checks="ParameterName" files="AeadParameterSpec\.java" />
+
+  <!-- Suppress naming checks for internal buffer variables using snake_case -->
+  <suppress checks="MemberName" files="BotanAeadCipher\.java" />
+  <suppress checks="MemberName" files="BotanBlockCipher\.java" />
+  <suppress checks="LocalVariableName" files="BotanAeadCipher\.java" />
+
+  <!-- Suppress overload ordering check for mixed visibility overloads -->
+  <suppress checks="OverloadMethodsDeclarationOrder" files="BotanAeadCipher\.java" />
+
+  <!-- Test file suppressions -->
+  <!-- Suppress Javadoc requirements for test classes and methods -->
+  <suppress checks="MissingJavadocType" files="src[\\/]test[\\/]java[\\/].*Test\.java" />
+  <suppress checks="MissingJavadocMethod" files="src[\\/]test[\\/]java[\\/].*Test\.java" />
+
+  <!-- Suppress naming violations for test variables (tLen, AAD, etc.) -->
+  <suppress checks="LocalVariableName" files="src[\\/]test[\\/]java[\\/].*Test\.java" />
+  <suppress checks="AbbreviationAsWordInName" files="src[\\/]test[\\/]java[\\/].*Test\.java" />
+  <suppress checks="MethodName" files="src[\\/]test[\\/]java[\\/].*Test\.java" />
+
+  <!-- Suppress variable declaration usage distance for test setup code -->
+  <suppress checks="VariableDeclarationUsageDistance" files="src[\\/]test[\\/]java[\\/].*Test\.java" />
+
+  <!-- Suppress wycheproof test base class issues -->
+  <suppress checks=".*" files="WycheproofTestBase\.java" />
+</suppressions>

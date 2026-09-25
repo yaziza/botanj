@@ -125,10 +125,15 @@ Salsa with 20 rounds:
 * `Salsa20/None/NoPadding`
 * `XSalsa20/None/NoPadding`
 
-ChaCha with 20 rounds:
+(x)ChaCha with 20 rounds:
 
 * `ChaCha20/None/NoPadding`
-* `XChaCha20/None/NoPadding`s
+* `XChaCha20/None/NoPadding`
+
+(x)ChaCha20-Poly1305 authenticated encryption with 20 rounds:
+
+* `ChaCha20/Poly1305/NoPadding`
+* `XChaCha20/Poly1305/NoPadding`
 
 ### Mac
 * `AESCMAC`
@@ -137,8 +142,12 @@ ChaCha with 20 rounds:
 * `HMAC-SHA1`
 * `HMAC-SHA224`
 * `HMAC-SHA256`
-* `HMAC-HMAC-SHA384`
+* `HMAC-SHA384`
 * `HMAC-SHA512`
+* `HMAC-SHA3-224`
+* `HMAC-SHA3-256`
+* `HMAC-SHA3-384`
+* `HMAC-SHA3-512`
 * `HMAC-MD5`
 * `HMAC-RIPEMD160`
 
