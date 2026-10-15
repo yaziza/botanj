@@ -9,7 +9,6 @@
 
 package net.randombit.botan.mac;
 
-import static net.randombit.botan.Constants.BOTAN_DO_FINAL_FLAG;
 import static net.randombit.botan.jnr.BotanInstance.checkNativeCall;
 import static net.randombit.botan.jnr.BotanInstance.singleton;
 import static net.randombit.botan.util.BotanUtil.checkKeySize;
@@ -232,8 +231,14 @@ public abstract class BotanMac extends MacSpi {
     int err = singleton().botan_mac_init(macRef, getBotanMacName(encodedKey.length), 0);
     checkNativeCall(err, "botan_mac_init");
 
+    // Make a defensive copy of the key for internal storage
+    currentKey = Arrays.copyOf(encodedKey, encodedKey.length);
+
     // Register cleaner for the newly created MAC object
-    cleanable = CLEANER.register(this, new BotanMacCleanupAction(macRef.getValue(), encodedKey));
+    // Pass both encodedKey and currentKey to ensure both are zeroed on cleanup
+    cleanable =
+        CLEANER.register(this,
+          new BotanMacCleanupAction(macRef.getValue(), encodedKey, currentKey));
 
     BotanUtil.FourParameterFunction<Pointer, NativeLongByReference> getKeySpec =
         (a, b, c, d) -> {
@@ -244,8 +249,6 @@ public abstract class BotanMac extends MacSpi {
 
     err = singleton().botan_mac_set_key(macRef.getValue(), encodedKey, encodedKey.length);
     checkNativeCall(err, "botan_mac_set_key");
-
-    currentKey = encodedKey;
 
     macFinalized = false;
   }
@@ -304,12 +307,17 @@ public abstract class BotanMac extends MacSpi {
   /**
    * Cleanup action for native MAC resources.
    */
-  private record BotanMacCleanupAction(jnr.ffi.Pointer macPointer, byte[] key) implements Runnable {
+  private record BotanMacCleanupAction(
+      jnr.ffi.Pointer macPointer, byte[] key, byte[] currentKey) implements Runnable {
 
     @Override
     public void run() {
       if (key != null) {
         Arrays.fill(key, (byte) 0x00);
+      }
+
+      if (currentKey != null) {
+        Arrays.fill(currentKey, (byte) 0x00);
       }
 
       if (macPointer != null) {
